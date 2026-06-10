@@ -33,7 +33,7 @@ if (isset($_SESSION['form_data'])) {
 <body>
     <nav>
         <ul>
-            <li><a href="../index.html">Accueil</a></li>
+            <a href="index.html"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport"></a>
             <li><a href="recherche.html">Voyager</a></li>
             <li><a href="VikingTransports.html">Notre entreprise</a></li>
             <li><a href="services.html">Nos services</a></li>
