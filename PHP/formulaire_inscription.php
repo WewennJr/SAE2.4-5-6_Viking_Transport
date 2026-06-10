@@ -31,15 +31,9 @@ if (isset($_SESSION['form_data'])) {
     <link rel="stylesheet" href="../CSS/style.css">
 </head>
 <body>
-    <nav>
-        <ul>
-            <a href="index.html"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport"></a>
-            <li><a href="../HTML/recherche.html">Voyager</a></li>
-            <li><a href="../HTML/VikingTransports.html">Notre entreprise</a></li>
-            <li><a href="../HTML/services.html">Nos services</a></li>
-            <li id="profil"><a href="../HTML/redirection.html">Me connecter</a></li>
-        </ul>
-    </nav>
+   <?php 
+    include_once("../PHP/nav.php");
+  ?>
     <main>
         <h1>Inscription</h1>
         <article>
@@ -98,10 +92,8 @@ if (isset($_SESSION['form_data'])) {
             <p>Déjà un compte ? <a href="../PHP/formulaire_connexion.php">Connectez-vous</a></p>
         </article>
     </main>
-    <footer>
-        <a href="contact.html">Nous contacter</a>
-        <div class="mentions"><a href="../HTML/mentionslegales.html">Mentions légales</a></div>
-        <div class="credits">Site réalisé par T.UI.sto</div>
-    </footer>
+    <?php 
+    include_once("../PHP/footer.php");
+  ?>
 </body>
 </html>
