@@ -29,7 +29,7 @@
     ?>
     </p>
 
-    <form action="../PHP/traitementConnexion.php" method="post">
+    <form action="../PHP/traitement_connexion.php" method="post">
         <label for="CLI_COURRIEL">Email :</label>
         <input type="email" id="CLI_COURRIEL" name="CLI_COURRIEL" required><br><br>
         <label for="CLI_MDP">Mot de passe :</label>
@@ -37,7 +37,7 @@
         <input type="submit" value="Se connecter">
     </form>
 
-    <p>Pas encore de compte ? <a href="../PHP/inscription.php">Inscrivez-vous</a></p>
+    <p>Pas encore de compte ? <a href="../PHP/formulaire_inscription.php">Inscrivez-vous</a></p>
 
     <footer>
         <a href="../HTML/contact.html">Nous contacter</a>

@@ -30,7 +30,7 @@
         $_SESSION['form_data'] = $form;
 
         $_SESSION['erreur'] = "Tous les champs sont obligatoires.";
-        header("Location: inscription.php");
+        header("Location: formulaire_inscription.php");
         exit();
     }
 
@@ -40,7 +40,7 @@
     if (isset($tab[0]['NB'])) {
         if ($tab[0]['NB'] > 0) {
             $_SESSION['erreur'] = "Un compte existe déjà avec ce courriel.";
-            header("Location: inscription.php");
+            header("Location: formulaire_inscription.php");
             exit();
         }
     }
@@ -48,7 +48,7 @@
     // Vérification de la correspondance des mots de passe
     if ($mdp !== $confirm_mdp) {
         $_SESSION['erreur'] = "Les mots de passe ne correspondent pas.";
-        header("Location: inscription.php");
+        header("Location: formulaire_inscription.php");
         exit();
     }
 
@@ -63,11 +63,11 @@
         unset($_SESSION['form_data']);
 
         $_SESSION['success'] = "Inscription réussie. Vous pouvez maintenant vous connecter.";
-        header("Location: connexion.php");
+        header("Location: formulaire_connexion.php");
         exit();
     } else {
         $_SESSION['erreur'] = "Erreur lors de l'inscription. Veuillez réessayer.";
-        header("Location: inscription.php");
+        header("Location: formulaire_inscription.php");
         exit();
     }
 ?>
