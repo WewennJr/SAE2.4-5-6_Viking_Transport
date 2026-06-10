@@ -8,15 +8,9 @@
   <link rel="stylesheet" href="../CSS/style.css">
 </head>
 <body>
-  <nav>
-    <ul>
-      <li><a href="../index.html"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport"></a></li>
-      <li><a href="../HTML/recherche.html">Voyager</a></li>
-      <li><a href="../HTML/VikingTransports.html">Notre entreprise</a></li>
-      <li><a href="../HTML/services.html">Nos services</a></li>
-      <li id="profil"><a href="../HTML/redirection.html">Me connecter</a></li>
-    </ul>
-  </nav>
+  <?php 
+    include_once("../PHP/nav.php");
+  ?>
 
   <main>
     <h1>Mentions légales</h1>
@@ -108,10 +102,8 @@
     <p><em>Dernière mise à jour : juin 2026</em></p>
   </main>
 
-  <footer>
-    <a href="../HTML/contact.html">Nous contacter</a>
-    <div class="mentions"><a href="../HTML/mentionslegales.html">Mentions légales</a></div>
-    <div class="credits">Site réalisé par T.UI.sto</div>
-  </footer>
+  <?php 
+    include_once("../PHP/footer.php");
+  ?>
 </body>
 </html>

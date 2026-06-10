@@ -8,15 +8,9 @@
     <link rel="stylesheet" href="../CSS/style.css">
 </head>
 <body>
-    <nav>
-        <ul>
-            <li><a href="../index.html">Accueil</a></li>
-            <li><a href="../HTML/recherche.html">Voyager</a></li>
-            <li><a href="../HTML/VikingTransports.html">Notre entreprise</a></li>
-            <li><a href="../HTML/services.html">Nos services</a></li>
-            <li id="profil"><a href="formulaire_connexion.php">Me connecter</a></li>
-        </ul>
-    </nav>
+    <?php 
+    include_once("../PHP/nav.php");
+  ?>
     <main>
     <h1>Connexion</h1>
 
@@ -45,9 +39,8 @@
 
     <p>Pas encore de compte ? <a href="../PHP/formulaire_inscription.php">Inscrivez-vous</a></p>
 </main>
-    <footer>
-        <a href="../HTML/contact.html">Nous contacter</a>
-        <div class="credits">Site réalisé par T.UI.sto</div>
-    </footer>
+    <?php 
+    include_once("../PHP/footer.php");
+  ?>
 </body>
 </html>
