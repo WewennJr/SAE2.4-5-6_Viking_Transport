@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="fr">
+	<head>
+		<meta charset="utf-8">
+		<title>connexion Viking Transport</title>
+        <link rel="stylesheet" href="style.css">
+	</head>
+	<body>
+        <h1>Connexion</h1>
+        <p id="erreur"> </p>
+        <form action="traitementConnexion.php" method="post">
+            <label for="CLI_COURRIEL">Email :</label>
+            <input type="email" id="CLI_COURRIEL" name="CLI_COURRIEL" required><br><br>
+
+            <label for="CLI_MDP">Mot de passe :</label>
+            <input type="password" id="CLI_MDP" name="CLI_MDP" required><br><br>
+
+            <input type="submit" value="Se connecter">
+        </form>
+	</body>
+</html>
