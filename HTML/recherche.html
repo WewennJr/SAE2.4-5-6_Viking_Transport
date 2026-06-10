@@ -1,0 +1,207 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="Viking Transports">
+    <meta author="T.UI.sto">
+    <title>Recherche de voyage – Viking Transport</title>
+    <link rel="stylesheet" href="../CSS/style.css">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li>
+                <a href="../index.html"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport"></a>
+            </li>
+            <li><a href="recherche.html">Voyager</a></li>
+            <li><a href="VikingTransports.html">Notre entreprise</a></li>
+            <li><a href="services.html">Nos services</a></li>
+            <li id="profil"><a href="redirection.html">Me connecter</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>Recherche de voyage</h1>
+        <label for="COM_DEPART">Ville de départ :</label>
+        <select id="COM_DEPART" name="COM_DEPART" required>
+            <option value="">Sélectionnez une ville</option>
+            <option value="Alençon">Alençon</option>
+            <option value="Argentan">Argentan</option>
+            <option value="Aunay-sur-Odon">Aunay-sur-Odon</option>
+            <option value="Avranches">Avranches</option>
+            <option value="Bagnoles de l'Orne Normandie">Bagnoles de l'Orne Normandie</option>
+            <option value="Barneville-Carteret">Barneville-Carteret</option>
+            <option value="Bayeux">Bayeux</option>
+            <option value="Bellême">Bellême</option>
+            <option value="Bernay">Bernay</option>
+            <option value="Bolbec">Bolbec</option>
+            <option value="Briouze">Briouze</option>
+            <option value="Buchy">Buchy</option>
+            <option value="Caen">Caen</option>
+            <option value="Carentan-les-Marais">Carentan-les-Marais</option>
+            <option value="Caumont-l'Éventé">Caumont-l'Éventé</option>
+            <option value="Cherbourg-en-Cotentin">Cherbourg-en-Cotentin</option>
+            <option value="Condé-en-Normandie">Condé-en-Normandie</option>
+            <option value="Courseulles-sur-Mer">Courseulles-sur-Mer</option>
+            <option value="Coutances">Coutances</option>
+            <option value="Deauville">Deauville</option>
+            <option value="Dieppe">Dieppe</option>
+            <option value="Domfront-en-Poiraie">Domfront-en-Poiraie</option>
+            <option value="Elbeuf">Elbeuf</option>
+            <option value="Épaignes">Épaignes</option>
+            <option value="Évreux">Évreux</option>
+            <option value="Falaise">Falaise</option>
+            <option value="Fécamp">Fécamp</option>
+            <option value="Flamanville">Flamanville</option>
+            <option value="Flers">Flers</option>
+            <option value="Gacé">Gacé</option>
+            <option value="Gaillon">Gaillon</option>
+            <option value="Gamaches">Gamaches</option>
+            <option value="Gatteville-le-Phare">Gatteville-le-Phare</option>
+            <option value="Gisors">Gisors</option>
+            <option value="Gournay-en-Bray">Gournay-en-Bray</option>
+            <option value="Grandcamp-Maisy">Grandcamp-Maisy</option>
+            <option value="Granville">Granville</option>
+            <option value="Honfleur">Honfleur</option>
+            <option value="L'Aigle">L'Aigle</option>
+            <option value="L'habit">L'habit</option>
+            <option value="La Ferté Macé">La Ferté Macé</option>
+            <option value="La Hague">La Hague</option>
+            <option value="Le Havre">Le Havre</option>
+            <option value="Le Mont-Saint-Michel">Le Mont-Saint-Michel</option>
+            <option value="Le Tréport">Le Tréport</option>
+            <option value="Lisieux">Lisieux</option>
+            <option value="Lison">Lison</option>
+            <option value="Londinières">Londinières</option>
+            <option value="Louviers">Louviers</option>
+            <option value="Mamers">Mamers</option>
+            <option value="Mézidon-Canon">Mézidon-Canon</option>
+            <option value="Mesnils-sur-Iton">Mesnils-sur-Iton</option>
+            <option value="Mortagne-au-Perche">Mortagne-au-Perche</option>
+            <option value="Moult-Chicheboville">Moult-Chicheboville</option>
+            <option value="Neufchâtel-en-Bray">Neufchâtel-en-Bray</option>
+            <option value="Nogent-le-Rotrou">Nogent-le-Rotrou</option>
+            <option value="Orbec">Orbec</option>
+            <option value="Pacy-sur-Eure">Pacy-sur-Eure</option>
+            <option value="Périers">Périers</option>
+            <option value="Petit-Caux">Petit-Caux</option>
+            <option value="Pont-Audemer">Pont-Audemer</option>
+            <option value="Pont-l'Évêque">Pont-l'Évêque</option>
+            <option value="Rouen">Rouen</option>
+            <option value="Saint-Lô">Saint-Lô</option>
+            <option value="Saint-Pierre-en-Auge">Saint-Pierre-en-Auge</option>
+            <option value="Saint-Valery-en-Caux">Saint-Valery-en-Caux</option>
+            <option value="Sées">Sées</option>
+            <option value="Taillepied">Taillepied</option>
+            <option value="Tinchebray-Bocage">Tinchebray-Bocage</option>
+            <option value="Tôtes">Tôtes</option>
+            <option value="Val-de-Reuil">Val-de-Reuil</option>
+            <option value="Valognes">Valognes</option>
+            <option value="Vernon">Vernon</option>
+            <option value="Verneuil d'Avre et d'Iton">Verneuil d'Avre et d'Iton</option>
+            <option value="Villedieu-les-Poêles-Rouffigny">Villedieu-les-Poêles-Rouffigny</option>
+            <option value="Vimoutiers">Vimoutiers</option>
+            <option value="Vire Normandie">Vire Normandie</option>
+            <option value="Yvetot">Yvetot</option>
+        </select><br><br>
+
+        <label for="COM_ARRIVEE">Ville d'arrivée :</label>
+        <select id="COM_ARRIVEE" name="COM_ARRIVEE" required>
+            <option value="">Sélectionnez une ville</option>
+            <option value="Alençon">Alençon</option>
+            <option value="Argentan">Argentan</option>
+            <option value="Aunay-sur-Odon">Aunay-sur-Odon</option>
+            <option value="Avranches">Avranches</option>
+            <option value="Bagnoles de l'Orne Normandie">Bagnoles de l'Orne Normandie</option>
+            <option value="Barneville-Carteret">Barneville-Carteret</option>
+            <option value="Bayeux">Bayeux</option>
+            <option value="Bellême">Bellême</option>
+            <option value="Bernay">Bernay</option>
+            <option value="Bolbec">Bolbec</option>
+            <option value="Briouze">Briouze</option>
+            <option value="Buchy">Buchy</option>
+            <option value="Caen">Caen</option>
+            <option value="Carentan-les-Marais">Carentan-les-Marais</option>
+            <option value="Caumont-l'Éventé">Caumont-l'Éventé</option>
+            <option value="Cherbourg-en-Cotentin">Cherbourg-en-Cotentin</option>
+            <option value="Condé-en-Normandie">Condé-en-Normandie</option>
+            <option value="Courseulles-sur-Mer">Courseulles-sur-Mer</option>
+            <option value="Coutances">Coutances</option>
+            <option value="Deauville">Deauville</option>
+            <option value="Dieppe">Dieppe</option>
+            <option value="Domfront-en-Poiraie">Domfront-en-Poiraie</option>
+            <option value="Elbeuf">Elbeuf</option>
+            <option value="Épaignes">Épaignes</option>
+            <option value="Évreux">Évreux</option>
+            <option value="Falaise">Falaise</option>
+            <option value="Fécamp">Fécamp</option>
+            <option value="Flamanville">Flamanville</option>
+            <option value="Flers">Flers</option>
+            <option value="Gacé">Gacé</option>
+            <option value="Gaillon">Gaillon</option>
+            <option value="Gamaches">Gamaches</option>
+            <option value="Gatteville-le-Phare">Gatteville-le-Phare</option>
+            <option value="Gisors">Gisors</option>
+            <option value="Gournay-en-Bray">Gournay-en-Bray</option>
+            <option value="Grandcamp-Maisy">Grandcamp-Maisy</option>
+            <option value="Granville">Granville</option>
+            <option value="Honfleur">Honfleur</option>
+            <option value="L'Aigle">L'Aigle</option>
+            <option value="L'habit">L'habit</option>
+            <option value="La Ferté Macé">La Ferté Macé</option>
+            <option value="La Hague">La Hague</option>
+            <option value="Le Havre">Le Havre</option>
+            <option value="Le Mont-Saint-Michel">Le Mont-Saint-Michel</option>
+            <option value="Le Tréport">Le Tréport</option>
+            <option value="Lisieux">Lisieux</option>
+            <option value="Lison">Lison</option>
+            <option value="Londinières">Londinières</option>
+            <option value="Louviers">Louviers</option>
+            <option value="Mamers">Mamers</option>
+            <option value="Mézidon-Canon">Mézidon-Canon</option>
+            <option value="Mesnils-sur-Iton">Mesnils-sur-Iton</option>
+            <option value="Mortagne-au-Perche">Mortagne-au-Perche</option>
+            <option value="Moult-Chicheboville">Moult-Chicheboville</option>
+            <option value="Neufchâtel-en-Bray">Neufchâtel-en-Bray</option>
+            <option value="Nogent-le-Rotrou">Nogent-le-Rotrou</option>
+            <option value="Orbec">Orbec</option>
+            <option value="Pacy-sur-Eure">Pacy-sur-Eure</option>
+            <option value="Périers">Périers</option>
+            <option value="Petit-Caux">Petit-Caux</option>
+            <option value="Pont-Audemer">Pont-Audemer</option>
+            <option value="Pont-l'Évêque">Pont-l'Évêque</option>
+            <option value="Rouen">Rouen</option>
+            <option value="Saint-Lô">Saint-Lô</option>
+            <option value="Saint-Pierre-en-Auge">Saint-Pierre-en-Auge</option>
+            <option value="Saint-Valery-en-Caux">Saint-Valery-en-Caux</option>
+            <option value="Sées">Sées</option>
+            <option value="Taillepied">Taillepied</option>
+            <option value="Tinchebray-Bocage">Tinchebray-Bocage</option>
+            <option value="Tôtes">Tôtes</option>
+            <option value="Val-de-Reuil">Val-de-Reuil</option>
+            <option value="Valognes">Valognes</option>
+            <option value="Vernon">Vernon</option>
+            <option value="Verneuil d'Avre et d'Iton">Verneuil d'Avre et d'Iton</option>
+            <option value="Villedieu-les-Poêles-Rouffigny">Villedieu-les-Poêles-Rouffigny</option>
+            <option value="Vimoutiers">Vimoutiers</option>
+            <option value="Vire Normandie">Vire Normandie</option>
+            <option value="Yvetot">Yvetot</option>
+        </select><br><br>
+
+        <label for="DATE_VOYAGE">Date de voyage :</label>
+        <input type="date" id="DATE_VOYAGE" name="DATE_VOYAGE" required><br><br>
+
+        <input type="submit" value="Rechercher">
+
+        </form>
+        <img id="carte-recherche" src="../images/carte.png" alt="Plan du réseau Viking Transport">
+        <div id="resultats"></div>
+    </main>
+
+    <footer>
+        <a href="contact.html">Nous contacter</a>
+        <div class="mentions"><a href="mentionslegales.html">Mentions légales</a></div>
+        <div class="credits">Site réalisé par T.UI.sto</div>
+    </footer>
+</body>
+</html>
