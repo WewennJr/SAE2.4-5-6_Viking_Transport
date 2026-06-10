@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500&display=swap');
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #0f0f0f;
+    color: #f0f0f0;
+    font-family: 'Inter', sans-serif;
+    padding: 3rem 2rem;
+    min-height: 100vh;
+}
+
+h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #ffffff;
+    margin-bottom: 0.4rem;
+}
+
+.sous-titre {
+    font-size: 0.95rem;
+    color: #888;
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.grille {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.2rem;
+}
+
+.carte {
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    padding: 1.4rem 1.6rem;
+    border-left: 5px solid var(--couleur);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.carte:hover {
+    transform: translateY(-3px);
+    background-color: #222;
+}
+
+.numero {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--couleur);
+    margin-bottom: 1rem;
+}
+
+.trajet {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.ville {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.ville.depart::before {
+    content: '⬤ ';
+    font-size: 0.6rem;
+    color: var(--couleur);
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+.ville.arrivee::before {
+    content: '⬤ ';
+    font-size: 0.6rem;
+    color: var(--couleur);
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+.etapes {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0.6rem;
+    margin: 0.3rem 0;
+    border-left: 2px dashed #333;
+    gap: 0.25rem;
+}
+
+.etapes span {
+    font-size: 0.82rem;
+    color: #aaa;
+    padding-left: 0.6rem;
+    position: relative;
+}
+
+.etapes span::before {
+    content: '·';
+    position: absolute;
+    left: -4px;
+    color: #555;
+}
+
+@media (max-width: 600px) {
+    h1 {
+        font-size: 2rem;
+    }
+
+    .grille {
+        grid-template-columns: 1fr;
+    }
+}
