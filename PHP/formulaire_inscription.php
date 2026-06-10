@@ -34,10 +34,10 @@ if (isset($_SESSION['form_data'])) {
     <nav>
         <ul>
             <a href="index.html"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport"></a>
-            <li><a href="recherche.html">Voyager</a></li>
-            <li><a href="VikingTransports.html">Notre entreprise</a></li>
-            <li><a href="services.html">Nos services</a></li>
-            <li id="profil"><a href="redirection.html">Me connecter</a></li>
+            <li><a href="../HTML/recherche.html">Voyager</a></li>
+            <li><a href="../HTML/VikingTransports.html">Notre entreprise</a></li>
+            <li><a href="../HTML/services.html">Nos services</a></li>
+            <li id="profil"><a href="../HTML/redirection.html">Me connecter</a></li>
         </ul>
     </nav>
     <main>
@@ -95,12 +95,12 @@ if (isset($_SESSION['form_data'])) {
                 <button type="submit">S'inscrire</button>
             </form>
 
-            <p>Déjà un compte ? <a href="formulaire_connexion.php">Connectez-vous</a></p>
+            <p>Déjà un compte ? <a href="../PHP/formulaire_connexion.php">Connectez-vous</a></p>
         </article>
     </main>
     <footer>
         <a href="contact.html">Nous contacter</a>
-        <div class="mentions"><a href="mentionslegales.html">Mentions légales</a></div>
+        <div class="mentions"><a href="../HTML/mentionslegales.html">Mentions légales</a></div>
         <div class="credits">Site réalisé par T.UI.sto</div>
     </footer>
 </body>
