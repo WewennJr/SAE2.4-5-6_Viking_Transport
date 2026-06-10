@@ -265,6 +265,8 @@ input[type="submit"]:hover {
   margin-bottom: 0.5rem;
 }
 
+
+
 footer {
   width: 100%;
   background-color: var(--noir);
@@ -344,6 +346,24 @@ footer a:hover {
   box-shadow: 0 4px 16px rgba(0,0,0,0.10);
 }
 
+
+#redirect a{
+  border-radius: 30px;
+  color: #a32a1d;
+  text-align: center;
+  padding: 10px;
+  max-width: 50%;
+  max-height: 50%;
+  vertical-align: middle ;
+  text-decoration: underline;
+}
+
+#redirect{
+  display: grid;
+  grid-template-rows: repeat(2,30%);
+  grid-template-columns: 1fr;
+  align-items: center;
+}
 /* ── Responsive ─────────────────────────────────────────── */
 
 @media (max-width: 900px) {
