@@ -1,14 +1,24 @@
 <?php
+<<<<<<< HEAD
 // Si la session n'est pas déjà démarrée, on la démarre (sécurité)
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+=======
+
+session_start();
+
+>>>>>>> dev-Enzo
 $connecte = isset($_SESSION["num_client"]);
 ?>
 <nav>
     <ul>
         <li>
+<<<<<<< HEAD
             <a href="../index.php"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport"></a>
+=======
+            <a href="../PHP/index.php"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport"></a>
+>>>>>>> dev-Enzo
         </li>
         <li><a href="../HTML/recherche.html">Voyager</a></li>
         <li><a href="../HTML/VikingTransports.html">Notre entreprise</a></li>
