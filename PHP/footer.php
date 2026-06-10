@@ -71,11 +71,11 @@
         <div class="footer-colonne">
             <h3>Liens utiles</h3>
             <ul>
-                <li><a href="mentionslegales.html">Mentions légales</a></li>
-                <li><a href="donnees.html">Politique de confidentialité</a></li>
-                <li><a href="cgu.html">Conditions générales d'utilisation</a></li>
-                <li><a href="contact.html">Nous contacter</a></li>
-                <li><a href="formulaire_inscription.php">Créer un compte</a></li>
+                <li><a href="../PHP/mentionslegales.php">Mentions légales</a></li>
+                <li><a href="../PHP/donnees.php">Politique de confidentialité</a></li>
+                <li><a href="../PHP/cgu.php">Conditions générales d'utilisation</a></li>
+                <li><a href="../PHP/contact.php">Nous contacter</a></li>
+                <li><a href="../PHP/formulaire_inscription.php">Créer un compte</a></li>
             </ul>
         </div>
 
