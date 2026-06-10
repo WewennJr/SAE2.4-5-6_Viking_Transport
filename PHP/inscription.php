@@ -94,6 +94,8 @@ if (isset($_SESSION['form_data'])) {
                 </div>
                 <button type="submit">S'inscrire</button>
             </form>
+
+            <p>Déjà un compte ? <a href="formulaire_connexion.php">Connectez-vous</a></p>
         </article>
     </main>
     <footer>
