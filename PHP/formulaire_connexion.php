@@ -11,9 +11,9 @@
     <nav>
         <ul>
             <li><a href="../index.html">Accueil</a></li>
-            <li><a href="recherche.html">Voyager</a></li>
-            <li><a href="VikingTransports.html">Notre entreprise</a></li>
-            <li><a href="services.html">Nos services</a></li>
+            <li><a href="../HTML/recherche.html">Voyager</a></li>
+            <li><a href="../HTML/VikingTransports.html">Notre entreprise</a></li>
+            <li><a href="../HTML/services.html">Nos services</a></li>
             <li id="profil"><a href="formulaire_connexion.php">Me connecter</a></li>
         </ul>
     </nav>
@@ -37,10 +37,10 @@
         <input type="submit" value="Se connecter">
     </form>
 
-    <p>Pas encore de compte ? <a href="inscription.php">Inscrivez-vous</a></p>
+    <p>Pas encore de compte ? <a href="../PHP/inscription.php">Inscrivez-vous</a></p>
 
     <footer>
-        <a href="contact.html">Nous contacter</a>
+        <a href="../HTML/contact.html">Nous contacter</a>
         <div class="credits">Site réalisé par T.UI.sto</div>
     </footer>
 </body>
