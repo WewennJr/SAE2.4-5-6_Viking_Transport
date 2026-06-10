@@ -5886,3 +5886,63 @@ UPDATE VIK_CLIENT SET CLI_NUM = ROWNUM;
 COMMIT;
 
 select * from vik_etape;
+
+
+select * from vik_client;
+
+
+
+
+
+
+
+
+/* Je peux visualiser la liste des lignes */
+Select l.lig_num as Numero_ligne, cd.com_nom as Debut, ct.com_nom as Terminus 
+from vik_ligne l
+join vik_commune cd on cd.com_code_insee = l.com_code_insee_debu
+join vik_commune ct on ct.com_code_insee = l.com_code_insee_term;
+
+/* Je peux visualiser les horaires d'une ligne */
+select n.lig_num as Numero_ligne, c.com_nom ,to_char(n.noe_heure_passage, 'hh24:mi:ss') as heure_passage
+from vik_noeud n
+join vik_commune c on c.com_code_insee = n.com_code_insee_arret
+where n.lig_num = '1A';
+
+/* je peux visualiser (compte , trajets, points) et modifier les informations de mon compte */
+
+    /* Client */
+select * from vik_client where cli_num = 4;
+
+    /* Nb_points */
+select cli_nb_points_ec as nb_points
+from vik_client
+where cli_num = 4;
+
+    /* Trajet / reservation */
+select cd.com_nom as Depart, ca.com_nom as Arrivee, to_char(r.res_date,'DD/MM/YYYY') as Res_Date, to_char(e.eta_heure, 'hh24:mi:ss') as Heure_depart
+from vik_reservation r
+join vik_etape e using(cli_num,res_num)
+join vik_commune cd on cd.com_code_insee = e.com_code_insee_depart
+join vik_commune ca on ca.com_code_insee = e.com_code_insee_arrivee
+where cli_num = 4;
+
+
+/* Je peux trouver les trajets possibles pour un depart et une destination donnée */
+
+select
+    nD.lig_num as Numero_Ligne,
+    cD.com_nom as Ville_Depart,
+    to_char(nD.noe_heure_passage, 'hh24:mi:ss') as Heure_Depart,
+    cA.com_nom as Ville_Arrivee,
+    to_char(nA.noe_heure_passage, 'hh24:mi:ss') as Heure_Arrivee
+from vik_noeud nD
+join vik_noeud nA on nD.lig_num = nA.lig_num
+join vik_commune cD on cD.com_code_insee = nD.com_code_insee_arret
+join vik_commune cA on cA.com_code_insee = nA.com_code_insee_arret
+where lower(cD.com_nom) = 'deauville' 
+  and lower(cA.com_nom) = 'falaise'
+  and nD.noe_heure_passage < nA.noe_heure_passage
+order by nD.noe_heure_passage ;
+
+
