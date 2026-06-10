@@ -15,7 +15,7 @@ $connecte = isset($_SESSION["num_client"]);
     <ul>
         <li>
 
-            <a href="../index.php"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport"></a>
+            <a href="../PHP/index.php"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport"></a>
 
         </li>
         <li><a href="../PHP/recherche.php">Voyager</a></li>
