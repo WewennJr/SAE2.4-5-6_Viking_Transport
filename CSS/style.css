@@ -25,3 +25,7 @@ footer{
     margin: 10%;
     background-color: rgb(212, 212, 212);
 }
+
+a{
+    text-decoration: none;
+}
