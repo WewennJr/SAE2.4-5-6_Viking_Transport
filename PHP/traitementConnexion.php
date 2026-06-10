@@ -29,7 +29,7 @@ if ($conn) {
 
             $_SESSION["flash"] = "Connexion réussie ! Bienvenue " . $client["CLI_PRENOM"];
             $conn = null;
-            header("Location: ../HTML/accueil.php");   // succès → page d'arrivée
+            header("Location: ../index.html");   // succès → page d'arrivée
             exit;
         } else {
             $_SESSION["erreur"] = "Courriel ou mot de passe incorrect.";
