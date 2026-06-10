@@ -1,3 +1,4 @@
+<!doctype html>
 <html>
 <head>
         <meta charset="utf-8">
@@ -5,6 +6,7 @@
         <meta author="T.UI.sto">
         <title>Connexion</title>
         <link rel="stylesheet" href="../CSS/style.css">
+    </head>
 <body>
     <nav>
             <ul>
@@ -30,7 +32,39 @@
 
 
         <main>
+            <h1>Recherche de voyage</h1>
+
+        <form action="traitementRecherche.php" method="post">
+            <label for="DEP_NUM_DEPART">Département de départ :</label>
+            <select id="DEP_NUM_DEPART" name="DEP_NUM_DEPART" required>
+                <option value="">Sélectionnez un département</option>
+               <option value="14">14  Calvados</option>
+                <option value="50">50  Manche</option>
+                <option value="61">61  Orne</option>
+                <option value="27">27  Eure</option>
+                <option value="76">76  Seine-Maritime</option>
+            </select><br><br>
             
+            <label for="DEP_NUM_DESTINATION">Département de destination :</label>
+            <select id="DEP_NUM_DESTINATION" name="DEP_NUM_DESTINATION" required>
+                <option value="">Sélectionnez un département</option>
+               <option value="14">14  Calvados</option>
+                <option value="50">50  Manche</option>
+                <option value="61">61  Orne</option>
+                <option value="27">27  Eure</option>
+                <option value="76">76  Seine-Maritime</option>
+            </select><br><br>
+            
+            <label for="DATE_VOYAGE">Date de voyage :</label>
+            <input type="date" id="DATE_VOYAGE" name="DATE_VOYAGE" required><br><br>
+
+            <input type="submit" value="Rechercher">
+
+        </form>
+
+        <div id="resultats">
+            
+        </div>
         </main>
 
         <footer>
