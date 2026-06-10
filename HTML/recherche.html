@@ -1,40 +1,29 @@
 <!doctype html>
 <html>
 <head>
-        <meta charset="utf-8">
-        <meta name="Viking Transports">
-        <meta author="T.UI.sto">
-        <title>Connexion</title>
-        <link rel="stylesheet" href="../CSS/style.css">
-    </head>
+    <meta charset="utf-8">
+    <meta name="Viking Transports">
+    <meta author="T.UI.sto">
+    <title>Recherche de voyage – Viking Transport</title>
+    <link rel="stylesheet" href="../CSS/style.css">
+</head>
 <body>
     <nav>
-            <ul>
-                <li>
-                    <a href="../index.html">Accueil</a>
-                </li>
-                <li>
-                    <a href="recherche.html">Voyager</a>
-                </li>
-                <li>
-                    <a href="VikingTransports.html">Notre entreprise</a>                    
-                </li>
-                <li>
-                    <a href="services.html">Nos services</a>
-                    
-                </li>
-                <li id="profil">
-                    <a href="redirection.html">Me connecter</a>
-                    
-                </li>
-            </ul>
-        </nav>
+        <ul>
+            <li>
+                <a href="../index.html"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport"></a>
+            </li>
+            <li><a href="recherche.html">Voyager</a></li>
+            <li><a href="VikingTransports.html">Notre entreprise</a></li>
+            <li><a href="services.html">Nos services</a></li>
+            <li id="profil"><a href="redirection.html">Me connecter</a></li>
+        </ul>
+    </nav>
 
-
-        <main>
-            <h1>Recherche de voyage</h1>
-            <label for="COM_DEPART">Ville de départ :</label>
-            <select id="COM_DEPART" name="COM_DEPART" required>
+    <main>
+        <h1>Recherche de voyage</h1>
+        <label for="COM_DEPART">Ville de départ :</label>
+        <select id="COM_DEPART" name="COM_DEPART" required>
             <option value="">Sélectionnez une ville</option>
             <option value="Alençon">Alençon</option>
             <option value="Argentan">Argentan</option>
@@ -114,10 +103,10 @@
             <option value="Vimoutiers">Vimoutiers</option>
             <option value="Vire Normandie">Vire Normandie</option>
             <option value="Yvetot">Yvetot</option>
-            </select><br><br>
+        </select><br><br>
 
-            <label for="COM_ARRIVEE">Ville d'arrivée :</label>
-            <select id="COM_ARRIVEE" name="COM_ARRIVEE" required>
+        <label for="COM_ARRIVEE">Ville d'arrivée :</label>
+        <select id="COM_ARRIVEE" name="COM_ARRIVEE" required>
             <option value="">Sélectionnez une ville</option>
             <option value="Alençon">Alençon</option>
             <option value="Argentan">Argentan</option>
@@ -197,25 +186,22 @@
             <option value="Vimoutiers">Vimoutiers</option>
             <option value="Vire Normandie">Vire Normandie</option>
             <option value="Yvetot">Yvetot</option>
-            </select><br><br>
+        </select><br><br>
 
+        <label for="DATE_VOYAGE">Date de voyage :</label>
+        <input type="date" id="DATE_VOYAGE" name="DATE_VOYAGE" required><br><br>
 
-            <label for="DATE_VOYAGE">Date de voyage :</label>
-            <input type="date" id="DATE_VOYAGE" name="DATE_VOYAGE" required><br><br>
-
-            <input type="submit" value="Rechercher">
+        <input type="submit" value="Rechercher">
 
         </form>
-        <img src="../images/carte.png" alt="Plan du réseau Viking Transport">
-        <div id="resultats">
-            
-        </div>
-        </main>
+        <img id="carte-recherche" src="../images/carte.png" alt="Plan du réseau Viking Transport">
+        <div id="resultats"></div>
+    </main>
 
-        <footer>
-            <a href="contact.html">Nous contacter</a>
-            <div class="mentions"> <a href="mentionslegales.html">Mentions légales</a></div>
-            <div class="credits">Site réalisé par T.UI.sto </div>
-        </footer>
-    </body>
+    <footer>
+        <a href="contact.html">Nous contacter</a>
+        <div class="mentions"><a href="mentionslegales.html">Mentions légales</a></div>
+        <div class="credits">Site réalisé par T.UI.sto</div>
+    </footer>
+</body>
 </html>
