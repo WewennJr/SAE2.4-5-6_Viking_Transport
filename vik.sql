@@ -78,15 +78,18 @@ CREATE TABLE VIK_CLIENT
     DEP_NUM CHAR(3)  NULL,
     CLI_NOM VARCHAR2(64)  NULL,
     CLI_PRENOM VARCHAR2(64)  NULL,
-    CLI_VILLE VARCHAR2(64)  NULL,
+    CLI_VILLE VARCHAR2(32)  NULL,
     CLI_TELEPHONE VARCHAR2( 16)  NULL,
-    CLI_COURRIEL VARCHAR2(32) NULL,
+    CLI_COURRIEL VARCHAR2(64) NULL,
     CLI_MDP VARCHAR2(300) NOT NULL,
     CLI_NB_POINTS_EC NUMBER(4)  NULL,
     CLI_NB_POINTS_TOT NUMBER(6)  NULL,
     CLI_DATE_CONNEC DATE  NULL,
     CONSTRAINT PK_VIK_CLIENT PRIMARY KEY (CLI_NUM)  
 );
+
+ALTER TABLE VIK_CLIENT
+MODIFY CLI_COURRIEL VARCHAR2(640);
 
 CREATE SEQUENCE cli_num_seq
     START WITH 34
@@ -5945,4 +5948,76 @@ where lower(cD.com_nom) = 'deauville'
   and nD.noe_heure_passage < nA.noe_heure_passage
 order by nD.noe_heure_passage ;
 
+select * from vik_client;
 
+
+
+/* Les heures les plus fréquenté */
+
+    /* Version 1 ville */
+Select lig_num as NumeroDeLigne, to_char(eta_heure, 'hh24') || 'h' as heure, count(*) as nb_passager
+from vik_etape e
+where lig_num = '4A'
+group by lig_num, to_char(eta_heure, 'hh24')
+order by to_char(eta_heure, 'hh24');
+
+    /* Version top 10 des lignes*/
+select *
+from (
+    Select lig_num as NumeroDeLigne, to_char(eta_heure, 'hh24') || 'h' as heure, count(*) as nb_passager
+    from vik_etape e
+    group by lig_num, to_char(eta_heure, 'hh24')
+    order by count(*) desc
+)
+where rownum <= 10;
+
+
+   /* Version top 10 des heures sur le réseaux*/
+select *
+from (
+    Select to_char(eta_heure, 'hh24') || 'h' as heure, count(*) as nb_passager
+    from vik_etape e
+    group by to_char(eta_heure, 'hh24')
+    order by count(*) desc
+)
+where rownum <= 10;
+
+
+/* Les lignes les plus frequenté */
+    /* Lignes globalement les plus uilisé */
+select lig_num, count(*) as NbVoyageur
+from vik_etape
+group by lig_num
+order by count(*) desc;
+
+    /* Lignes les plus utilisé tel jour */
+select lig_num,  to_char(res_date, 'DD/MM/YYYY') as res_date, count(*) as NbVoyageur
+from vik_etape e
+join vik_reservation r using(cli_num,res_num)
+group by lig_num,  to_char(res_date, 'DD/MM/YYYY')
+order by count(*) desc;
+
+select lig_num,  to_char(res_date, 'DD/MM/YYYY') as res_date, count(*) as NbVoyageur
+from vik_etape e
+join vik_reservation r using(cli_num,res_num)
+where to_char(res_date, 'DD/MM/YYYY') = '10/04/2026'
+group by lig_num,  to_char(res_date, 'DD/MM/YYYY')
+order by count(*) desc;
+
+    /* Lignes les plus utilisé tel jour et tel heure */
+select lig_num, to_char(eta_heure, 'hh:mi') as heure, res_date, count(*) as NbVoyageur
+from vik_etape e
+join vik_reservation r using(cli_num,res_num)
+group by lig_num, to_char(eta_heure, 'hh:mi'), res_date
+order by count(*) desc;
+
+select lig_num, to_char(eta_heure, 'hh:mi') as heure, res_date, count(*) as NbVoyageur
+from vik_etape e
+join vik_reservation r using(cli_num,res_num)
+where to_char(res_date, 'DD/MM/YYYY') = '10/04/2026'
+group by lig_num, to_char(eta_heure, 'hh:mi'), res_date
+order by count(*) desc;
+
+
+select * from vik_client
+order by cli_num;
