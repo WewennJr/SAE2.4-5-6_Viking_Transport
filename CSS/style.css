@@ -365,6 +365,10 @@ footer a:hover {
   align-items: center;
 }
 
+main.main-lignes {
+  max-width: 1400px;
+}
+
 .lignes-sous-titre {
   font-size: 0.95rem;
   color: var(--gris);
