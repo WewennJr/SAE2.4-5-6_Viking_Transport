@@ -93,7 +93,7 @@
         </div>
 
         <div class="footer-colonne footer-logo-col">
-            <h3>Notre équipe</h3>
+            <h3>T.UI.sto</h3>
             <img src="../images/tuisto.png" alt="Logo T.UI.sto">
         </div>
     </div>
