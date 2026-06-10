@@ -317,7 +317,7 @@
     </main>
 
     <?php 
-    include_once("../PHP/nav.php");
+    include_once("../PHP/footer.php");
   ?>
 </body>
 </html>
