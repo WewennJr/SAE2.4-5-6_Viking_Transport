@@ -37,6 +37,8 @@
         <input type="submit" value="Se connecter">
     </form>
 
+    <p>Pas encore de compte ? <a href="inscription.php">Inscrivez-vous</a></p>
+
     <footer>
         <a href="contact.html">Nous contacter</a>
         <div class="credits">Site réalisé par T.UI.sto</div>
