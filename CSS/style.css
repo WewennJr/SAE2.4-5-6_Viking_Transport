@@ -364,11 +364,98 @@ footer a:hover {
   grid-template-columns: 1fr;
   align-items: center;
 }
+
+.lignes-sous-titre {
+  font-size: 0.95rem;
+  color: var(--gris);
+  margin-bottom: 2.5rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.lignes-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.2rem;
+}
+
+.ligne-carte {
+  background-color: #fff;
+  border-radius: 0 6px 6px 0;
+  border-left: 5px solid var(--couleur, var(--rouge));
+  padding: 1.4rem 1.6rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ligne-carte:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.10);
+}
+
+.ligne-numero {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--couleur, var(--rouge));
+  margin-bottom: 0.9rem;
+}
+
+.ligne-trajet {
+  display: flex;
+  flex-direction: column;
+}
+
+.ligne-ville {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--noir);
+  font-family: var(--font-display);
+}
+
+.ligne-ville.depart::before,
+.ligne-ville.arrivee::before {
+  content: '⬤ ';
+  font-size: 0.55rem;
+  color: var(--couleur, var(--rouge));
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.ligne-etapes {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0.6rem;
+  margin: 0.3rem 0;
+  border-left: 2px dashed var(--gris-clair);
+  gap: 0.2rem;
+}
+
+.ligne-etapes span {
+  font-size: 0.82rem;
+  color: var(--gris);
+  padding-left: 0.6rem;
+  position: relative;
+}
+
+.ligne-etapes span::before {
+  content: '·';
+  position: absolute;
+  left: -4px;
+  color: var(--gris-clair);
+}
+
 /* ── Responsive ─────────────────────────────────────────── */
 
 @media (max-width: 900px) {
   main {
     padding: 2rem 5%;
+  }
+
+  .lignes-grille {
+    grid-template-columns: 1fr 1fr;
   }
 
   h1 {
@@ -407,6 +494,10 @@ footer a:hover {
   }
 
   .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .lignes-grille {
     grid-template-columns: 1fr;
   }
 
