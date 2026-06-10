@@ -1,14 +1,4 @@
 <?php
-
-// Si la session n'est pas déjà démarrée, on la démarre (sécurité)
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-
-session_start();
-
-
 $connecte = isset($_SESSION["num_client"]);
 ?>
 <nav>

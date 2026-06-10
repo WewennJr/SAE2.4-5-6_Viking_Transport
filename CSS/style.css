@@ -57,10 +57,14 @@ nav ul {
 
 nav li {
   list-style: none;
+  display: flex;            /* chaque cellule étire son <a> sur toute la hauteur */
 }
 
 nav a {
-  display: block;
+  display: flex;            /* flex au lieu de block : hauteurs identiques */
+  align-items: center;      /* centre verticalement */
+  justify-content: center;  /* centre horizontalement */
+  width: 100%;
   padding: 1rem 0.5rem;
   text-align: center;
   font-family: var(--font-display);
@@ -77,12 +81,39 @@ nav a:hover {
   color: #fff;
 }
 
-nav li#profil a {
+/* ── Cellule profil (utilisateur connecté) ── */
+nav li#profil {
   background-color: var(--rouge);
+  display: flex;            /* aligne le nom et l'icône sur une ligne */
+  align-items: stretch;     /* les deux liens prennent toute la hauteur */
+}
+
+/* Le prénom : occupe l'espace, fond transparent pour laisser voir le rouge du li */
+nav li#profil a.profil-nom {
+  flex: 1;
+  width: auto;              /* annule le width:100% hérité de "nav a" */
+  background: none;
   color: #fff;
   font-weight: 700;
 }
 
+/* Cas "non connecté" : un seul lien "Me connecter" */
+nav li#profil a:only-child {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* L'icône de déconnexion */
+nav li#profil a.btn-deconnexion {
+  flex: 0 0 auto;           /* prend juste sa largeur */
+  width: auto;              /* annule le width:100% hérité de "nav a" */
+  background: none;
+  color: #fff;
+  font-size: 1.4rem;
+  padding: 0 1.2rem;        /* pas de padding vertical : hauteur gérée par le flex parent */
+}
+
+/* Survol : seul le lien survolé devient foncé */
 nav li#profil a:hover {
   background-color: var(--rouge-dark);
 }
@@ -265,6 +296,8 @@ input[type="submit"]:hover {
   margin-bottom: 0.5rem;
 }
 
+
+
 footer {
   width: 100%;
   background-color: var(--noir);
@@ -320,6 +353,7 @@ footer a:hover {
   box-shadow: 0 4px 16px rgba(0,0,0,0.10);
 }
 
+/* Carte accueil */
 #carte-image {
   display: block;
   width: 100%;
@@ -331,6 +365,7 @@ footer a:hover {
   box-shadow: 0 4px 16px rgba(0,0,0,0.10);
 }
 
+/* Carte page recherche */
 #carte-recherche {
   display: block;
   width: 100%;
@@ -342,132 +377,29 @@ footer a:hover {
   box-shadow: 0 4px 16px rgba(0,0,0,0.10);
 }
 
-#redirect {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  padding: 5rem 8%;
-  flex: 1;
-}
 
-#redirect a {
-  display: inline-block;
-  background-color: var(--rouge);
-  color: #fff;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1.1rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+#redirect a{
+  border-radius: 30px;
+  color: #a32a1d;
   text-align: center;
-  padding: 1rem 2.5rem;
-  border-radius: 4px;
-  min-width: 280px;
-  transition: background-color 0.2s, transform 0.1s;
+  padding: 10px;
+  max-width: 50%;
+  max-height: 50%;
+  vertical-align: middle ;
+  text-decoration: underline;
 }
 
-#redirect a:hover {
-  background-color: var(--rouge-dark);
-  transform: translateY(-2px);
-}
-main.main-lignes {
-  max-width: 1400px;
-}
-
-.lignes-sous-titre {
-  font-size: 0.95rem;
-  color: var(--gris);
-  margin-bottom: 2.5rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.lignes-grille {
+#redirect{
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.2rem;
+  grid-template-rows: repeat(2,30%);
+  grid-template-columns: 1fr;
+  align-items: center;
 }
-
-.ligne-carte {
-  background-color: #fff;
-  border-radius: 0 6px 6px 0;
-  border-left: 5px solid var(--couleur, var(--rouge));
-  padding: 1.4rem 1.6rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.ligne-carte:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.10);
-}
-
-.ligne-numero {
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--couleur, var(--rouge));
-  margin-bottom: 0.9rem;
-}
-
-.ligne-trajet {
-  display: flex;
-  flex-direction: column;
-}
-
-.ligne-ville {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--noir);
-  font-family: var(--font-display);
-}
-
-.ligne-ville.depart::before,
-.ligne-ville.arrivee::before {
-  content: '⬤ ';
-  font-size: 0.55rem;
-  color: var(--couleur, var(--rouge));
-  vertical-align: middle;
-  margin-right: 4px;
-}
-
-.ligne-etapes {
-  display: flex;
-  flex-direction: column;
-  padding-left: 0.6rem;
-  margin: 0.3rem 0;
-  border-left: 2px dashed var(--gris-clair);
-  gap: 0.2rem;
-}
-
-.ligne-etapes span {
-  font-size: 0.82rem;
-  color: var(--gris);
-  padding-left: 0.6rem;
-  position: relative;
-}
-
-.ligne-etapes span::before {
-  content: '·';
-  position: absolute;
-  left: -4px;
-  color: var(--gris-clair);
-
-}
-
 /* ── Responsive ─────────────────────────────────────────── */
 
 @media (max-width: 900px) {
   main {
     padding: 2rem 5%;
-  }
-
-  .lignes-grille {
-    grid-template-columns: 1fr 1fr;
   }
 
   h1 {
@@ -506,10 +438,6 @@ main.main-lignes {
   }
 
   .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .lignes-grille {
     grid-template-columns: 1fr;
   }
 
