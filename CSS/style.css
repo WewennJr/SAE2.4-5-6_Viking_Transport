@@ -265,8 +265,6 @@ input[type="submit"]:hover {
   margin-bottom: 0.5rem;
 }
 
-
-
 footer {
   width: 100%;
   background-color: var(--noir);
@@ -322,7 +320,6 @@ footer a:hover {
   box-shadow: 0 4px 16px rgba(0,0,0,0.10);
 }
 
-/* Carte accueil */
 #carte-image {
   display: block;
   width: 100%;
@@ -334,7 +331,6 @@ footer a:hover {
   box-shadow: 0 4px 16px rgba(0,0,0,0.10);
 }
 
-/* Carte page recherche */
 #carte-recherche {
   display: block;
   width: 100%;
@@ -346,24 +342,37 @@ footer a:hover {
   box-shadow: 0 4px 16px rgba(0,0,0,0.10);
 }
 
-
-#redirect a{
-  border-radius: 30px;
-  color: #a32a1d;
-  text-align: center;
-  padding: 10px;
-  max-width: 50%;
-  max-height: 50%;
-  vertical-align: middle ;
-  text-decoration: underline;
-}
-
-#redirect{
-  display: grid;
-  grid-template-rows: repeat(2,30%);
-  grid-template-columns: 1fr;
+#redirect {
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 5rem 8%;
+  flex: 1;
 }
+
+#redirect a {
+  display: inline-block;
+  background-color: var(--rouge);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 1rem 2.5rem;
+  border-radius: 4px;
+  min-width: 280px;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+#redirect a:hover {
+  background-color: var(--rouge-dark);
+  transform: translateY(-2px);
+}
+
 /* ── Responsive ─────────────────────────────────────────── */
 
 @media (max-width: 900px) {
