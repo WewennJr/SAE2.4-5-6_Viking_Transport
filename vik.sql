@@ -18,7 +18,7 @@ DROP TABLE VIK_CLIENT CASCADE CONSTRAINTS;
 DROP TABLE VIK_REDUCTION CASCADE CONSTRAINTS;
 DROP TABLE vik_reservation CASCADE CONSTRAINTS;
 DROP TABLE VIK_ETAPE CASCADE CONSTRAINTS;
---DROP TABLE VIK_NOEUD CASCADE CONSTRAINTS;
+DROP TABLE VIK_NOEUD CASCADE CONSTRAINTS;
 
 CREATE TABLE VIK_DEPARTEMENT
 ( 
@@ -81,8 +81,8 @@ CREATE TABLE VIK_CLIENT
     CLI_PRENOM VARCHAR2(64)  NULL,
     CLI_VILLE VARCHAR2(64)  NULL,
     CLI_TELEPHONE VARCHAR2( 16)  NULL,
-    CLI_COURRIEL VARCHAR2(32)  NULL,
-    CLI_MDP VARCHAR2(32) NULL,
+    CLI_COURRIEL VARCHAR2(32) NOT NULL,
+    CLI_MDP VARCHAR2(32) NOT NULL,
     CLI_NB_POINTS_EC NUMBER(4)  NULL,
     CLI_NB_POINTS_TOT NUMBER(6)  NULL,
     CLI_DATE_CONNEC DATE  NULL,
@@ -265,10 +265,10 @@ insert into vik_client values ( '5'   , '2' , '14' , 'LE BOURGEOIS' , 'Bernard' 
 insert into vik_client values ( '6'   , '2' , '50' , 'SMITH'        , 'Tom'       , 'Cherbourg'  , ''              , 'tom.smith43@free.uk'      , 'Bq5!uN7hY'       , '46'  , '46'    , to_date('15/03/2023','dd/mm/yyyy') );
 insert into vik_client values ( '7'   , '2' , '14' , 'MARIE'        , 'Josiane'   , 'Ifs'        , '0033621112112' , 'j.marie@frie.fr'          , 'pL2$dX8kVm3'     , '25'  , '35'    , to_date('13/01/2023','dd/mm/yyyy') );
 insert into vik_client values ( '8'   , '2' , '14' , 'DURAND'       , 'Paul'      , 'Ifs'        , '0033231202020' , 'paul.durand@wanadoo.fr'   , 'Wr6#tQ1nZ'       , '38'  , '58'    , to_date('28/03/2023','dd/mm/yyyy') );
-insert into vik_client values ( '9'   , '2' , '61' , 'POULEQ'       , 'Patrick'   , 'Flers'      , '0033612202021' , ''                         , 'Hs4@fC9mKp7'     , '106' , '306'   , to_date('16/03/2023','dd/mm/yyyy') );
-insert into vik_client values ( '10'  , '3' , '61' , 'NEIGE'        , 'Blanche'   , 'Flers'      , '0033612202022' , ''                         , 'jN8!vB3xTw'      , '9'   , '3410'  , to_date('10/03/2023','dd/mm/yyyy') );
+insert into vik_client values ( '9'   , '2' , '61' , 'POULEQ'       , 'Patrick'   , 'Flers'      , '0033612202021' , 'patrick.pouleq@mail.fr'                         , 'Hs4@fC9mKp7'     , '106' , '306'   , to_date('16/03/2023','dd/mm/yyyy') );
+insert into vik_client values ( '10'  , '3' , '61' , 'NEIGE'        , 'Blanche'   , 'Flers'      , '0033612202022' , 'blanche.neige@mail.fr'                         , 'jN8!vB3xTw'      , '9'   , '3410'  , to_date('10/03/2023','dd/mm/yyyy') );
 insert into vik_client values ( '11'  , '3' , '61' , 'ESCARRE'      , 'Stéphane'  , 'Flers'      , ''              , 'sescarre@wanadogou.ke'    , 'Yd7$qM5rLn2'     , '95'  , '3795'  , to_date('09/04/2023','dd/mm/yyyy') );
-insert into vik_client values ( '13'  , '1' , '50' , 'SUPORMOI'     , 'Sylvie'    , 'Cherbourg'  , ''              , ''                         , 'cP3#wK6hXz'      , '8'   , '8'     , to_date('14/08/2022','dd/mm/yyyy') );
+insert into vik_client values ( '13'  , '1' , '50' , 'SUPORMOI'     , 'Sylvie'    , 'Cherbourg'  , ''              , 'sylvie.supormoi@mail.fr'                         , 'cP3#wK6hXz'      , '8'   , '8'     , to_date('14/08/2022','dd/mm/yyyy') );
 insert into vik_client values ( '16'  , '2' , '14' , 'LITON'        , 'Samir'     , 'Ifs'        , '0033123888456' , 'samirliton@orage.fr'      , 'Fn9@bV2mQs4'     , '24'  , '44'    , to_date('15/10/2022','dd/mm/yyyy') );
 insert into vik_client values ( '18'  , '2' , '14' , 'DURAND'       , 'Simone'    , 'Ifs'        , '0033729113115' , 'simone.durand@gmal.com'   , 'Rk5!tJ8nWx'      , '65'  , '65'    , to_date('13/02/2023','dd/mm/yyyy') );
 insert into vik_client values ( '20'  , '2' , '14' , 'JORT'         , 'Etama'     , 'Ifs'        , '0033623524456' , 'etamajort@frie.fr'        , 'zG4$pL7vCm9'     , '46'  , '246'   , to_date('11/04/2023','dd/mm/yyyy') );
@@ -279,9 +279,9 @@ insert into vik_client values ( '31'  , '1' , '14' , 'SUPLONG'      , 'Arthur'  
 insert into vik_client values ( '33'  , '2' , '50' , 'TALUT'        , 'Jean'      , 'Cherbourg'  , ''              , '4jeantalut@gmal.com'      , 'Kb7#fX2vNs'      , '81'  , '198'   , to_date('13/04/2023','dd/mm/yyyy') );
 insert into vik_client values ( '35'  , '3' , '50' , 'DEWAERE'      , 'Marlène'   , 'Valognes'   , ''              , 'marlenedewaere@gmal.com'  , 'Pu3@jC8mWq6'     , '95'  , '3505'  , to_date('12/04/2023','dd/mm/yyyy') );
 insert into vik_client values ( '38'  , '5' , '50' , 'RIVES'        , 'Chiquita'  , 'Taillepied' , '0033688241309' , 'ChiquitaRives@gmal.com'   , 'Gn5!tK1xRz'      , '0'   , '58000' , to_date('15/10/2022','dd/mm/yyyy') );
-insert into vik_client values ( '40'  , '1' , '61' , 'POIGNON'      , 'Vincent'   , 'Flers'      , ''              , ''                         , 'Ej9$bL6hVm'      , '0'   , '0'     , to_date('01/05/2022','dd/mm/yyyy') );
-insert into vik_client values ( '41'  , '1' , '61' , 'DE THUNE'     , 'Aplu'      , 'Alençon'    , ''              , ''                         , 'Sq4#nW7kTp2'     , '0'   , '0'     , to_date('01/04/2022','dd/mm/yyyy') );
-insert into vik_client values ( '42'  , '1' , '14' , 'CANTE'        , 'Hermine'   , 'Caen'       , ''              , ''                         , 'Hf8@vM3rXj'      , '0'   , '0'     , to_date('01/09/2022','dd/mm/yyyy') );
+insert into vik_client values ( '40'  , '1' , '61' , 'POIGNON'      , 'Vincent'   , 'Flers'      , ''              , 'vincent.poignon@mail.fr'                         , 'Ej9$bL6hVm'      , '0'   , '0'     , to_date('01/05/2022','dd/mm/yyyy') );
+insert into vik_client values ( '41'  , '1' , '61' , 'DE THUNE'     , 'Aplu'      , 'Alençon'    , ''              , 'aplu.dethune@mail.fr'                         , 'Sq4#nW7kTp2'     , '0'   , '0'     , to_date('01/04/2022','dd/mm/yyyy') );
+insert into vik_client values ( '42'  , '1' , '14' , 'CANTE'        , 'Hermine'   , 'Caen'       , ''              , 'hermine.cante@mail.fr'                         , 'Hf8@vM3rXj'      , '0'   , '0'     , to_date('01/09/2022','dd/mm/yyyy') );
 insert into vik_client values ( '101' , '1' , '14' , 'DUPONT'       , 'Luc'       , 'Caen'       , '0600000001'    , 'luc.dupont@mail.fr'       , 'Aw2!dQ9nZs5'     , '5'   , '120'   , to_date('10/03/2026','dd/mm/yyyy') );
 insert into vik_client values ( '102' , '2' , '76' , 'LEMAIRE'      , 'Sophie'    , 'Rouen'      , '0600000002'    , 'sophie.lemaire@mail.fr'   , 'Yx7$pK4mBr'      , '10'  , '210'   , to_date('12/03/2026','dd/mm/yyyy') );
 insert into vik_client values ( '103' , '1' , '14' , 'CARON'        , 'Paul'      , 'Lisieux'    , '0600000003'    , 'paul.caron@mail.fr'       , 'Nc3#hV8xWq1'     , '0'   , '15'    , to_date('08/03/2026','dd/mm/yyyy') );
@@ -613,3 +613,6 @@ update vik_noeud set lig_num= trim(lig_num);
 
 
 select * from vik_client;
+
+select * from vik_type_client;
+
