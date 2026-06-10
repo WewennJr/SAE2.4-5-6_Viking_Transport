@@ -21,8 +21,7 @@
     $nb_points_ec = 0;
     $nb_points_tot = 0;
     $date_connec = date("Y-m-d H:i:s");
-
-    
+    $grade = "client";
 
     if ($erreur) {
         // Sauvegarde des données (sauf mdp) pour reremplir automatiquement en cas d'erreur
@@ -38,10 +37,12 @@
     // Vérification des doublons
     $sql = "SELECT count(cli_courriel) AS nb FROM vik_client WHERE cli_courriel = '$courriel'";
     $tab = LireDonneesPDO3($conn,$sql,$table);
-    if ($tab[0]['nb'] > 0) {
-        $_SESSION['erreur'] = "Un compte existe déjà avec ce courriel.";
-        header("Location: inscription.php");
-        exit();
+    if (isset($tab[0]['NB'])) {
+        if ($tab[0]['NB'] > 0) {
+            $_SESSION['erreur'] = "Un compte existe déjà avec ce courriel.";
+            header("Location: inscription.php");
+            exit();
+        }
     }
 
     // Vérification de la correspondance des mots de passe
@@ -52,11 +53,11 @@
     }
 
     // Hash mdp
-    $mdp = password_hash($mdp, PASSWORD_DEFAULT);
+    $mdp = password_hash($mdp, PASSWORD_BCRYPT);
 
     // Si aucune erreur, insertion du nouvel utilisateur
-    $sql = "INSERT INTO vik_client (cli_dep, cli_nom, cli_prenom, cli_ville, cli_tel, cli_courriel, cli_mdp, cli_nb_points_ec, cli_nb_points_tot, cli_date_connec) 
-            VALUES ('$dep', '$nom', '$prenom', '$ville', '$tel', '$courriel', '$mdp', $nb_points_ec, $nb_points_tot, TO_DATE('$date_connec', 'YYYY-MM-DD HH24:MI:SS'))";
+    $sql = "INSERT INTO vik_client (cli_num, typ_num, dep_num, cli_nom, cli_prenom, cli_ville, cli_telephone, cli_courriel, cli_mdp, cli_nb_points_ec, cli_nb_points_tot, cli_date_connec, cli_grade) 
+            VALUES (cli_num_seq.nextval, '$type_num', '$dep', '$nom', '$prenom', '$ville', '$tel', '$courriel', '$mdp', $nb_points_ec, $nb_points_tot, TO_DATE('$date_connec', 'YYYY-MM-DD HH24:MI:SS'), '$grade')";
     $res = majDonneesPDO($conn,$sql);
     if ($res) {
         unset($_SESSION['form_data']);
