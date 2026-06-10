@@ -30,7 +30,7 @@ if ($conn) {
             $_SESSION["flash"] = "Connexion réussie ! Bienvenue " . $client["CLI_PRENOM"];
             $conn = null;
 
-            header("Location: ../index.php");   // succès → page d'arrivée
+            header("Location: ../PHP/formulaire_connexion.php");   // succès → page d'arrivée
 
         } else {
             $_SESSION["erreur"] = "Courriel ou mot de passe incorrect.";
@@ -44,6 +44,6 @@ if ($conn) {
 }
 
 // En cas d'échec : on renvoie vers le formulaire
-header("Location: formulaire_connexion.php");
+header("Location: ../PHP/index.php");
 exit;
 ?>
