@@ -1,4 +1,3 @@
-
 <?php
 	// E.Porcq : Saison 5 , Épisode 3 
 	// préparation SAE 2.456 : paramètres de connexion à un SGBD Oracle ou MySQL
