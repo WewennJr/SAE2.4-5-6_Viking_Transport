@@ -23,6 +23,7 @@ $ville    = $client['CLI_VILLE'];
 $tel      = $client['CLI_TELEPHONE'];
 $dep      = $client['DEP_NUM'];
 $points   = $client['CLI_NB_POINTS_TOT'];
+$grade    = $client['CLI_GRADE'];   // pour tester si l'utilisateur est admin
 
 // --- Réservations du client ---
 $stmtResa = $conn->prepare("
@@ -53,6 +54,10 @@ $conn = null;
     <div class="compte-entete">
         <h1>Mon espace client</h1>
         <p class="sous-titre">Bonjour <?= htmlspecialchars($prenom) ?>, ravis de vous revoir</p>
+
+        <?php if ($grade === 'administrateur') { ?>
+            <a href="admin.php" class="lien-admin">⚙ Accéder au tableau de bord admin</a>
+        <?php } ?>
     </div>
 
     <div class="compte-grille">
