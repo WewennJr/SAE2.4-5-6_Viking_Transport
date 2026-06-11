@@ -102,15 +102,20 @@ $stat_resa_villes = null;
 $stat_v1 = isset($_GET['v1']) ? trim($_GET['v1']) : '';
 $stat_v2 = isset($_GET['v2']) ? trim($_GET['v2']) : '';
 if ($stat_v1 !== '' && $stat_v2 !== '') {
-    $sql_sv = "SELECT COUNT(*) AS NB FROM VIK_ETAPE e
-        JOIN VIK_COMMUNE c_dep ON c_dep.COM_CODE_INSEE = e.COM_CODE_INSEE_DEPART
-        JOIN VIK_COMMUNE c_arr ON c_arr.COM_CODE_INSEE = e.COM_CODE_INSEE_ARRIVEE
-        WHERE c_dep.COM_NOM = ? AND c_arr.COM_NOM = ?";
+    $sql_sv = "SELECT COUNT(*) AS NB
+        FROM VIK_ETAPE e
+        JOIN VIK_COMMUNE c_dep
+            ON c_dep.COM_CODE_INSEE = e.COM_CODE_INSEE_DEPART
+        JOIN VIK_COMMUNE c_arr
+            ON c_arr.COM_CODE_INSEE = e.COM_CODE_INSEE_ARRIVEE
+        WHERE c_dep.COM_NOM = ?
+        AND c_arr.COM_NOM = ?";
+
     $cur_sv = preparerRequetePDO($conn, $sql_sv);
-    $res_sv = LireDonneesPDOPreparee($cur_sv, $t_sv);
-    // on passe les paramètres via execute direct
     $cur_sv->execute([$stat_v1, $stat_v2]);
+
     $r = $cur_sv->fetch(PDO::FETCH_ASSOC);
+
     $stat_resa_villes = $r ? (int)$r['NB'] : 0;
 }
 
@@ -118,8 +123,10 @@ if ($stat_v1 !== '' && $stat_v2 !== '') {
 $stat_lignes_ville = null;
 $stat_lv = isset($_GET['lv']) ? trim($_GET['lv']) : '';
 if ($stat_lv !== '') {
-    $sql_slv = "SELECT COUNT(DISTINCT TRIM(n.LIG_NUM)) AS NB FROM VIK_NOEUD n
-        JOIN VIK_COMMUNE c ON c.COM_CODE_INSEE = n.COM_CODE_INSEE_ARRET
+    $sql_slv = "SELECT COUNT(DISTINCT n.LIG_NUM) AS NB
+        FROM VIK_NOEUD n
+        JOIN VIK_COMMUNE c
+            ON c.COM_CODE_INSEE = n.COM_CODE_INSEE_ARRET
         WHERE c.COM_NOM = ?";
     $cur_slv = preparerRequetePDO($conn, $sql_slv);
     $cur_slv->execute([$stat_lv]);
@@ -131,13 +138,23 @@ if ($stat_lv !== '') {
 $stat_dep_arr = null;
 $stat_dav = isset($_GET['dav']) ? trim($_GET['dav']) : '';
 if ($stat_dav !== '') {
-    $sql_sdav = "SELECT c.COM_NOM AS VILLE,
-        COUNT(DISTINCT CASE WHEN e.COM_CODE_INSEE_DEPART  = c.COM_CODE_INSEE THEN e.CLI_NUM END) AS NB_DEPARTS,
-        COUNT(DISTINCT CASE WHEN e.COM_CODE_INSEE_ARRIVEE = c.COM_CODE_INSEE THEN e.CLI_NUM END) AS NB_ARRIVEES
-        FROM VIK_ETAPE e
-        JOIN VIK_COMMUNE c ON c.COM_CODE_INSEE = e.COM_CODE_INSEE_DEPART OR c.COM_CODE_INSEE = e.COM_CODE_INSEE_ARRIVEE
-        WHERE c.COM_NOM = ?
-        GROUP BY c.COM_NOM";
+    $sql_sdav = "SELECT
+            COUNT(DISTINCT CASE
+                WHEN e.COM_CODE_INSEE_DEPART = c.COM_CODE_INSEE
+                THEN e.CLI_NUM
+            END) AS NB_DEPARTS,
+
+            COUNT(DISTINCT CASE
+                WHEN e.COM_CODE_INSEE_ARRIVEE = c.COM_CODE_INSEE
+                THEN e.CLI_NUM
+            END) AS NB_ARRIVEES
+
+        FROM VIK_COMMUNE c
+        LEFT JOIN VIK_ETAPE e
+            ON e.COM_CODE_INSEE_DEPART = c.COM_CODE_INSEE
+            OR e.COM_CODE_INSEE_ARRIVEE = c.COM_CODE_INSEE
+
+        WHERE c.COM_NOM = ?";
     $cur_sdav = preparerRequetePDO($conn, $sql_sdav);
     $cur_sdav->execute([$stat_dav]);
     $stat_dep_arr = $cur_sdav->fetch(PDO::FETCH_ASSOC);
@@ -439,6 +456,36 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
             .ligne-infos-form { grid-template-columns: 1fr; }
             .edit-grid { grid-template-columns: 1fr; }
             .edit-full { grid-column: span 1; }
+        }
+
+        #btnTop {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+
+            width: 50px;
+            height: 50px;
+
+            border: none;
+            border-radius: 50%;
+
+            background: var(--rouge);
+            color: white;
+
+            font-size: 1.4rem;
+            font-weight: bold;
+
+            cursor: pointer;
+
+            display: none;
+
+            z-index: 1000;
+
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        #btnTop:hover {
+            background: var(--rouge-dark);
         }
     </style>
 </head>
@@ -799,6 +846,8 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
     </div>
 </div>
 
+<button id="btnTop" onclick="retourHaut()">↑</button>
+
 <?php include_once "footer.php"; ?>
 
 <script>
@@ -883,6 +932,23 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
     function toggleLigne(lnum) {
         document.getElementById('body-'    + lnum).classList.toggle('open');
         document.getElementById('chevron-' + lnum).classList.toggle('open');
+    }
+
+    const btnTop = document.getElementById('btnTop');
+
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 400) {
+            btnTop.style.display = 'block';
+        } else {
+            btnTop.style.display = 'none';
+        }
+    });
+
+    function retourHaut() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     }
 </script>
 </body>
