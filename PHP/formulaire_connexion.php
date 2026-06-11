@@ -39,6 +39,8 @@
 			<button type="submit">Se connecter</button>
 		</form>
 
+		<a class="link-rouge">Mot de passe oublié ?</a>
+
 		<p>Pas encore de compte ? <a class="link-rouge" href="../PHP/formulaire_inscription.php">Inscrivez-vous</a></p>
 	</main>
 	<?php
