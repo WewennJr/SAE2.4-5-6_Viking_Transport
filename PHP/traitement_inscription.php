@@ -59,6 +59,14 @@
         exit();
     }
 
+    // Vérification de l'acceptation des conditions générales
+    if (empty($_POST["accept_conditions"])) {
+        $_SESSION['erreur'] = "Vous devez accepter les conditions générales.";
+        $_SESSION['form_data'] = $_POST;
+        header("Location: formulaire_inscription.php");
+        exit();
+    }
+
     // Hash mdp
     $mdp = password_hash($mdp, PASSWORD_BCRYPT);
 

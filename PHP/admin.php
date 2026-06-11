@@ -29,12 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $mail   = trim($_POST['cli_courriel']);
     $points = (int)trim($_POST['cli_nb_points_ec']);
     $grade  = trim($_POST['cli_grade']);
-    // Sécurité : seuls ces grades sont autorisés
     $grades_ok = ['client', 'administrateur'];
     if (!in_array($grade, $grades_ok)) $grade = 'client';
     $sql_u = "UPDATE vik_client SET cli_prenom = ?, cli_nom = ?, cli_courriel = ?, cli_nb_points_ec = ?, cli_grade = ? WHERE cli_num = ?";
     $cur   = preparerRequetePDO($conn, $sql_u);
     majDonneesPrepareesTabPDO($cur, [$prenom, $nom, $mail, $points, $grade, $id]);
+    $conn->exec("COMMIT");
     $msg_modif = "client_$id";
 }
 
@@ -47,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $sql_ul = "UPDATE vik_ligne SET com_code_insee_debu = ?, com_code_insee_term = ? WHERE lig_num = ?";
     $cur    = preparerRequetePDO($conn, $sql_ul);
     majDonneesPrepareesTabPDO($cur, [$insee_deb, $insee_term, $lig]);
+    $conn->exec("COMMIT");
     $msg_ligne = $lig;
 }
 
@@ -63,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                WHERE lig_num = ? AND cli_num = ? AND res_num = ?";
     $cur = preparerRequetePDO($conn, $sql_ue);
     majDonneesPrepareesTabPDO($cur, [$heure, $dist, $lig, $cli, $res]);
+    $conn->exec("COMMIT");
 }
 
 // ── Stats générales ───────────────────────────────────────────────────────────
@@ -78,9 +80,9 @@ $sql_heures = "SELECT * FROM (
 $heures_pop = LireDonneesPDO3($conn, $sql_heures, $t);
 
 $sql_lignes_heures = "SELECT * FROM (
-        SELECT lig_num AS LIGNE, to_char(eta_heure, 'HH24') || 'h' AS HEURE, count(*) AS NB
-        FROM vik_etape GROUP BY lig_num, to_char(eta_heure, 'HH24') ORDER BY count(*) DESC
-    ) WHERE rownum <= 10";
+    SELECT lig_num AS LIGNE, to_char(eta_heure, 'HH24') || 'h' AS HEURE, count(*) AS NB
+    FROM vik_etape GROUP BY lig_num, to_char(eta_heure, 'HH24') ORDER BY count(*) DESC
+) WHERE rownum <= 10";
 $lignes_heures = LireDonneesPDO3($conn, $sql_lignes_heures, $t);
 
 $sql_clients_top = "SELECT * FROM (
@@ -95,7 +97,7 @@ $sql_mois = "SELECT to_char(res_date, 'MM/YYYY') AS MOIS, count(*) AS NB
     ORDER BY to_char(res_date, 'MM/YYYY') ASC";
 $resas_mois = LireDonneesPDO3($conn, $sql_mois, $t);
 
-// ── Stats interactives : listes de villes disponibles ────────────────────────
+// ── Stats interactives ────────────────────────────────────────────────────────
 $sql_villes = "SELECT DISTINCT com_nom FROM vik_commune ORDER BY com_nom ASC";
 $villes_list = LireDonneesPDO3($conn, $sql_villes, $t);
 
@@ -104,62 +106,56 @@ $stat_resa_villes = null;
 $stat_v1 = isset($_GET['v1']) ? trim($_GET['v1']) : '';
 $stat_v2 = isset($_GET['v2']) ? trim($_GET['v2']) : '';
 if ($stat_v1 !== '' && $stat_v2 !== '') {
-    $sql_sv = "SELECT COUNT(*) AS NB
+    $sql_sv = "SELECT r.res_num, r.res_date, r.res_prix_tot,
+        c_cli.cli_prenom || ' ' || c_cli.cli_nom AS CLIENT
         FROM VIK_ETAPE e
-        JOIN VIK_COMMUNE c_dep
-            ON c_dep.COM_CODE_INSEE = e.COM_CODE_INSEE_DEPART
-        JOIN VIK_COMMUNE c_arr
-            ON c_arr.COM_CODE_INSEE = e.COM_CODE_INSEE_ARRIVEE
+        JOIN VIK_COMMUNE c_dep ON c_dep.COM_CODE_INSEE = e.COM_CODE_INSEE_DEPART
+        JOIN VIK_COMMUNE c_arr ON c_arr.COM_CODE_INSEE = e.COM_CODE_INSEE_ARRIVEE
+        JOIN VIK_RESERVATION r ON r.cli_num = e.cli_num AND r.res_num = e.res_num
+        JOIN VIK_CLIENT c_cli ON c_cli.cli_num = r.cli_num
         WHERE c_dep.COM_NOM = ?
-        AND c_arr.COM_NOM = ?";
-
+        AND c_arr.COM_NOM = ?
+        ORDER BY r.res_date DESC";
     $cur_sv = preparerRequetePDO($conn, $sql_sv);
     $cur_sv->execute([$stat_v1, $stat_v2]);
-
-    $r = $cur_sv->fetch(PDO::FETCH_ASSOC);
-
-    $stat_resa_villes = $r ? (int)$r['NB'] : 0;
+    $stat_resa_villes = $cur_sv->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // Stat 2 : lignes passant par une ville
 $stat_lignes_ville = null;
 $stat_lv = isset($_GET['lv']) ? trim($_GET['lv']) : '';
 if ($stat_lv !== '') {
-    $sql_slv = "SELECT COUNT(DISTINCT n.LIG_NUM) AS NB
+    $sql_slv = "SELECT DISTINCT n.LIG_NUM,
+        cd.com_nom AS NOM_DEBU, ct.com_nom AS NOM_TERM
         FROM VIK_NOEUD n
-        JOIN VIK_COMMUNE c
-            ON c.COM_CODE_INSEE = n.COM_CODE_INSEE_ARRET
-        WHERE c.COM_NOM = ?";
+        JOIN VIK_COMMUNE c ON c.COM_CODE_INSEE = n.COM_CODE_INSEE_ARRET
+        JOIN VIK_LIGNE l ON l.lig_num = n.lig_num
+        JOIN VIK_COMMUNE cd ON cd.com_code_insee = l.com_code_insee_debu
+        JOIN VIK_COMMUNE ct ON ct.com_code_insee = l.com_code_insee_term
+        WHERE c.COM_NOM = ?
+        ORDER BY n.LIG_NUM";
     $cur_slv = preparerRequetePDO($conn, $sql_slv);
     $cur_slv->execute([$stat_lv]);
-    $r = $cur_slv->fetch(PDO::FETCH_ASSOC);
-    $stat_lignes_ville = $r ? (int)$r['NB'] : 0;
+    $stat_lignes_ville = $cur_slv->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // Stat 3 : départs / arrivées dans une ville
 $stat_dep_arr = null;
 $stat_dav = isset($_GET['dav']) ? trim($_GET['dav']) : '';
 if ($stat_dav !== '') {
-    $sql_sdav = "SELECT
-            COUNT(DISTINCT CASE
-                WHEN e.COM_CODE_INSEE_DEPART = c.COM_CODE_INSEE
-                THEN e.CLI_NUM
-            END) AS NB_DEPARTS,
-
-            COUNT(DISTINCT CASE
-                WHEN e.COM_CODE_INSEE_ARRIVEE = c.COM_CODE_INSEE
-                THEN e.CLI_NUM
-            END) AS NB_ARRIVEES
-
+    $sql_sdav = "SELECT e.cli_num, r.res_date, r.res_prix_tot,
+        c_cli.cli_prenom || ' ' || c_cli.cli_nom AS CLIENT,
+        CASE WHEN e.COM_CODE_INSEE_DEPART = c.COM_CODE_INSEE THEN 'Départ' ELSE 'Arrivée' END AS SENS
         FROM VIK_COMMUNE c
-        LEFT JOIN VIK_ETAPE e
-            ON e.COM_CODE_INSEE_DEPART = c.COM_CODE_INSEE
+        JOIN VIK_ETAPE e ON e.COM_CODE_INSEE_DEPART = c.COM_CODE_INSEE
             OR e.COM_CODE_INSEE_ARRIVEE = c.COM_CODE_INSEE
-
-        WHERE c.COM_NOM = ?";
+        JOIN VIK_RESERVATION r ON r.cli_num = e.cli_num AND r.res_num = e.res_num
+        JOIN VIK_CLIENT c_cli ON c_cli.cli_num = r.cli_num
+        WHERE c.COM_NOM = ?
+        ORDER BY r.res_date DESC";
     $cur_sdav = preparerRequetePDO($conn, $sql_sdav);
     $cur_sdav->execute([$stat_dav]);
-    $stat_dep_arr = $cur_sdav->fetch(PDO::FETCH_ASSOC);
+    $stat_dep_arr = $cur_sdav->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // ── Clients inactifs ──────────────────────────────────────────────────────────
@@ -169,7 +165,7 @@ $sql_inactifs = "SELECT cli_num, cli_prenom, cli_nom, cli_date_connec,
     ORDER BY cli_date_connec ASC";
 $inactifs = LireDonneesPDO3($conn, $sql_inactifs, $t);
 
-// ── Liste clients (avec grade pour l'édition) ─────────────────────────────────
+// ── Liste clients ─────────────────────────────────────────────────────────────
 $sql_clients = "SELECT cli_num, cli_prenom, cli_nom, cli_courriel, cli_nb_points_ec, cli_grade
     FROM vik_client
     WHERE cli_grade != 'administrateur' AND cli_num != 0 AND cli_num != 1
@@ -235,139 +231,54 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
     <link rel="stylesheet" href="../CSS/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
-        /* ── Navigation rapide – même style que .btn du site ── */
-        .admin-nav {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.6rem;
-            margin-bottom: 2rem;
-        }
-        .admin-nav .btn {
-            font-size: 0.88rem;
-            padding: 0.6rem 1.2rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            cursor: pointer;
-            border: none;
-        }
-
-        /* ── Layout ── */
+        .admin-nav { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 2rem; }
+        .admin-nav .btn { font-size: 0.88rem; padding: 0.6rem 1.2rem; display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; border: none; }
         .admin-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
         .admin-col { min-width: 0; }
         @media (max-width: 1100px) { .admin-layout { grid-template-columns: 1fr; } }
 
-        /* ── Stat cards ── */
-        .stat-card {
-            background: #fff;
-            border-left: 4px solid var(--rouge);
-            border-radius: 0 6px 6px 0;
-            padding: 1.5rem 2rem;
-            margin-bottom: 1.75rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-        .stat-card h3 {
-            font-family: var(--font-display);
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--noir);
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--gris-clair);
-        }
+        .stat-card { background: #fff; border-left: 4px solid var(--rouge); border-radius: 0 6px 6px 0; padding: 1.5rem 2rem; margin-bottom: 1.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat-card h3 { font-family: var(--font-display); font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--noir); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--gris-clair); }
         .stat-card canvas { max-height: 220px; max-width: 100%; }
 
-        /* ── Stats interactives ── */
-        .stat-interactive {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.6rem;
-            align-items: flex-end;
-            margin-bottom: 1rem;
-        }
+        .stat-interactive { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end; margin-bottom: 1rem; }
         .stat-interactive .si-group { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; min-width: 140px; }
         .stat-interactive label { font-family: var(--font-display); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--gris); }
-        .stat-interactive select {
-            padding: 0.5rem 0.7rem;
-            border: 2px solid var(--gris-clair);
-            border-radius: 4px;
-            font-size: 0.9rem;
-            color: var(--noir);
-            background: #fff;
-            transition: border-color 0.2s;
-        }
+        .stat-interactive select { padding: 0.5rem 0.7rem; border: 2px solid var(--gris-clair); border-radius: 4px; font-size: 0.9rem; color: var(--noir); background: #fff; transition: border-color 0.2s; }
         .stat-interactive select:focus { outline: none; border-color: var(--rouge); }
         .stat-interactive .btn { font-size: 0.85rem; padding: 0.5rem 1rem; border: none; cursor: pointer; align-self: flex-end; }
-        .stat-result {
-            font-family: var(--font-display);
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--rouge);
-            text-align: center;
-            padding: 0.5rem 0;
-        }
+        .stat-result { font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--rouge); text-align: center; padding: 0.5rem 0; }
         .stat-result-label { font-size: 0.82rem; color: var(--gris); text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
         .stat-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem; }
         .stat-result-box { background: var(--gris-clair); border-radius: 4px; padding: 0.75rem; text-align: center; }
         .stat-result-box .val { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; color: var(--rouge); }
         .stat-result-box .lbl { font-size: 0.78rem; color: var(--gris); text-transform: uppercase; letter-spacing: 0.04em; }
 
-        /* ── Tables ── */
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         thead tr { background-color: var(--noir); color: var(--blanc); font-family: var(--font-display); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em; }
         thead th { padding: 0.6rem 0.8rem; text-align: left; }
         tbody tr:nth-child(even) { background-color: var(--gris-clair); }
         tbody td { padding: 0.5rem 0.8rem; color: var(--gris); }
 
-        /* ── Barre de recherche clients ── */
         .clients-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
         .clients-header h2 { margin-bottom: 0; }
-        .search-clients {
-            flex: 1;
-            min-width: 180px;
-            padding: 0.5rem 0.9rem;
-            border: 2px solid var(--gris-clair);
-            border-radius: 4px;
-            font-size: 0.9rem;
-            color: var(--noir);
-            font-family: var(--font-body);
-            transition: border-color 0.2s;
-        }
+        .search-clients { flex: 1; min-width: 180px; padding: 0.5rem 0.9rem; border: 2px solid var(--gris-clair); border-radius: 4px; font-size: 0.9rem; color: var(--noir); transition: border-color 0.2s; }
         .search-clients:focus { outline: none; border-color: var(--rouge); }
         .client-card.hidden { display: none; }
+        .client-extra { display: none; }
 
-        /* ── Client cards ── */
-        .client-card {
-            background: #fff;
-            border-left: 4px solid var(--rouge);
-            border-radius: 0 6px 6px 0;
-            padding: 1rem 1.25rem;
-            margin-bottom: 0.75rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
+        .client-card { background: #fff; border-left: 4px solid var(--rouge); border-radius: 0 6px 6px 0; padding: 1rem 1.25rem; margin-bottom: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .client-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
         .client-info { flex: 1; min-width: 0; }
         .client-nom { font-family: var(--font-display); font-weight: 600; font-size: 1rem; color: var(--noir); text-transform: uppercase; }
         .client-details { font-size: 0.85rem; color: var(--gris); margin-top: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .client-actions { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }
 
-        .btn-ic {
-            background: none;
-            border: 2px solid var(--gris-clair);
-            border-radius: 4px;
-            width: 34px; height: 34px;
-            cursor: pointer;
-            font-size: 1rem;
-            color: var(--gris);
-            transition: border-color 0.2s, color 0.2s, background-color 0.2s;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .btn-ic.btn-toggle:hover      { border-color: var(--rouge); color: var(--rouge); }
-        .btn-ic.btn-edit:hover        { border-color: #2980b9; color: #2980b9; }
-        .btn-ic.btn-suppr:hover       { background-color: var(--rouge); border-color: var(--rouge); color: #fff; }
+        .btn-ic { background: none; border: 2px solid var(--gris-clair); border-radius: 4px; width: 34px; height: 34px; cursor: pointer; font-size: 1rem; color: var(--gris); transition: border-color 0.2s, color 0.2s, background-color 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-ic.btn-toggle:hover { border-color: var(--rouge); color: var(--rouge); }
+        .btn-ic.btn-edit:hover   { border-color: #2980b9; color: #2980b9; }
+        .btn-ic.btn-suppr:hover  { background-color: var(--rouge); border-color: var(--rouge); color: #fff; }
 
-        /* ── Réservations panel ── */
         .resas-panel { display: none; margin-top: 1rem; border-top: 1px solid var(--gris-clair); padding-top: 0.75rem; }
         .resas-panel.open { display: block; }
         .resa-ligne { display: grid; grid-template-columns: auto 1fr auto auto; gap: 0.5rem 1rem; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--gris-clair); font-size: 0.88rem; }
@@ -378,39 +289,20 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
         .resa-prix   { font-family: var(--font-display); font-weight: 600; color: var(--noir); white-space: nowrap; }
         .no-resa     { font-size: 0.88rem; color: var(--gris); font-style: italic; }
 
-        /* ── Panel édition client ── */
         .edit-client-panel { display: none; margin-top: 1rem; border-top: 2px solid #2980b9; padding-top: 0.9rem; }
         .edit-client-panel.open { display: block; }
         .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 1rem; }
         .edit-full { grid-column: span 2; }
-        .edit-client-panel label {
-            font-family: var(--font-display); font-size: 0.78rem; text-transform: uppercase;
-            letter-spacing: 0.04em; color: var(--gris); display: block; margin-bottom: 0.25rem;
-        }
-        .edit-client-panel input,
-        .edit-client-panel select {
-            width: 100%; padding: 0.45rem 0.7rem; border: 2px solid var(--gris-clair);
-            border-radius: 4px; font-size: 0.9rem; color: var(--noir); transition: border-color 0.2s;
-            background: #fff;
-        }
-        .edit-client-panel input:focus,
-        .edit-client-panel select:focus { outline: none; border-color: #2980b9; }
+        .edit-client-panel label { font-family: var(--font-display); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--gris); display: block; margin-bottom: 0.25rem; }
+        .edit-client-panel input, .edit-client-panel select { width: 100%; padding: 0.45rem 0.7rem; border: 2px solid var(--gris-clair); border-radius: 4px; font-size: 0.9rem; color: var(--noir); transition: border-color 0.2s; background: #fff; }
+        .edit-client-panel input:focus, .edit-client-panel select:focus { outline: none; border-color: #2980b9; }
         .edit-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem; }
-        .btn-save-client {
-            background-color: #2980b9; border: 2px solid #2980b9; border-radius: 4px;
-            padding: 0.45rem 1rem; font-family: var(--font-display); font-weight: 600;
-            font-size: 0.85rem; text-transform: uppercase; cursor: pointer; color: #fff; transition: background-color 0.2s;
-        }
+        .btn-save-client { background-color: #2980b9; border: 2px solid #2980b9; border-radius: 4px; padding: 0.45rem 1rem; font-family: var(--font-display); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; color: #fff; transition: background-color 0.2s; }
         .btn-save-client:hover { background-color: #1f6390; border-color: #1f6390; }
-        .btn-cancel-edit {
-            background: none; border: 2px solid var(--gris-clair); border-radius: 4px;
-            padding: 0.45rem 1rem; font-family: var(--font-display); font-weight: 600;
-            font-size: 0.85rem; text-transform: uppercase; cursor: pointer; color: var(--gris); transition: border-color 0.2s;
-        }
+        .btn-cancel-edit { background: none; border: 2px solid var(--gris-clair); border-radius: 4px; padding: 0.45rem 1rem; font-family: var(--font-display); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; color: var(--gris); transition: border-color 0.2s; }
         .btn-cancel-edit:hover { border-color: var(--gris); }
         .edit-success { font-size: 0.82rem; color: #27ae60; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.04em; margin-right: auto; align-self: center; }
 
-        /* ── Modal suppression ── */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 500; align-items: center; justify-content: center; }
         .modal-overlay.open { display: flex; }
         .modal-box { background: #fff; border-top: 4px solid var(--rouge); border-radius: 0 0 6px 6px; padding: 2rem 2.5rem; max-width: 420px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
@@ -422,12 +314,10 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
         .btn-confirmer { background-color: var(--rouge); border: 2px solid var(--rouge); border-radius: 4px; padding: 0.6rem 1.2rem; font-family: var(--font-display); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; color: #fff; text-decoration: none; transition: background-color 0.2s; }
         .btn-confirmer:hover { background-color: var(--rouge-dark); border-color: var(--rouge-dark); }
 
-        /* ── Inactifs ── */
         .inactifs-wrap { margin-top: 2rem; }
         .btn-goto { background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--rouge); padding: 0; line-height: 1; }
         .btn-goto:hover { opacity: 0.7; }
 
-        /* ── Section lignes & horaires ── */
         .lignes-horaires-wrap { margin-top: 2rem; }
         .ligne-edit-card { background: #fff; border-left: 4px solid var(--noir); border-radius: 0 6px 6px 0; padding: 1rem 1.25rem; margin-bottom: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .ligne-edit-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; cursor: pointer; user-select: none; }
@@ -454,40 +344,13 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
         .btn-save-ligne { background-color: var(--rouge); border: 2px solid var(--rouge); border-radius: 4px; padding: 0.5rem 1.1rem; font-family: var(--font-display); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; color: #fff; white-space: nowrap; transition: background-color 0.2s; align-self: end; }
         .btn-save-ligne:hover { background-color: var(--rouge-dark); border-color: var(--rouge-dark); }
 
+        #back-to-top { position: fixed; bottom: 2rem; right: 2rem; width: 2.8rem; height: 2.8rem; background-color: var(--rouge); color: #fff; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); opacity: 0; pointer-events: none; transition: background-color 0.2s, transform 0.2s, opacity 0.3s; z-index: 500; }
+        #back-to-top:hover { background-color: var(--rouge-dark); transform: translateY(-3px); }
+
         @media (max-width: 700px) {
             .ligne-infos-form { grid-template-columns: 1fr; }
             .edit-grid { grid-template-columns: 1fr; }
             .edit-full { grid-column: span 1; }
-        }
-
-        #btnTop {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-
-            width: 50px;
-            height: 50px;
-
-            border: none;
-            border-radius: 50%;
-
-            background: var(--rouge);
-            color: white;
-
-            font-size: 1.4rem;
-            font-weight: bold;
-
-            cursor: pointer;
-
-            display: none;
-
-            z-index: 1000;
-
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-        }
-
-        #btnTop:hover {
-            background: var(--rouge-dark);
         }
     </style>
 </head>
@@ -496,7 +359,6 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
 <main>
     <h1>Tableau de bord admin</h1>
 
-    <!-- ── Navigation rapide ── -->
     <div class="admin-nav">
         <button class="btn" onclick="scrollSec('section-stats')">Statistiques</button>
         <button class="btn" onclick="scrollSec('section-stats-interactives')">Stats avancées</button>
@@ -507,9 +369,8 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
 
     <div class="admin-layout">
 
-        <!-- ── Colonne gauche : graphiques ── -->
-        <div class="admin-col admin-col-stats" id="section-stats">
-
+        <!-- Colonne gauche : graphiques -->
+        <div class="admin-col" id="section-stats">
             <div class="stat-card">
                 <h3>Lignes les plus fréquentées</h3>
                 <canvas id="chartLignes"></canvas>
@@ -530,28 +391,22 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
                 <h3>Réservations par mois</h3>
                 <canvas id="chartMois"></canvas>
             </div>
-
         </div>
 
-        <!-- ── Colonne droite : clients ── -->
-        <div class="admin-col admin-col-clients" id="section-clients">
-
+        <!-- Colonne droite : clients -->
+        <div class="admin-col" id="section-clients">
             <div class="clients-header">
                 <h2>Clients (<?php echo count($clients); ?>)</h2>
-                <input
-                    type="search"
-                    class="search-clients"
-                    id="searchClients"
-                    placeholder="Rechercher un client…"
-                    oninput="filtrerClients(this.value)"
-                >
+                <input type="search" class="search-clients" id="searchClients"
+                       placeholder="Rechercher un client…" oninput="filtrerClients(this.value)">
             </div>
 
-            <?php foreach ($clients as $client) {
+            <?php foreach ($clients as $i => $client) {
                 $cnum = $client['CLI_NUM'];
                 $grade_client = $client['CLI_GRADE'] ?? 'client';
+                $extra = $i >= 10 ? 'client-extra' : '';
             ?>
-            <div class="client-card" id="client-<?php echo $cnum; ?>"
+            <div class="client-card <?php echo $extra; ?>" id="client-<?php echo $cnum; ?>"
                  data-search="<?php echo strtolower(htmlspecialchars($client['CLI_PRENOM'] . ' ' . $client['CLI_NOM'] . ' ' . $client['CLI_COURRIEL'])); ?>">
                 <div class="client-header">
                     <div class="client-info">
@@ -563,13 +418,12 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
                         </div>
                     </div>
                     <div class="client-actions">
-                        <button class="btn-ic btn-toggle" onclick="toggleResas(<?php echo $cnum; ?>)"      title="Voir les réservations">▼</button>
-                        <button class="btn-ic btn-edit"   onclick="toggleEditClient(<?php echo $cnum; ?>)" title="Modifier le client">✏️</button>
+                        <button class="btn-ic btn-toggle" onclick="toggleResas(<?php echo $cnum; ?>)" title="Voir les réservations">▼</button>
+                        <button class="btn-ic btn-edit"   onclick="toggleEditClient(<?php echo $cnum; ?>)" title="Modifier">✏️</button>
                         <button class="btn-ic btn-suppr"  onclick="demanderSuppr(<?php echo $cnum; ?>, '<?php echo addslashes($client['CLI_PRENOM'] . ' ' . $client['CLI_NOM']); ?>')" title="Supprimer">🗑</button>
                     </div>
                 </div>
 
-                <!-- Panel réservations -->
                 <div class="resas-panel" id="resas-<?php echo $cnum; ?>">
                     <?php if (empty($reservations[$cnum])) { ?>
                         <p class="no-resa">Aucune réservation.</p>
@@ -583,7 +437,6 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
                     <?php } } ?>
                 </div>
 
-                <!-- Panel modification client -->
                 <div class="edit-client-panel <?php echo ($msg_modif === "client_$cnum") ? 'open' : ''; ?>" id="edit-client-<?php echo $cnum; ?>">
                     <form method="post" action="#">
                         <input type="hidden" name="action"  value="modif_client">
@@ -622,14 +475,19 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
                         </div>
                     </form>
                 </div>
-
             </div>
+            <?php } ?>
+
+            <?php if (count($clients) > 10) { ?>
+            <button class="btn" id="btn-voir-plus" onclick="voirPlusClients()" style="width:100%;margin-top:0.5rem">
+                Voir plus (<?php echo count($clients) - 10; ?> clients restants)
+            </button>
             <?php } ?>
         </div>
 
     </div>
 
-    <!-- ── Stats avancées (pleine largeur) ── -->
+    <!-- Stats avancées pleine largeur -->
     <div id="section-stats-interactives" style="margin-top:2rem;">
 
         <div class="stat-card">
@@ -656,15 +514,29 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
                             } ?>
                         </select>
                     </div>
-                    <!-- Conserver les autres GET pour ne pas les écraser -->
                     <?php if ($stat_lv !== '')  echo "<input type='hidden' name='lv'  value='" . htmlspecialchars($stat_lv)  . "'>"; ?>
                     <?php if ($stat_dav !== '') echo "<input type='hidden' name='dav' value='" . htmlspecialchars($stat_dav) . "'>"; ?>
                     <button type="submit" class="btn">Calculer</button>
                 </div>
             </form>
             <?php if ($stat_resa_villes !== null) { ?>
-                <div class="stat-result"><?php echo $stat_resa_villes; ?></div>
+                <div class="stat-result"><?php echo count($stat_resa_villes); ?></div>
                 <div class="stat-result-label">réservation(s) de <?php echo htmlspecialchars($stat_v1); ?> vers <?php echo htmlspecialchars($stat_v2); ?></div>
+                <?php if (count($stat_resa_villes) > 0) { ?>
+                <table style="margin-top:1rem">
+                    <thead><tr><th>#</th><th>Client</th><th>Date</th><th>Prix</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($stat_resa_villes as $r) { ?>
+                        <tr>
+                            <td>#<?php echo $r['RES_NUM']; ?></td>
+                            <td><?php echo htmlspecialchars($r['CLIENT']); ?></td>
+                            <td><?php echo $r['RES_DATE']; ?></td>
+                            <td><?php echo $r['RES_PRIX_TOT']; ?> €</td>
+                        </tr>
+                    <?php } ?>
+                    </tbody>
+                </table>
+                <?php } ?>
             <?php } ?>
         </div>
 
@@ -689,8 +561,22 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
                 </div>
             </form>
             <?php if ($stat_lignes_ville !== null) { ?>
-                <div class="stat-result"><?php echo $stat_lignes_ville; ?></div>
+                <div class="stat-result"><?php echo count($stat_lignes_ville); ?></div>
                 <div class="stat-result-label">ligne(s) passant par <?php echo htmlspecialchars($stat_lv); ?></div>
+                <?php if (count($stat_lignes_ville) > 0) { ?>
+                <table style="margin-top:1rem">
+                    <thead><tr><th>Ligne</th><th>Départ</th><th>Terminus</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($stat_lignes_ville as $r) { ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($r['LIG_NUM']); ?></td>
+                            <td><?php echo htmlspecialchars($r['NOM_DEBU']); ?></td>
+                            <td><?php echo htmlspecialchars($r['NOM_TERM']); ?></td>
+                        </tr>
+                    <?php } ?>
+                    </tbody>
+                </table>
+                <?php } ?>
             <?php } ?>
         </div>
 
@@ -714,17 +600,29 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
                     <button type="submit" class="btn">Calculer</button>
                 </div>
             </form>
-            <?php if ($stat_dep_arr !== null && $stat_dep_arr !== false) { ?>
+            <?php if ($stat_dep_arr !== null) {
+                $nb_dep = count(array_filter($stat_dep_arr, function($r) { return $r['SENS'] === 'Départ'; }));
+                $nb_arr = count(array_filter($stat_dep_arr, function($r) { return $r['SENS'] === 'Arrivée'; }));
+            ?>
                 <div class="stat-result-grid">
-                    <div class="stat-result-box">
-                        <div class="val"><?php echo (int)$stat_dep_arr['NB_DEPARTS']; ?></div>
-                        <div class="lbl">voyageur(s) au départ</div>
-                    </div>
-                    <div class="stat-result-box">
-                        <div class="val"><?php echo (int)$stat_dep_arr['NB_ARRIVEES']; ?></div>
-                        <div class="lbl">voyageur(s) à l'arrivée</div>
-                    </div>
+                    <div class="stat-result-box"><div class="val"><?php echo $nb_dep; ?></div><div class="lbl">voyageur(s) au départ</div></div>
+                    <div class="stat-result-box"><div class="val"><?php echo $nb_arr; ?></div><div class="lbl">voyageur(s) à l'arrivée</div></div>
                 </div>
+                <?php if (count($stat_dep_arr) > 0) { ?>
+                <table style="margin-top:1rem">
+                    <thead><tr><th>Client</th><th>Sens</th><th>Date</th><th>Prix</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($stat_dep_arr as $r) { ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($r['CLIENT']); ?></td>
+                            <td><?php echo $r['SENS']; ?></td>
+                            <td><?php echo $r['RES_DATE']; ?></td>
+                            <td><?php echo $r['RES_PRIX_TOT']; ?> €</td>
+                        </tr>
+                    <?php } ?>
+                    </tbody>
+                </table>
+                <?php } ?>
                 <div class="stat-result-label" style="margin-top:0.5rem">pour la ville de <?php echo htmlspecialchars($stat_dav); ?></div>
             <?php } else if ($stat_dav !== '') { ?>
                 <p class="no-resa" style="margin-top:0.5rem">Aucune donnée pour cette ville.</p>
@@ -733,7 +631,7 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
 
     </div>
 
-    <!-- ── Clients inactifs ── -->
+    <!-- Clients inactifs -->
     <div class="inactifs-wrap" id="section-inactifs">
         <div class="stat-card">
             <h3>Clients inactifs (<?php echo count($inactifs); ?>)</h3>
@@ -762,11 +660,10 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
         </div>
     </div>
 
-    <!-- ── Lignes & Horaires ── -->
+    <!-- Lignes & Horaires -->
     <div class="lignes-horaires-wrap" id="section-lignes">
         <div class="stat-card">
             <h3>Lignes &amp; Horaires (<?php echo count($all_lignes); ?> lignes)</h3>
-
             <?php foreach ($all_lignes as $lig) {
                 $lnum   = trim($lig['LIG_NUM']);
                 $etapes = $etapes_par_ligne[$lnum] ?? [];
@@ -798,7 +695,7 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
                                 <input type="text" name="com_code_insee_term" value="<?php echo htmlspecialchars($lig['COM_CODE_INSEE_TERM']); ?>" maxlength="10" required>
                             </div>
                             <div>
-                                <button type="submit" class="btn-save-ligne"><?php echo $isOpen ? '✔ Sauvegardé' : 'Enregistrer'; ?></button>
+                                <button type="submit" class="btn-save-ligne">Enregistrer</button>
                             </div>
                         </div>
                     </form>
@@ -810,20 +707,22 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
                         <table class="etapes-table">
                             <thead><tr><th>Départ</th><th>Arrivée</th><th>Heure</th><th>Distance (km)</th><th></th></tr></thead>
                             <tbody>
-                            <?php foreach ($etapes as $etape) { ?>
+                            <?php foreach ($etapes as $etape) {
+                                $form_id = 'form-etape-' . $etape['CLI_NUM'] . '-' . $etape['RES_NUM'];
+                            ?>
                                 <tr>
-                                    <form method="post" action="#ligne-<?php echo htmlspecialchars($lnum); ?>">
-                                        <input type="hidden" name="action"  value="modif_etape">
-                                        <input type="hidden" name="lig_num" value="<?php echo htmlspecialchars($lnum); ?>">
-                                        <input type="hidden" name="cli_num" value="<?php echo $etape['CLI_NUM']; ?>">
-                                        <input type="hidden" name="res_num" value="<?php echo $etape['RES_NUM']; ?>">
-                                        <td><?php echo htmlspecialchars($etape['NOM_DEPART']); ?></td>
-                                        <td><?php echo htmlspecialchars($etape['NOM_ARRIVEE']); ?></td>
-                                        <td><input type="time"   name="eta_heure"    value="<?php echo htmlspecialchars($etape['ETA_HEURE_HM']); ?>"></td>
-                                        <td><input type="number" name="eta_distance" value="<?php echo str_replace(',', '.', $etape['ETA_DISTANCE']); ?>" step="0.1" min="0"></td>
-                                        <td><button type="submit" class="btn-save-etape" title="Enregistrer">✔</button></td>
-                                    </form>
+                                    <td><?php echo htmlspecialchars($etape['NOM_DEPART']); ?></td>
+                                    <td><?php echo htmlspecialchars($etape['NOM_ARRIVEE']); ?></td>
+                                    <td><input form="<?php echo $form_id; ?>" type="time"   name="eta_heure"    value="<?php echo htmlspecialchars($etape['ETA_HEURE_HM']); ?>"></td>
+                                    <td><input form="<?php echo $form_id; ?>" type="number" name="eta_distance" value="<?php echo str_replace(',', '.', $etape['ETA_DISTANCE']); ?>" step="0.1" min="0"></td>
+                                    <td><button form="<?php echo $form_id; ?>" type="submit" class="btn-save-etape" title="Enregistrer">✔</button></td>
                                 </tr>
+                                <form id="<?php echo $form_id; ?>" method="post" action="#ligne-<?php echo htmlspecialchars($lnum); ?>">
+                                    <input type="hidden" name="action"  value="modif_etape">
+                                    <input type="hidden" name="lig_num" value="<?php echo htmlspecialchars($lnum); ?>">
+                                    <input type="hidden" name="cli_num" value="<?php echo $etape['CLI_NUM']; ?>">
+                                    <input type="hidden" name="res_num" value="<?php echo $etape['RES_NUM']; ?>">
+                                </form>
                             <?php } ?>
                             </tbody>
                         </table>
@@ -836,7 +735,6 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
 
 </main>
 
-<!-- Modal suppression -->
 <div class="modal-overlay" id="modal">
     <div class="modal-box">
         <h3>Confirmer la suppression</h3>
@@ -848,7 +746,11 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
     </div>
 </div>
 
-<button id="btnTop" onclick="retourHaut()">↑</button>
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Retour en haut">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <polyline points="18 15 12 9 6 15"/>
+    </svg>
+</button>
 
 <?php include_once "footer.php"; ?>
 
@@ -883,7 +785,6 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
         options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: gris } }, x: { ticks: { color: gris } } } }
     });
 
-    /* ── Navigation rapide ── */
     function scrollSec(id) {
         const el = document.getElementById(id);
         if (!el) return;
@@ -892,66 +793,68 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
         window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
     }
 
-    /* ── Recherche clients ── */
     function filtrerClients(val) {
         const q = val.toLowerCase().trim();
+        const btn = document.getElementById('btn-voir-plus');
         document.querySelectorAll('.client-card').forEach(card => {
             const search = card.dataset.search || '';
-            card.classList.toggle('hidden', q !== '' && !search.includes(q));
+            if (q !== '' && search.includes(q)) {
+                card.classList.remove('hidden');
+                card.classList.remove('client-extra');
+            } else if (q !== '' && !search.includes(q)) {
+                card.classList.add('hidden');
+                card.classList.remove('client-extra');
+            } else {
+                card.classList.remove('hidden');
+            }
         });
+        if (btn) btn.style.display = q !== '' ? 'none' : '';
     }
 
-    /* ── Réservations ── */
+    function voirPlusClients() {
+        document.querySelectorAll('.client-extra').forEach(c => c.classList.remove('client-extra'));
+        const btn = document.getElementById('btn-voir-plus');
+        if (btn) btn.style.display = 'none';
+    }
+
     function toggleResas(num) {
         document.getElementById('resas-' + num).classList.toggle('open');
     }
 
-    /* ── Édition client ── */
     function toggleEditClient(num) {
         document.getElementById('edit-client-' + num).classList.toggle('open');
     }
 
-    /* ── Suppression ── */
     function demanderSuppr(num, nom) {
         document.getElementById('modal-texte').innerText = 'Voulez-vous vraiment supprimer le compte de ' + nom + ' ? Cette action est irréversible.';
         document.getElementById('modal-lien').href = 'supprimer_client.php?id=' + num;
         document.getElementById('modal').classList.add('open');
     }
+
     function fermerModal() {
         document.getElementById('modal').classList.remove('open');
     }
 
-    /* ── Scroll vers client depuis inactifs ── */
     function scrollToClient(num) {
         const el = document.getElementById('client-' + num);
         if (!el) return;
+        el.classList.remove('client-extra');
+        el.classList.remove('hidden');
         const nav = document.querySelector('nav');
         const offset = (nav ? nav.offsetHeight : 0) + 16;
         window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
     }
 
-    /* ── Accordéon lignes ── */
     function toggleLigne(lnum) {
         document.getElementById('body-'    + lnum).classList.toggle('open');
         document.getElementById('chevron-' + lnum).classList.toggle('open');
     }
 
-    const btnTop = document.getElementById('btnTop');
-
+    const btn = document.getElementById('back-to-top');
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 400) {
-            btnTop.style.display = 'block';
-        } else {
-            btnTop.style.display = 'none';
-        }
+        btn.style.opacity = window.scrollY > 300 ? '1' : '0';
+        btn.style.pointerEvents = window.scrollY > 300 ? 'auto' : 'none';
     });
-
-    function retourHaut() {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    }
 </script>
 </body>
 </html>
