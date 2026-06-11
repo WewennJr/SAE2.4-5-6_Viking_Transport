@@ -10,7 +10,7 @@ $connecte = isset($_SESSION["num_client"]);
 
         <li>
 
-            <a href="../PHP/index.php"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport"></a>
+            <a href="../PHP/index.php"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport" title="Accueil"></a>
 
         </li>
 
@@ -51,7 +51,7 @@ $connecte = isset($_SESSION["num_client"]);
 
             <li id="profil">
 
-                <a href="../PHP/compte.php" class="profil-nom">Bonjour <?= htmlspecialchars($_SESSION["prenom"]) ?></a>
+                <a href="../PHP/compte.php" class="profil-nom" title="Mon espace">Bonjour <?= htmlspecialchars($_SESSION["prenom"]) ?></a>
 
                 <a href="../PHP/deconnexion.php" class="btn-deconnexion" title="Se déconnecter" aria-label="Se déconnecter">⏻</a>
 
