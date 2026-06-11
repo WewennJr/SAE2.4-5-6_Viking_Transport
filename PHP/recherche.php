@@ -5,14 +5,18 @@ include_once "param_connexion_etu.php";
 
 $conn = OuvrirConnexionPDO($dbOracle, $db_usernameOracle, $db_passwordOracle);
 
-$sql_communes = "SELECT COM_NOM FROM VIK_COMMUNE ORDER BY COM_NOM ASC";
 $liste_communes = [];
+$erreur_connexion = "";
 if ($conn) {
+    $sql_communes = "SELECT COM_NOM FROM VIK_COMMUNE ORDER BY COM_NOM ASC";
     $liste_communes = LireDonneesPDO3($conn, $sql_communes, $t_communes);
+} else {
+    $erreur_connexion = "Impossible de se connecter à la base de données Oracle.";
 }
 
 $trajets = [];
 $recherche_faite = false;
+$erreur_requete = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['rechercher'])) {
     $com_depart = $_POST['COM_DEPART'];
@@ -20,20 +24,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['rechercher'])) {
     $date_voyage = $_POST['DATE_VOYAGE'];
     $recherche_faite = true;
 
-    $sql_recherche = "SELECT n1.LIG_NUM 
-                      FROM VIK_NOEUD n1
-                      JOIN VIK_NOEUD n2 ON n1.LIG_NUM = n2.LIG_NUM
-                      JOIN VIK_COMMUNE c1 ON n1.COM_CODE_INSEE = c1.COM_CODE_INSEE
-                      JOIN VIK_COMMUNE c2 ON n2.COM_CODE_INSEE = c2.COM_CODE_INSEE
-                      WHERE UPPER(c1.COM_NOM) = UPPER(:dep) 
-                      AND UPPER(c2.COM_NOM) = UPPER(:arr)";
-    
-    $stmt = $conn->prepare($sql_recherche);
-    $stmt->execute([
-        ':dep' => $com_depart,
-        ':arr' => $com_arrivee
-    ]);
-    $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if ($conn) {
+        $sql_recherche = "SELECT n1.LIG_NUM 
+                          FROM VIK_NOEUD n1
+                          JOIN VIK_NOEUD n2 ON n1.LIG_NUM = n2.LIG_NUM
+                          JOIN VIK_COMMUNE c1 ON n1.COM_CODE_INSEE = c1.COM_CODE_INSEE
+                          JOIN VIK_COMMUNE c2 ON n2.COM_CODE_INSEE = c2.COM_CODE_INSEE
+                          WHERE UPPER(c1.COM_NOM) = UPPER(:dep) 
+                          AND UPPER(c2.COM_NOM) = UPPER(:arr)";
+        
+        $stmt = $conn->prepare($sql_recherche);
+        if ($stmt) {
+            $stmt->execute([
+                ':dep' => $com_depart,
+                ':arr' => $com_arrivee
+            ]);
+            $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            $erreur_requete = "Erreur lors de la préparation de la recherche.";
+        }
+    }
 }
 ?>
 <!doctype html>
@@ -49,6 +59,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['rechercher'])) {
     <main>
         <h1>Recherche de voyage</h1>
         
+        <?php if (!empty($erreur_connexion)) { ?>
+            <p style="color: red; font-weight: bold;"><?php echo htmlspecialchars($erreur_connexion); ?></p>
+        <?php } ?>
+
+        <?php if (!empty($erreur_requete)) { ?>
+            <p style="color: red; font-weight: bold;"><?php echo htmlspecialchars($erreur_requete); ?></p>
+        <?php } ?>
+
         <form action="recherche.php" method="post">
             <label for="COM_DEPART">Ville de départ :</label>
             <select id="COM_DEPART" name="COM_DEPART" required>
