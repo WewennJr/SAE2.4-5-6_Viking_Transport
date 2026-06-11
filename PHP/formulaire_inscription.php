@@ -111,7 +111,7 @@ if (isset($_SESSION['form_data'])) {
                 </button>
             </form>
 
-            <p>Déjà un compte ? <a href="../PHP/formulaire_connexion.php">Connectez-vous</a></p>
+            <p>Déjà un compte ? <a class="link-rouge" href="../PHP/formulaire_connexion.php">Connectez-vous</a></p>
         </article>
     </main>
     <?php

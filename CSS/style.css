@@ -490,6 +490,18 @@ footer a:hover {
   color: var(--rouge);
 }
 
+.link-rouge {
+  color: var(--rouge);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s, text-decoration 0.2s;
+}
+
+.link-rouge:hover {
+  color: var(--rouge-dark);
+  text-decoration: underline;
+}
+
 /* ── Images ─────────────────────────────────────────────── */
 
 #logo {

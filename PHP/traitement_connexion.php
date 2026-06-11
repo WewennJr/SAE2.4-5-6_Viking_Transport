@@ -31,6 +31,7 @@ if ($conn) {
             $conn = null;
 
             header("Location: ../PHP/espace_client.php");   // succès → page d'arrivée
+            exit();
 
         } else {
             $_SESSION["erreur"] = "Courriel ou mot de passe incorrect.";
