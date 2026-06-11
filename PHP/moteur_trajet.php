@@ -1,13 +1,9 @@
 <?php
 // ════════════════════════════════════════════════════════════
 // moteur_trajet.php
-// Fonctions de recherche de trajet (graphe + Dijkstra)
+// Fonctions de recherche de trajet (graphe + Dijkstra et K-Trajets)
 // ════════════════════════════════════════════════════════════
 
-// Construit le graphe du réseau à partir de VIK_NOEUD.
-// On garde les sens réels, ET on ajoute le sens inverse UNIQUEMENT
-// quand il n'existe pas déjà (pour que les communes terminus puissent
-// servir de départ, sans dupliquer les liaisons déjà bidirectionnelles).
 function chargerGraphe($conn)
 {
     $sql = "SELECT LIG_NUM, COM_CODE_INSEE_ARRET, COM_CODE_INSEE_SUIVANT,
@@ -16,7 +12,6 @@ function chargerGraphe($conn)
     $stmt = $conn->query($sql);
     $noeuds = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Durée minimale par liaison (depart -> vers) sur une ligne donnée
     $minDuree = [];
     foreach ($noeuds as $n) {
         $depart = trim($n['COM_CODE_INSEE_ARRET']);
@@ -34,13 +29,11 @@ function chargerGraphe($conn)
         }
     }
 
-    // 1) On note quelles liaisons (depart->vers) existent réellement
     $liaisonsReelles = [];
     foreach ($minDuree as $c) {
         $liaisonsReelles[$c['depart'] . '>' . $c['vers']] = true;
     }
 
-    // 2) Construction du graphe : sens réels d'abord
     $graphe = [];
     foreach ($minDuree as $c) {
         $graphe[$c['depart']][] = [
@@ -51,15 +44,12 @@ function chargerGraphe($conn)
         ];
     }
 
-    // 3) Sens inverse SEULEMENT si la liaison inverse n'existe pas déjà
-    //    (évite de dupliquer les lignes déjà bidirectionnelles type 5A/5B,
-    //     mais donne une sortie aux communes terminus comme Bréval)
     foreach ($minDuree as $c) {
         $cleInverse = $c['vers'] . '>' . $c['depart'];
         if (!isset($liaisonsReelles[$cleInverse])) {
             $graphe[$c['vers']][] = [
                 'vers'     => $c['depart'],
-                'ligne'    => $c['ligne'],   // on réutilise la même ligne (sens retour implicite)
+                'ligne'    => $c['ligne'],
                 'duree'    => $c['duree'],
                 'distance' => $c['distance'],
             ];
@@ -69,15 +59,11 @@ function chargerGraphe($conn)
     return $graphe;
 }
 
-// Dijkstra : trajet optimal entre deux communes selon un critère.
-// $critere = 'duree' (le plus rapide) ou 'distance' (le plus court)
 function trouverTrajet($graphe, $depart, $arrivee, $critere = 'duree')
 {
     if (!isset($graphe[$depart])) return null;
 
-    // Le poids d'une arête dépend du critère choisi
-    // (on minimise la durée OU la distance cumulée)
-    $cout    = [$depart => 0];   // coût cumulé minimal selon le critère
+    $cout    = [$depart => 0];
     $parents = [];
     $visites = [];
     $aTraiter = [$depart => 0];
@@ -95,7 +81,6 @@ function trouverTrajet($graphe, $depart, $arrivee, $critere = 'duree')
 
         foreach ($graphe[$commune] as $conn) {
             $voisine = $conn['vers'];
-            // Poids de l'arête selon le critère
             $poids = ($critere === 'distance') ? $conn['distance'] : $conn['duree'];
             $nouveauCout = $coutActuel + $poids;
 
@@ -109,7 +94,6 @@ function trouverTrajet($graphe, $depart, $arrivee, $critere = 'duree')
 
     if (!isset($cout[$arrivee])) return null;
 
-    // Reconstruction
     $chemin = [];
     $courant = $arrivee;
     while (isset($parents[$courant])) {
@@ -119,8 +103,6 @@ function trouverTrajet($graphe, $depart, $arrivee, $critere = 'duree')
     }
     $chemin = array_reverse($chemin);
 
-    // On calcule TOUJOURS la durée et la distance totales du chemin trouvé
-    // (peu importe le critère, pour pouvoir afficher les deux infos)
     $dureeTot = 0;
     $distTot = 0;
     foreach ($chemin as $e) {
@@ -174,5 +156,88 @@ function distanceTotale($chemin)
 function calculerPoints($distance)
 {
     return max(1, (int)floor($distance / 10));
+}
+
+function trouverKTrajets($graphe, $depart, $arrivee, $critere = 'duree', $k_max = 5) {
+    if (!isset($graphe[$depart])) return [];
+
+    $aTraiter = [[
+        'cout'    => 0,
+        'noeud'   => $depart,
+        'chemin'  => [],
+        'visites' => [$depart => true]
+    ]];
+
+    $cheminsTrouves = [];
+    $compteNoeuds = [];
+
+    while (!empty($aTraiter)) {
+        $minIndex = 0;
+        $minCout = $aTraiter[0]['cout'];
+        foreach ($aTraiter as $i => $item) {
+            if ($item['cout'] < $minCout) {
+                $minCout = $item['cout'];
+                $minIndex = $i;
+            }
+        }
+        $courant = $aTraiter[$minIndex];
+        unset($aTraiter[$minIndex]);
+        $aTraiter = array_values($aTraiter);
+
+        $noeudCourant = $courant['noeud'];
+
+        if (!isset($compteNoeuds[$noeudCourant])) $compteNoeuds[$noeudCourant] = 0;
+        $compteNoeuds[$noeudCourant]++;
+        if ($compteNoeuds[$noeudCourant] > 80) continue;
+
+        if ($noeudCourant === $arrivee) {
+            $dureeTot = 0;
+            $distTot = 0;
+            foreach ($courant['chemin'] as $e) {
+                $dureeTot += $e['duree'];
+                $distTot += $e['distance'];
+            }
+
+            $cheminsTrouves[] = [
+                'chemin'         => $courant['chemin'],
+                'dureeTotale'    => $dureeTot,
+                'distanceTotale' => $distTot,
+                'critere'        => $critere,
+            ];
+
+            if (count($cheminsTrouves) >= $k_max) break;
+            continue;
+        }
+
+        if (!isset($graphe[$noeudCourant])) continue;
+
+        foreach ($graphe[$noeudCourant] as $conn) {
+            $voisine = $conn['vers'];
+
+            if (isset($courant['visites'][$voisine])) continue;
+
+            $poids = ($critere === 'distance') ? $conn['distance'] : $conn['duree'];
+
+            $nouveauChemin = $courant['chemin'];
+            $nouveauChemin[] = [
+                'de'       => $noeudCourant,
+                'vers'     => $voisine,
+                'ligne'    => $conn['ligne'],
+                'duree'    => $conn['duree'],
+                'distance' => $conn['distance']
+            ];
+
+            $nouvellesVisites = $courant['visites'];
+            $nouvellesVisites[$voisine] = true;
+
+            $aTraiter[] = [
+                'cout'    => $courant['cout'] + $poids,
+                'noeud'   => $voisine,
+                'chemin'  => $nouveauChemin,
+                'visites' => $nouvellesVisites
+            ];
+        }
+    }
+    return $cheminsTrouves;
 }
 ?>
