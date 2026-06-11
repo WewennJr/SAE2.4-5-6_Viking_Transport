@@ -24,6 +24,7 @@
     $grade = "client";
 
     if ($erreur) {
+        $conn=null;
         // Sauvegarde des données (sauf mdp) pour reremplir automatiquement en cas d'erreur
         $form = $_POST;
         unset($form['CLI_MDP'], $form['CLI_MDP_CONF']);
@@ -40,6 +41,7 @@
     if (isset($tab[0]['NB'])) {
         if ($tab[0]['NB'] > 0) {
             $_SESSION['erreur'] = "Un compte existe déjà avec ce courriel.";
+            $conn=null;
             header("Location: formulaire_inscription.php");
             exit();
         }
@@ -48,6 +50,7 @@
     // Vérification du format du courriel
     if (!ctype_digit($tel)) {
         $_SESSION['erreur'] = "Le numéro de téléphone doit être composé de chiffres.";
+        $conn=null;
         header("Location: formulaire_inscription.php");
         exit();
     }
@@ -55,6 +58,7 @@
     // Vérification de la correspondance des mots de passe
     if ($mdp !== $confirm_mdp) {
         $_SESSION['erreur'] = "Les mots de passe ne correspondent pas.";
+        $conn=null;
         header("Location: formulaire_inscription.php");
         exit();
     }
@@ -63,6 +67,7 @@
     if (empty($_POST["accept_conditions"])) {
         $_SESSION['erreur'] = "Vous devez accepter les conditions générales.";
         $_SESSION['form_data'] = $_POST;
+        $conn=null;
         header("Location: formulaire_inscription.php");
         exit();
     }
@@ -74,6 +79,7 @@
     $sql = "INSERT INTO vik_client (cli_num, typ_num, dep_num, cli_nom, cli_prenom, cli_ville, cli_telephone, cli_courriel, cli_mdp, cli_nb_points_ec, cli_nb_points_tot, cli_date_connec, cli_grade) 
             VALUES (cli_num_seq.nextval, '$type_num', '$dep', '$nom', '$prenom', '$ville', '$tel', '$courriel', '$mdp', $nb_points_ec, $nb_points_tot, TO_DATE('$date_connec', 'YYYY-MM-DD HH24:MI:SS'), '$grade')";
     $res = majDonneesPDO($conn,$sql);
+    $conn=null;
     if ($res) {
         unset($_SESSION['form_data']);
 
@@ -85,4 +91,5 @@
         header("Location: formulaire_inscription.php");
         exit();
     }
+    
 ?>

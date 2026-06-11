@@ -318,6 +318,7 @@ if ($ligNum === null) {
         echo "</tbody></table></div>";
     }
 }
+$conn=null;
 ?>
 
     <a href="lignes.php" class="retour-lien">Retour aux lignes</a>

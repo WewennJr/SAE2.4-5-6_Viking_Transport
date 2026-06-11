@@ -221,6 +221,7 @@ $top_labels = []; $top_data = [];
 foreach ($top_clients as $row) { $top_labels[] = $row['CLIENT']; $top_data[] = (int)$row['NB']; }
 $mois_labels = []; $mois_data = [];
 foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (int)$row['NB']; }
+$conn=null;
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -352,7 +353,6 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
             .edit-grid { grid-template-columns: 1fr; }
             .edit-full { grid-column: span 1; }
         }
-<<<<<<< HEAD
 
         #btnTop {
             position: fixed;
@@ -383,8 +383,7 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
         #btnTop:hover {
             background: var(--rouge-dark);
         }
-=======
->>>>>>> 767faefc89ee4cfba0e1f162a474df550b330ce7
+
     </style>
 </head>
 <body>

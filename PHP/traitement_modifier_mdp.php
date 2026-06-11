@@ -13,6 +13,7 @@ $conn = OuvrirConnexionPDO($dbOracle, $db_usernameOracle, $db_passwordOracle);
 // Vérification des champs
 if (empty($_POST["CLI_MDP_NOUVEAU"]) || empty($_POST["CLI_MDP_CONF"])) {
     $_SESSION['erreur'] = "Tous les champs sont obligatoires.";
+    $conn=null;
     header("Location: modifier_profil.php");
     exit();
 }
@@ -23,6 +24,7 @@ $confirm_mdp  = $_POST["CLI_MDP_CONF"];
 // Vérification correspondance
 if ($nouveau_mdp !== $confirm_mdp) {
     $_SESSION['erreur'] = "Les mots de passe ne correspondent pas.";
+    $conn=null;
     header("Location: modifier_profil.php");
     exit();
 }
@@ -33,6 +35,8 @@ $num = $_SESSION['num_client'];
 
 $sql = "UPDATE vik_client SET cli_mdp = '$mdp_hash' WHERE cli_num = $num";
 $res = majDonneesPDO($conn, $sql);
+
+$conn=null;
 
 if ($res !== false) {
     $_SESSION['success'] = "Mot de passe modifié avec succès.";

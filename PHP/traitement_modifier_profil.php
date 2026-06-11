@@ -22,6 +22,7 @@ if (!empty($_POST["CLI_COURRIEL"]))  { $courriel = $_POST["CLI_COURRIEL"]; }  el
 if ($erreur) {
     $_SESSION['form_data'] = $_POST;
     $_SESSION['erreur'] = "Tous les champs sont obligatoires.";
+    $conn=null;
     header("Location: modifier_profil.php");
     exit();
 }
@@ -33,6 +34,7 @@ $tab = LireDonneesPDO3($conn, $sql, $table);
 if (isset($tab[0]['NB']) && $tab[0]['NB'] > 0) {
     $_SESSION['form_data'] = $_POST;
     $_SESSION['erreur'] = "Un compte existe déjà avec ce courriel.";
+    $conn=null;
     header("Location: modifier_profil.php");
     exit();
 }
@@ -55,6 +57,8 @@ if ($res !== false) {
 } else {
     $_SESSION['erreur'] = "Erreur lors de la mise à jour. Veuillez réessayer.";
 }
+
+$conn=null;
 
 header("Location: modifier_profil.php");
 exit();

@@ -46,6 +46,7 @@ if (isset($_SESSION['form_data'])) {
     $dep      = $_SESSION['form_data']['DEP_NUM'];
     unset($_SESSION['form_data']);
 }
+$conn=null;
 ?>
 <!doctype html>
 <html lang="fr">

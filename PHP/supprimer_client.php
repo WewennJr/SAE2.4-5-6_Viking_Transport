@@ -37,6 +37,9 @@ majDonneesPDO($conn, $sql);
 $sql = "DELETE FROM vik_client WHERE cli_num = $id AND cli_grade != 'administrateur'";
 majDonneesPDO($conn, $sql);
 
+$conn=null;
+
 header("Location: admin.php");
 exit();
+
 ?>
