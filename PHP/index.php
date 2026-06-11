@@ -175,7 +175,6 @@ $connecte = isset($_SESSION["num_client"]);
 
     <?php include_once("../PHP/footer.php"); ?>
 
-    <!-- Bouton retour en haut -->
     <button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Retour en haut">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <polyline points="18 15 12 9 6 15"/>
