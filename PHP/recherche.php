@@ -140,7 +140,7 @@ $conn = null;
                 <?php } ?>
             </ol>
 
-            <form action="traitement_reservation.php" method="post" class="form-reserver">
+            <form action="paiement.php" method="post" class="form-reserver">
                 <input type="submit" value="Réserver ce trajet">
             </form>
         </section>
