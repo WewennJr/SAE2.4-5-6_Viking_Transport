@@ -29,9 +29,12 @@ $tarifBase = $tarif ? (float)$tarif['TAR_PRIX'] : 0;
 
 $pourcentagePaye = 100;
 $nomNiveau = "Non inscrit";
+$pointsClient = 0;
+$reductionsPossibles = [];
+
 if (isset($_SESSION['num_client'])) {
     $stmtCli = $conn->prepare("
-        SELECT t.TYP_REDUC, t.TYP_NOM
+        SELECT t.TYP_REDUC, t.TYP_NOM, c.CLI_NB_POINTS_EC
         FROM VIK_CLIENT c JOIN VIK_TYPE_CLIENT t ON c.TYP_NUM = t.TYP_NUM
         WHERE c.CLI_NUM = :num
     ");
@@ -40,7 +43,12 @@ if (isset($_SESSION['num_client'])) {
     if ($niv) {
         $pourcentagePaye = (float)$niv['TYP_REDUC'];
         $nomNiveau = $niv['TYP_NOM'];
+        $pointsClient = (int)$niv['CLI_NB_POINTS_EC'];
     }
+
+    // Les 3 paliers de réduction par points (table VIK_REDUCTION)
+    $stmtRed = $conn->query("SELECT RED_NB_POINTS, RED_VALEUR FROM VIK_REDUCTION ORDER BY RED_NB_POINTS");
+    $reductionsPossibles = $stmtRed->fetchAll(PDO::FETCH_ASSOC);
 }
 $prixFinal = (int)round($tarifBase * $pourcentagePaye / 100);
 
@@ -76,14 +84,49 @@ $estConnecte = isset($_SESSION['num_client']);
             <p>Distance : <?= htmlspecialchars($trajet['distance']) ?> km</p>
             <p>Tarif de base : <?= $tarifBase ?> €</p>
             <p>Votre statut : <?= htmlspecialchars($nomNiveau) ?> (<?= $pourcentagePaye ?> %)</p>
+            <p class="ligne-reduc-points" id="ligne-reduc" style="display:none;">Réduction points : <strong id="montant-reduc">−0 €</strong></p>
             <hr>
-            <p class="recap-total">Total à payer : <strong><?= $prixFinal ?> €</strong></p>
+            <p class="recap-total">Total à payer : <strong><span id="total-prix"><?= $prixFinal ?></span> €</strong></p>
         </section>
 
         <!-- Formulaire -->
         <section class="carte paiement-form">
             <h2>Coordonnées de paiement</h2>
             <form action="traitement_reservation.php" method="post" id="form-paiement" novalidate>
+
+                <?php
+                // Réductions que le client peut réellement s'offrir (assez de points)
+                $reductionsDispo = array_filter($reductionsPossibles, function ($r) use ($pointsClient) {
+                    return $pointsClient >= (int)$r['RED_NB_POINTS'];
+                });
+                if ($estConnecte && !empty($reductionsPossibles)) { ?>
+                    <div class="bloc-form bloc-points">
+                        <p class="bloc-titre">Utiliser mes points fidélité</p>
+                        <p class="points-solde">Vous avez <strong><?= $pointsClient ?></strong> point(s) utilisable(s).</p>
+
+                        <?php if (empty($reductionsDispo)) { ?>
+                            <p class="points-insuffisant">Il vous faut au moins <?= (int)$reductionsPossibles[0]['RED_NB_POINTS'] ?> points pour bénéficier d'une réduction.</p>
+                        <?php } ?>
+
+                        <label class="radio-reduc">
+                            <input type="radio" name="reduction_points" value="0" data-valeur="0" data-points="0" checked>
+                            <span>Ne pas utiliser mes points</span>
+                        </label>
+
+                        <?php foreach ($reductionsPossibles as $r) {
+                            $nbPts  = (int)$r['RED_NB_POINTS'];
+                            $valeur = (int)$r['RED_VALEUR'];
+                            $peut   = ($pointsClient >= $nbPts);
+                        ?>
+                            <label class="radio-reduc <?= $peut ? '' : 'desactive' ?>">
+                                <input type="radio" name="reduction_points" value="<?= $nbPts ?>"
+                                       data-valeur="<?= $valeur ?>" data-points="<?= $nbPts ?>"
+                                       <?= $peut ? '' : 'disabled' ?>>
+                                <span><?= $nbPts ?> points → <strong>−<?= $valeur ?> €</strong></span>
+                            </label>
+                        <?php } ?>
+                    </div>
+                <?php } ?>
 
                 <?php if (!$estConnecte) { ?>
                     <div class="bloc-form">
@@ -129,7 +172,9 @@ $estConnecte = isset($_SESSION['num_client']);
                     </div>
                 </div>
 
-                <input type="submit" value="Payer <?= $prixFinal ?> € et réserver">
+                <input type="submit" id="btn-payer" value="Payer <?= $prixFinal ?> € et réserver">
+                <input type="hidden" id="prix-base" value="<?= $prixFinal ?>">
+                <input type="hidden" id="points-dispo" value="<?= $pointsClient ?>">
             </form>
         </section>
     </div>
@@ -203,6 +248,37 @@ form.addEventListener('submit', function (e) {
 
     if (!ok) e.preventDefault();
 });
+
+// ── Recalcul du prix selon la réduction points choisie ──
+const elemPrixBase = document.getElementById('prix-base');
+const radiosReduc = document.querySelectorAll('input[name="reduction_points"]');
+
+if (elemPrixBase && radiosReduc.length > 0) {
+    const prixBase = parseInt(elemPrixBase.value, 10);
+    const totalPrix    = document.getElementById('total-prix');
+    const ligneReduc   = document.getElementById('ligne-reduc');
+    const montantReduc = document.getElementById('montant-reduc');
+    const btnPayer     = document.getElementById('btn-payer');
+
+    function majPrix() {
+        const choisi = document.querySelector('input[name="reduction_points"]:checked');
+        const valeur = choisi ? parseInt(choisi.dataset.valeur, 10) : 0;
+        let total = prixBase - valeur;
+        if (total < 0) total = 0;
+
+        totalPrix.textContent = total;
+        btnPayer.value = "Payer " + total + " € et réserver";
+
+        if (valeur > 0) {
+            montantReduc.textContent = "−" + valeur + " €";
+            ligneReduc.style.display = "block";
+        } else {
+            ligneReduc.style.display = "none";
+        }
+    }
+
+    radiosReduc.forEach(r => r.addEventListener('change', majPrix));
+}
 </script>
 
 </body>

@@ -19,10 +19,11 @@ if (isset($_SESSION['num_client'])) {
     $stmtCli->execute([':num' => $cliNum]);
     $infoCli = $stmtCli->fetch(PDO::FETCH_ASSOC);
     $typNum = $infoCli['TYP_NUM'];
-    $nomVoyageur = null;   
+    $nomVoyageur = null;   // inscrit : on prendra son nom depuis la base
 } else {
-    $cliNum = 0;           
+    $cliNum = 0;           // client invité unique
     $typNum = null;
+    // Nom saisi sur la page de paiement (pour le billet)
     $prenom = trim($_POST['v_prenom'] ?? 'Voyageur');
     $nom    = trim($_POST['v_nom'] ?? 'invité');
     $email  = trim($_POST['v_email'] ?? '');
@@ -51,36 +52,36 @@ if ($typNum !== null) {
 }
 $prixFinal = (int)round($tarifBase * $pourcentagePaye / 100);
 
-// ── Gestion de l'utilisation des points ──
+// ── Réduction par points (priorité 12) ──
+// Le client a choisi un palier (RED_NB_POINTS) parmi les 3 de VIK_REDUCTION, ou 0.
+// SÉCURITÉ : on ne fait JAMAIS confiance au formulaire. On revérifie en base
+// que la réduction existe ET que le client a assez de points utilisables.
 $pointsUtilises = 0;
-$remiseEuros = 0;
+$valeurReduc    = 0;
+$choixReduc = (int)($_POST['reduction_points'] ?? 0);
 
-if ($cliNum != 0 && isset($_POST['reduction_points']) && $_POST['reduction_points'] > 0) {
-    $pointsDemandes = (int)$_POST['reduction_points'];
+if ($cliNum != 0 && $choixReduc > 0) {
+    // La réduction demandée existe-t-elle dans la table ?
+    $stmtVerifRed = $conn->prepare("SELECT RED_VALEUR FROM VIK_REDUCTION WHERE RED_NB_POINTS = :nb");
+    $stmtVerifRed->execute([':nb' => $choixReduc]);
+    $red = $stmtVerifRed->fetch(PDO::FETCH_ASSOC);
 
-    // On vérifie que le client a bien assez de points
-    $stmtVerif = $conn->prepare("SELECT CLI_NB_POINTS_EC FROM VIK_CLIENT WHERE CLI_NUM = :num");
-    $stmtVerif->execute([':num' => $cliNum]);
-    $solde = (int)$stmtVerif->fetchColumn();
+    // Le client a-t-il assez de points utilisables ?
+    $stmtPts = $conn->prepare("SELECT CLI_NB_POINTS_EC FROM VIK_CLIENT WHERE CLI_NUM = :num");
+    $stmtPts->execute([':num' => $cliNum]);
+    $soldePts = (int)$stmtPts->fetch(PDO::FETCH_ASSOC)['CLI_NB_POINTS_EC'];
 
-    if ($solde >= $pointsDemandes) {
-        // On récupère la valeur en euros de cette réduction
-        $stmtRemise = $conn->prepare("SELECT VALEUR_REDUC FROM VIK_REDUCTION WHERE NB_POINTS = :pts");
-        $stmtRemise->execute([':pts' => $pointsDemandes]);
-        $valRemise = $stmtRemise->fetchColumn();
-
-        if ($valRemise !== false) {
-            $pointsUtilises = $pointsDemandes;
-            $remiseEuros = (float)$valRemise;
-        }
+    if ($red && $soldePts >= $choixReduc) {
+        $pointsUtilises = $choixReduc;
+        $valeurReduc    = (int)$red['RED_VALEUR'];
+        $prixFinal     -= $valeurReduc;
+        if ($prixFinal < 0) $prixFinal = 0;   // jamais négatif
     }
+    // Sinon : choix ignoré (client triche ou points insuffisants), prix inchangé
 }
 
-// On applique la remise sur le prix final (sans descendre en dessous de zéro)
-$prixFinal = max(0, $prixFinal - $remiseEuros);
-
-// ── Points gagnés sur ce trajet (non inscrit = 0) ──
-$pointsGagnes = ($cliNum == 0) ? 0 : calculerPoints($distanceTot);
+// ── Points (non inscrit = 0) ──
+$points = ($cliNum == 0) ? 0 : calculerPoints($distanceTot);
 
 // ── Insertion en TRANSACTION ──
 try {
@@ -96,7 +97,7 @@ try {
     ");
     $stmtInsRes->execute([
         ':cli' => $cliNum, ':res' => $resNum, ':tranche' => $numTranche,
-        ':dateres' => $trajet['date'], ':points' => $pointsGagnes, ':prix' => $prixFinal,
+        ':dateres' => $trajet['date'], ':points' => $points, ':prix' => $prixFinal,
     ]);
 
     $segments = regrouperParLigne($trajet['chemin']);
@@ -113,19 +114,19 @@ try {
     }
 
     if ($cliNum != 0) {
-        // Mise à jour : on ajoute les points gagnés ET on soustrait les points utilisés
-        // (Attention : le TOTAL ne descend jamais, seul le solde EN COURS baisse)
+        // CLI_NB_POINTS_TOT : on ajoute seulement les points gagnés (cumul pour le niveau, jamais débité)
+        // CLI_NB_POINTS_EC  : on ajoute les gagnés ET on retire ceux utilisés pour la réduction
         $stmtMajPts = $conn->prepare("
             UPDATE VIK_CLIENT
-            SET CLI_NB_POINTS_TOT = CLI_NB_POINTS_TOT + :pts_gagnes,
-                CLI_NB_POINTS_EC  = CLI_NB_POINTS_EC + :pts_gagnes2 - :pts_utilises
+            SET CLI_NB_POINTS_TOT = CLI_NB_POINTS_TOT + :ptsTot,
+                CLI_NB_POINTS_EC  = CLI_NB_POINTS_EC + :ptsGagnes - :ptsUtilises
             WHERE CLI_NUM = :num
         ");
         $stmtMajPts->execute([
-            ':pts_gagnes' => $pointsGagnes, 
-            ':pts_gagnes2' => $pointsGagnes, 
-            ':pts_utilises' => $pointsUtilises, 
-            ':num' => $cliNum
+            ':ptsTot'      => $points,
+            ':ptsGagnes'   => $points,
+            ':ptsUtilises' => $pointsUtilises,
+            ':num'         => $cliNum,
         ]);
     }
 
@@ -134,12 +135,14 @@ try {
     unset($_SESSION['trajet_a_reserver']);
     $_SESSION['resa_confirmee'] = [
         'cli_num' => $cliNum, 'res_num' => $resNum,
-        'prix' => $prixFinal, 'points' => $pointsGagnes, 'distance' => $distanceTot,
+        'prix' => $prixFinal, 'points' => $points, 'distance' => $distanceTot,
     ];
 
+    // Non-inscrit : on autorise le billet ET on garde le nom saisi pour l'afficher
     if ($cliNum == 0) {
         if (!isset($_SESSION['billets_invite'])) $_SESSION['billets_invite'] = [];
         $_SESSION['billets_invite'][] = $resNum;
+        // On stocke le nom du voyageur indexé par numéro de réservation
         if (!isset($_SESSION['noms_invite'])) $_SESSION['noms_invite'] = [];
         $_SESSION['noms_invite'][$resNum] = $nomVoyageur;
     }
