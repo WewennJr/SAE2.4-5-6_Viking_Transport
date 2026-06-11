@@ -454,12 +454,13 @@ input[type="submit"]:hover {
   transform: translateY(-1px);
 }
 
-button:disabled {
-    background-color: #bdbdbd;   /* gris */
-    color: #666;
-    cursor: not-allowed;
-    opacity: 0.7;
-    border: 1px solid #999;
+button[type="submit"]:disabled,
+input[type="submit"]:disabled {
+  background-color: #bdbdbd !important;
+  color: #666 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  opacity: 0.7;
 }
 
 #erreur {
