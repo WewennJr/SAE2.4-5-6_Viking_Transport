@@ -63,11 +63,13 @@ if (!$resa) {
 $stmtEtapes = $conn->prepare("
     SELECT e.LIG_NUM, e.ETA_DISTANCE,
            cd.COM_NOM AS DEPART,
-           ca.COM_NOM AS ARRIVEE
+           ca.COM_NOM AS ARRIVEE,
+           TO_CHAR(e.ETA_HEURE, 'HH24:MI') AS HEURE_DEP
     FROM VIK_ETAPE e
     JOIN VIK_COMMUNE cd ON e.COM_CODE_INSEE_DEPART  = cd.COM_CODE_INSEE
     JOIN VIK_COMMUNE ca ON e.COM_CODE_INSEE_ARRIVEE = ca.COM_CODE_INSEE
     WHERE e.CLI_NUM = :cli AND e.RES_NUM = :res
+    ORDER BY e.ETA_HEURE
 ");
 $stmtEtapes->execute([':cli' => $cliNum, ':res' => $resNum]);
 $etapes = $stmtEtapes->fetchAll(PDO::FETCH_ASSOC);
@@ -106,7 +108,9 @@ foreach ($etapes as $e) $distanceTotale += $e['ETA_DISTANCE'];
 
 $conn = null;
 
-$contenuQR = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+$contenuQR = "VIKING TRANSPORT | Billet #{$resa['RES_NUM']} | "
+           . "{$resa['CLI_PRENOM']} {$resa['CLI_NOM']} | "
+           . "$villeDepart -> $villeArrivee | {$resa['RES_DATE']}";
 $urlQR = "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=" . urlencode($contenuQR);
 ?>
 <!doctype html>
@@ -178,8 +182,14 @@ $urlQR = "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=" . urle
     <div class="billet-etapes">
         <h3>Détail de votre trajet</h3>
         <ol>
-            <?php foreach ($etapes as $e) { ?>
+            <?php foreach ($etapes as $e) {
+                $heureDep = $e['HEURE_DEP'] ?? '00:00';
+                $afficheHeure = ($heureDep !== '00:00');
+            ?>
                 <li>
+                    <?php if ($afficheHeure) { ?>
+                        <span class="etape-heure"><?= htmlspecialchars(str_replace(':', 'h', $heureDep)) ?></span>
+                    <?php } ?>
                     <span class="etape-ligne">Ligne <?= htmlspecialchars(trim($e['LIG_NUM'])) ?></span>
                     <span class="etape-villes"><?= htmlspecialchars($e['DEPART']) ?> → <?= htmlspecialchars($e['ARRIVEE']) ?></span>
                     <span class="etape-dist"><?= htmlspecialchars($e['ETA_DISTANCE']) ?> km</span>
