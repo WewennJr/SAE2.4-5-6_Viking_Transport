@@ -4,8 +4,12 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 $connecte = isset($_SESSION["num_client"]);
 ?>
-<title>Viking Transport</title>
-<link rel="icon" type="image/png" href="../images/favicon.png">
+<head>
+    <meta charset="UTF-8">
+    <title>Viking Transport</title>
+
+    <link rel="icon" type="image/png" href="../images/favicon.png">
+</head>
 <nav>
 
     <!-- Barre mobile : logo + hamburger (cachée sur desktop via CSS) -->
