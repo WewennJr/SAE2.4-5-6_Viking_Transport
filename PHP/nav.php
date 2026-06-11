@@ -23,9 +23,7 @@ $connecte = isset($_SESSION["num_client"]);
 
                 <li><a href="../PHP/recherche.php">Recherche</a></li>
 
-                <li><a href="../PHP/lignes.php">Lignes</a></li>
-
-                <li><a href="../PHP/horaire_ligne.php">Horaires</a></li>
+                <li><a href="../PHP/lignes.php">Horaires</a></li>
 
             </ul>
 
@@ -51,7 +49,7 @@ $connecte = isset($_SESSION["num_client"]);
 
             <li id="profil">
 
-                <a href="../PHP/compte.php" class="profil-nom" title="Mon espace">Bonjour <?= htmlspecialchars($_SESSION["prenom"]) ?></a>
+                <a href="../PHP/espace_client.php" class="profil-nom" title="Mon espace">Bonjour <?= htmlspecialchars($_SESSION["prenom"]) ?></a>
 
                 <a href="../PHP/deconnexion.php" class="btn-deconnexion" title="Se déconnecter" aria-label="Se déconnecter">⏻</a>
 
