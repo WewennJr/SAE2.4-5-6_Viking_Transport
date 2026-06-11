@@ -145,6 +145,25 @@ foreach ($resas_mois as $row) {
             align-items: start;
         }
 
+        /* min-width: 0 est indispensable sur les enfants directs d'un grid :
+           sans ça, les colonnes refusent de rétrécir en dessous de leur contenu
+           et le breakpoint ne s'applique jamais visuellement au resize */
+        .admin-col {
+            min-width: 0;
+        }
+
+        /* Canvas Chart.js : sans max-width les graphiques débordent de leur colonne */
+        .stat-card canvas {
+            max-height: 220px;
+            max-width: 100%;
+        }
+
+        /* Breakpoint relevé à 1100px pour couvrir les cas tablette paysage,
+           et les tableaux/cards qui débordent avant 900px */
+        @media (max-width: 1100px) {
+            .admin-layout { grid-template-columns: 1fr; }
+        }
+
         .stat-card {
             background: #fff;
             border-left: 4px solid var(--rouge);
@@ -164,8 +183,6 @@ foreach ($resas_mois as $row) {
             padding-bottom: 0.5rem;
             border-bottom: 2px solid var(--gris-clair);
         }
-
-        .stat-card canvas { max-height: 220px; }
 
         table {
             width: 100%;
@@ -337,12 +354,17 @@ foreach ($resas_mois as $row) {
 
         .inactifs-wrap { margin-top: 2rem; }
 
-        @media (max-width: 900px) {
-            .admin-layout { grid-template-columns: 1fr; }
-            .admin-col-stats  { order: 1; }
-            .admin-col-clients { order: 2; }
-            .inactifs-wrap { order: 3; }
+        /* Bouton flèche dans la table des inactifs */
+        .btn-goto {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--rouge);
+            padding: 0;
+            line-height: 1;
         }
+        .btn-goto:hover { opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -456,7 +478,11 @@ foreach ($resas_mois as $row) {
                                 }
                                 ?>
                             </td>
-                            <td><a href="#client-<?php echo $c['CLI_NUM']; ?>" title="Aller au client">↗</a></td>
+                            <!-- FIX SCROLL : bouton JS au lieu du lien ancre natif,
+                                 pour compenser la hauteur de la navbar -->
+                            <td>
+                                <button class="btn-goto" onclick="scrollToClient(<?php echo $c['CLI_NUM']; ?>)" title="Aller au client">↗</button>
+                            </td>
                         </tr>
                         <?php } ?>
                     </tbody>
@@ -544,6 +570,20 @@ foreach ($resas_mois as $row) {
 
     function fermerModal() {
         document.getElementById('modal').classList.remove('open');
+    }
+
+    /**
+     * FIX SCROLL : scroll vers la carte client en compensant la hauteur de la navbar.
+     * On récupère la hauteur réelle de la <nav> dynamiquement, donc ça s'adapte
+     * même si la navbar change de taille selon la résolution.
+     */
+    function scrollToClient(num) {
+        const el = document.getElementById('client-' + num);
+        if (!el) return;
+        const navbar = document.querySelector('nav');
+        const navbarHeight = navbar ? navbar.offsetHeight : 80;
+        const top = el.getBoundingClientRect().top + window.scrollY - navbarHeight - 16;
+        window.scrollTo({ top: top, behavior: 'smooth' });
     }
 </script>
 </body>
