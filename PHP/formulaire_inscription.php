@@ -106,7 +106,6 @@ if (isset($_SESSION['form_data'])) {
                 </div>
 
                 <button type="submit" id="btn_submit" disabled>S'inscrire</button>
-                <button type="submit">S'inscrire</button>
             </form>
 
             <p>Déjà un compte ? <a href="../PHP/formulaire_connexion.php">Connectez-vous</a></p>
