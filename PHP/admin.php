@@ -16,7 +16,7 @@ $num = $_SESSION['num_client'];
 $sql = "SELECT cli_grade FROM vik_client WHERE cli_num = $num";
 $tab = LireDonneesPDO3($conn, $sql, $table);
 if (!isset($tab[0]['CLI_GRADE']) || $tab[0]['CLI_GRADE'] != 'admin') {
-    header("Location: ../HTML/accueil.php");
+    header("Location: ../PHP/index.php");
     exit();
 }
 
