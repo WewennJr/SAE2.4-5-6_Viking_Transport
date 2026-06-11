@@ -127,6 +127,7 @@ $conn = null;
                     <th>Départ</th>
                     <th>Arrivée</th>
                     <th>Prix</th>
+                    <th>Billet</th>
                 </tr>
             </thead>
             <tbody>
@@ -138,11 +139,12 @@ $conn = null;
                             <td><?= htmlspecialchars($resa['DEPART']) ?></td>
                             <td><?= htmlspecialchars($resa['ARRIVEE']) ?></td>
                             <td><?= htmlspecialchars($resa['RES_PRIX_TOT']) ?> €</td>
+                            <td><a href="billet.php?res=<?= htmlspecialchars($resa['RES_NUM']) ?>" class="lien-billet">🎫 Télécharger</a></td>
                         </tr>
                     <?php } ?>
                 <?php } else { ?>
                     <tr>
-                        <td colspan="5" class="aucune-resa">Vous n'avez aucune réservation pour le moment.</td>
+                        <td colspan="6" class="aucune-resa">Vous n'avez aucune réservation pour le moment.</td>
                     </tr>
                 <?php } ?>
             </tbody>

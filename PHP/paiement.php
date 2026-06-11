@@ -4,11 +4,20 @@ include_once "pdo_agile.php";
 include_once "param_connexion_etu.php";
 include_once "moteur_trajet.php";
 
-if (!isset($_SESSION['trajet_a_reserver'])) {
+if (!isset($_SESSION['trajets_proposes'])) {
     header("Location: recherche.php");
     exit;
 }
-$trajet = $_SESSION['trajet_a_reserver'];
+
+// Quel trajet l'utilisateur a-t-il choisi parmi les propositions ?
+$indexChoisi = $_POST['trajet_choisi'] ?? null;
+if ($indexChoisi === null || !isset($_SESSION['trajets_proposes'][$indexChoisi])) {
+    header("Location: recherche.php");
+    exit;
+}
+$trajet = $_SESSION['trajets_proposes'][$indexChoisi];
+// On le mémorise comme LE trajet à réserver (pour le traitement ensuite)
+$_SESSION['trajet_a_reserver'] = $trajet;
 
 $conn = OuvrirConnexionPDO($dbOracle, $db_usernameOracle, $db_passwordOracle);
 $noms = chargerNomsCommunes($conn);
@@ -20,13 +29,9 @@ $tarifBase = $tarif ? (float)$tarif['TAR_PRIX'] : 0;
 
 $pourcentagePaye = 100;
 $nomNiveau = "Non inscrit";
-$pointsClient = 0;
-$reductions = [];
-
 if (isset($_SESSION['num_client'])) {
-    // Récupération des infos niveau
     $stmtCli = $conn->prepare("
-        SELECT c.CLI_NB_POINTS_EC, t.TYP_REDUC, t.TYP_NOM
+        SELECT t.TYP_REDUC, t.TYP_NOM
         FROM VIK_CLIENT c JOIN VIK_TYPE_CLIENT t ON c.TYP_NUM = t.TYP_NUM
         WHERE c.CLI_NUM = :num
     ");
@@ -35,13 +40,6 @@ if (isset($_SESSION['num_client'])) {
     if ($niv) {
         $pourcentagePaye = (float)$niv['TYP_REDUC'];
         $nomNiveau = $niv['TYP_NOM'];
-        $pointsClient = (int)$niv['CLI_NB_POINTS_EC'];
-    }
-
-    // Récupération des réductions possibles
-    $stmtRed = $conn->query("SELECT NB_POINTS, VALEUR_REDUC FROM VIK_REDUCTION ORDER BY NB_POINTS ASC");
-    if ($stmtRed) {
-        $reductions = $stmtRed->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 $prixFinal = (int)round($tarifBase * $pourcentagePaye / 100);
@@ -61,11 +59,6 @@ $estConnecte = isset($_SESSION['num_client']);
     <title>Paiement - Viking Transport</title>
     <link rel="stylesheet" href="../CSS/style.css">
     <link rel="stylesheet" href="../CSS/paiement.css">
-    <style>
-        .radio-reduction { display: block; margin-bottom: 0.5rem; cursor: pointer; }
-        .radio-reduction input { margin-right: 0.5rem; }
-        .radio-disabled { color: #999; cursor: not-allowed; }
-    </style>
 </head>
 <body>
 
@@ -75,6 +68,7 @@ $estConnecte = isset($_SESSION['num_client']);
     <h1>Paiement</h1>
 
     <div class="paiement-grille">
+        <!-- Récapitulatif -->
         <section class="carte recap">
             <h2>Récapitulatif</h2>
             <p class="recap-trajet"><strong><?= htmlspecialchars($nomDep) ?></strong> → <strong><?= htmlspecialchars($nomArr) ?></strong></p>
@@ -83,9 +77,10 @@ $estConnecte = isset($_SESSION['num_client']);
             <p>Tarif de base : <?= $tarifBase ?> €</p>
             <p>Votre statut : <?= htmlspecialchars($nomNiveau) ?> (<?= $pourcentagePaye ?> %)</p>
             <hr>
-            <p class="recap-total">Total à payer : <strong id="affichage-total"><?= $prixFinal ?> €</strong></p>
+            <p class="recap-total">Total à payer : <strong><?= $prixFinal ?> €</strong></p>
         </section>
 
+        <!-- Formulaire -->
         <section class="carte paiement-form">
             <h2>Coordonnées de paiement</h2>
             <form action="traitement_reservation.php" method="post" id="form-paiement" novalidate>
@@ -104,27 +99,6 @@ $estConnecte = isset($_SESSION['num_client']);
                         <div class="form-group">
                             <label for="v_email">Email</label>
                             <input type="email" id="v_email" name="v_email" placeholder="jean.dupont@email.fr" required>
-                        </div>
-                    </div>
-                <?php } else { ?>
-                    <div class="bloc-form">
-                        <p class="bloc-titre">Utiliser mes points (Solde : <?= $pointsClient ?> pts)</p>
-                        <div class="form-group">
-                            <label class="radio-reduction">
-                                <input type="radio" name="reduction_points" value="0" data-remise="0" checked>
-                                Ne pas utiliser de points
-                            </label>
-                            <?php foreach ($reductions as $red) { 
-                                $ptsReq = (int)$red['NB_POINTS'];
-                                $valReduc = (int)$red['VALEUR_REDUC'];
-                                $disabled = ($pointsClient < $ptsReq) ? 'disabled' : '';
-                                $classDis = ($pointsClient < $ptsReq) ? 'radio-disabled' : '';
-                            ?>
-                            <label class="radio-reduction <?= $classDis ?>">
-                                <input type="radio" name="reduction_points" value="<?= $ptsReq ?>" data-remise="<?= $valReduc ?>" <?= $disabled ?>>
-                                Utiliser <?= $ptsReq ?> points (- <?= $valReduc ?> €)
-                            </label>
-                            <?php } ?>
                         </div>
                     </div>
                 <?php } ?>
@@ -155,7 +129,7 @@ $estConnecte = isset($_SESSION['num_client']);
                     </div>
                 </div>
 
-                <input type="submit" id="btn-submit" value="Payer <?= $prixFinal ?> € et réserver">
+                <input type="submit" value="Payer <?= $prixFinal ?> € et réserver">
             </form>
         </section>
     </div>
@@ -164,22 +138,6 @@ $estConnecte = isset($_SESSION['num_client']);
 <?php include_once "footer.php"; ?>
 
 <script>
-// Gestion de la mise à jour du prix selon les points
-const prixBase = <?= $prixFinal ?>;
-const radios = document.querySelectorAll('input[name="reduction_points"]');
-const affichageTotal = document.getElementById('affichage-total');
-const btnSubmit = document.getElementById('btn-submit');
-
-radios.forEach(radio => {
-    radio.addEventListener('change', function() {
-        let remise = parseInt(this.dataset.remise) || 0;
-        let nouveauPrix = Math.max(0, prixBase - remise); // Le prix ne peut pas être négatif
-        affichageTotal.textContent = nouveauPrix + ' €';
-        btnSubmit.value = 'Payer ' + nouveauPrix + ' € et réserver';
-    });
-});
-
-// Formatage carte
 const form  = document.getElementById('form-paiement');
 const carte = document.getElementById('carte');
 const exp   = document.getElementById('expiration');
