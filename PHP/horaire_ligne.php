@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="fr">
+<html lang="fr">
 <head>
     <meta charset="utf-8">
     <title>Horaires – Viking Transport</title>
@@ -113,6 +114,37 @@
         .retour-lien:hover { color: var(--rouge); }
         .retour-lien::before { content: '←'; font-size: 1rem; }
 
+        .sens-toggle {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .sens-btn {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.6rem 1.4rem;
+            border-radius: 4px;
+            border: 2px solid var(--rouge);
+            color: var(--rouge);
+            background-color: transparent;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .sens-btn:hover {
+            background-color: var(--rouge);
+            color: #fff;
+        }
+
+        .sens-btn.actif {
+            background-color: var(--rouge);
+            color: #fff;
+            pointer-events: none;
+        }
+
         .horaires-vide {
             padding: 2rem 0;
             color: var(--gris);
@@ -135,8 +167,24 @@ if ($ligNum === null) {
 } else {
     $conn = OuvrirConnexionPDO($dbOracle, $db_usernameOracle, $db_passwordOracle);
 
-    echo "<h1>Horaires &ndash; Ligne " . htmlspecialchars($ligNum) . "</h1>";
+    // Extraire le numéro de base et le sens (A ou B)
+    $sens    = strtoupper(substr(trim($ligNum), -1)); // 'A' ou 'B'
+    $numBase = rtrim(trim($ligNum), 'ABab');          // ex: '1', '10'
+    $ligA    = $numBase . 'A';
+    $ligB    = $numBase . 'B';
+
+    echo "<h1>Horaires &ndash; Ligne " . htmlspecialchars($numBase) . "</h1>";
     echo "<p class='horaires-meta'>Réseau Viking Transport &mdash; Normandie</p>";
+    echo "<div class='sens-toggle'>
+        <a href='horaire_ligne.php?lig=" . htmlspecialchars($ligA) . "'
+           class='sens-btn" . ($sens === 'A' ? ' actif' : '') . "'>
+            &#9654; Aller
+        </a>
+        <a href='horaire_ligne.php?lig=" . htmlspecialchars($ligB) . "'
+           class='sens-btn" . ($sens === 'B' ? ' actif' : '') . "'>
+            &#9664; Retour
+        </a>
+    </div>";
 
     /*
      * ÉTAPE 1 — Récupérer tous les noeuds de la ligne
@@ -275,6 +323,8 @@ if ($ligNum === null) {
     <a href="lignes.php" class="retour-lien">Retour aux lignes</a>
 </main>
 
+<?php include_once("../PHP/footer.php"); ?>
+</body>
 <?php include_once("../PHP/footer.php"); ?>
 </body>
 </html>
