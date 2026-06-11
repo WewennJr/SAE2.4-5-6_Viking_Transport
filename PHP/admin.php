@@ -15,7 +15,7 @@ $conn = OuvrirConnexionPDO($dbOracle, $db_usernameOracle, $db_passwordOracle);
 $num = $_SESSION['num_client'];
 $sql = "SELECT cli_grade FROM vik_client WHERE cli_num = $num";
 $tab = LireDonneesPDO3($conn, $sql, $table);
-if (!isset($tab[0]['CLI_GRADE']) || $tab[0]['CLI_GRADE'] != 'admin') {
+if (!isset($tab[0]['CLI_GRADE']) || $tab[0]['CLI_GRADE'] != 'administrateur') {
     header("Location: ../PHP/index.php");
     exit();
 }
@@ -49,7 +49,7 @@ $sql4 = "SELECT cli_prenom, cli_nom, cli_date_connec,
     ROUND(SYSDATE - cli_date_connec) AS JOURS
     FROM vik_client
     WHERE SYSDATE - cli_date_connec > 365
-    AND cli_grade != 'admin'
+    AND cli_grade != 'administrateur'
     ORDER BY cli_date_connec ASC";
 $inactifs = LireDonneesPDO3($conn, $sql4, $t4);
 
