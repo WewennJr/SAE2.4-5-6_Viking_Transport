@@ -30,7 +30,7 @@ if ($conn) {
 
             $conn = null;
 
-            header("Location: ../PHP/espace_client.php");   // succès → page d'arrivée
+            header("Location: ../PHP/index.php");   // succès → page d'arrivée
             exit();
 
         } else {
