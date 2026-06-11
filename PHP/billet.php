@@ -108,7 +108,7 @@ foreach ($etapes as $e) $distanceTotale += $e['ETA_DISTANCE'];
 
 $conn = null;
 
-$contenuQR = "https://https://wewennjr.github.io/test-api-publique-resume-billet/";
+$contenuQR = "https://wewennjr.github.io/test-api-publique-resume-billet/";
 $urlQR = "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=" . urlencode($contenuQR);
 ?>
 <!doctype html>
