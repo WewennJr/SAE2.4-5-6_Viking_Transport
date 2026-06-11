@@ -178,11 +178,11 @@ if ($ligNum === null) {
     echo "<div class='sens-toggle'>
         <a href='horaire_ligne.php?lig=" . htmlspecialchars($ligA) . "'
            class='sens-btn" . ($sens === 'A' ? ' actif' : '') . "'>
-            &#9654; Aller
+            &#9654; Ligne A
         </a>
         <a href='horaire_ligne.php?lig=" . htmlspecialchars($ligB) . "'
            class='sens-btn" . ($sens === 'B' ? ' actif' : '') . "'>
-            &#9664; Retour
+            &#9664; Ligne B
         </a>
     </div>";
 
