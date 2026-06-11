@@ -105,7 +105,10 @@ if (isset($_SESSION['form_data'])) {
                     </label>
                 </div>
 
-                <button type="submit" id="btn_submit" disabled>S'inscrire</button>
+                <button type="submit" id="btn_submit" disabled
+                    style="background-color:#bdbdbd; color:#666; cursor:not-allowed; opacity:0.7; border:none;">
+                    S'inscrire
+                </button>
             </form>
 
             <p>Déjà un compte ? <a href="../PHP/formulaire_connexion.php">Connectez-vous</a></p>
@@ -119,7 +122,19 @@ if (isset($_SESSION['form_data'])) {
         const btn = document.getElementById('btn_submit');
 
         checkbox.addEventListener('change', function () {
-            btn.disabled = !this.checked;
+            if (this.checked) {
+                btn.disabled = false;
+                btn.style.backgroundColor = "var(--rouge)";
+                btn.style.color = "#fff";
+                btn.style.cursor = "pointer";
+                btn.style.opacity = "1";
+            } else {
+                btn.disabled = true;
+                btn.style.backgroundColor = "#bdbdbd";
+                btn.style.color = "#666";
+                btn.style.cursor = "not-allowed";
+                btn.style.opacity = "0.7";
+            }
         });
     </script>
 </body>

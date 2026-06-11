@@ -454,15 +454,6 @@ input[type="submit"]:hover {
   transform: translateY(-1px);
 }
 
-button[type="submit"]:disabled,
-input[type="submit"]:disabled {
-  background-color: #bdbdbd !important;
-  color: #666 !important;
-  cursor: not-allowed !important;
-  transform: none !important;
-  opacity: 0.7;
-}
-
 #erreur {
   color: var(--rouge);
   font-weight: 600;
