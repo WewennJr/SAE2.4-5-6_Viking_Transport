@@ -15,7 +15,7 @@ $connecte = isset($_SESSION["num_client"]);
 
     <?php include_once("../PHP/nav.php"); ?>
 
-    <main>
+    <main id="accueil">
         <h1>Viking Transport</h1>
 
         <?php if ($connecte) { ?>
