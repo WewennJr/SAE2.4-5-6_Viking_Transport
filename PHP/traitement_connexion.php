@@ -21,13 +21,13 @@ if ($conn) {
 
         if ($client && password_verify($motdepasse, $client['CLI_MDP'])) {
             $_SESSION["num_client"] = $client["CLI_NUM"];
-            $_SESSION["prenom"]     = $client["CLI_PRENOM"];
+            $_SESSION["prenom"] = $client["CLI_PRENOM"];
+            $_SESSION["just_connected"] = true;
 
             $sqlMaj = "UPDATE VIK_CLIENT SET CLI_DATE_CONNEC = SYSDATE WHERE CLI_NUM = :num";
             $stmtMaj = $conn->prepare($sqlMaj);
             $stmtMaj->execute([':num' => $client["CLI_NUM"]]);
 
-            $_SESSION["flash"] = "Connexion réussie ! Bienvenue " . $client["CLI_PRENOM"];
             $conn = null;
 
             header("Location: ../PHP/espace_client.php");   // succès → page d'arrivée
@@ -43,6 +43,8 @@ if ($conn) {
 } else {
     $_SESSION["erreur"] = "Connexion à la base impossible.";
 }
+
+$conn = null;
 
 // En cas d'échec : on renvoie vers le formulaire
 header("Location: ../PHP/formulaire_connexion.php");

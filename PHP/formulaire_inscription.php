@@ -101,7 +101,8 @@ if (isset($_SESSION['form_data'])) {
                 <div class="form-group">
                     <label>
                         <input type="checkbox" id="accept_conditions" name="accept_conditions">
-                        J’accepte les <a href="../PHP/cgu.php" target="_blank">conditions générales</a>
+                        J’accepte les <a class="link-rouge" href="../PHP/cgu.php" target="_blank">conditions
+                            générales</a>
                     </label>
                 </div>
 
