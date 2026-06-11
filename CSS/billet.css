@@ -1,0 +1,266 @@
+/* ════════════════════════════════════════════════════════════
+   billet.css — Billet numérique imprimable
+   À charger APRÈS style.css
+   ════════════════════════════════════════════════════════════ */
+
+body {
+  background-color: var(--gris-clair, #f0f0f0);
+}
+
+/* Barre d'actions au-dessus du billet */
+.billet-actions {
+  max-width: 800px;
+  margin: 2rem auto 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1rem;
+}
+
+.btn-retour {
+  color: var(--noir);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.btn-retour:hover {
+  color: var(--rouge);
+}
+
+.btn-imprimer {
+  background-color: var(--rouge);
+  color: #fff;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
+  font-family: var(--font-display, sans-serif);
+  font-weight: 600;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.btn-imprimer:hover {
+  background-color: var(--rouge-fonce, #922b21);
+}
+
+/* Le billet lui-même */
+.billet {
+  max-width: 800px;
+  margin: 0 auto 3rem;
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+/* En-tête noir */
+.billet-entete {
+  background-color: var(--noir, #1a1a1a);
+  color: #fff;
+  padding: 1.5rem 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.billet-logo {
+  font-family: var(--font-display, sans-serif);
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: 0.1em;
+}
+
+.billet-numero {
+  font-size: 1rem;
+  color: var(--rouge);
+  font-weight: 600;
+}
+
+/* Corps : infos + QR côte à côte */
+.billet-corps {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  padding: 2.5rem;
+  border-bottom: 2px dashed var(--gris-clair, #ddd);
+}
+
+/* Trajet principal (grandes villes) */
+.billet-trajet-principal {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.ville {
+  display: flex;
+  flex-direction: column;
+}
+
+.ville-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gris, #888);
+}
+
+.ville-nom {
+  font-family: var(--font-display, sans-serif);
+  font-weight: 700;
+  font-size: 1.8rem;
+  color: var(--noir, #1a1a1a);
+}
+
+.fleche {
+  font-size: 1.8rem;
+  color: var(--rouge);
+}
+
+/* Détails en grille */
+.billet-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gris, #888);
+}
+
+.detail-valeur {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--noir, #1a1a1a);
+}
+
+/* QR code */
+.billet-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.billet-qr img {
+  border: 1px solid var(--gris-clair, #ddd);
+  border-radius: 6px;
+}
+
+.qr-legende {
+  font-size: 0.75rem;
+  color: var(--gris, #888);
+  text-align: center;
+}
+
+/* Étapes détaillées */
+.billet-etapes {
+  padding: 2rem 2.5rem;
+}
+
+.billet-etapes h3 {
+  font-family: var(--font-display, sans-serif);
+  font-weight: 600;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--noir, #1a1a1a);
+  margin-bottom: 1rem;
+}
+
+.billet-etapes ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  counter-reset: etape;
+}
+
+.billet-etapes li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--gris-clair, #eee);
+}
+
+.billet-etapes li:last-child {
+  border-bottom: none;
+}
+
+.etape-ligne {
+  font-family: var(--font-display, sans-serif);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--rouge);
+  background-color: rgba(192, 57, 43, 0.1);
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.etape-villes {
+  font-weight: 500;
+  color: var(--noir, #1a1a1a);
+}
+
+.etape-dist {
+  font-size: 0.85rem;
+  color: var(--gris, #888);
+  white-space: nowrap;
+}
+
+/* Pied de billet */
+.billet-pied {
+  background-color: var(--gris-clair, #f7f7f7);
+  padding: 1rem 2.5rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--gris, #888);
+}
+
+/* ── RÈGLES D'IMPRESSION ── */
+@media print {
+  /* On masque tout ce qui n'est pas le billet */
+  .billet-actions,
+  nav, header, footer {
+    display: none !important;
+  }
+
+  body {
+    background-color: #fff;
+  }
+
+  .billet {
+    box-shadow: none;
+    margin: 0;
+    max-width: 100%;
+  }
+
+  /* On force l'impression des couleurs de fond */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+@media (max-width: 640px) {
+  .billet-corps {
+    grid-template-columns: 1fr;
+  }
+  .billet-details {
+    grid-template-columns: 1fr;
+  }
+}

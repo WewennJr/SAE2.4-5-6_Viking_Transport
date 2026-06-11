@@ -4,18 +4,16 @@ include_once "pdo_agile.php";
 include_once "param_connexion_etu.php";
 include_once "moteur_trajet.php";
 
-// On doit avoir un trajet en attente, sinon retour à la recherche
 if (!isset($_SESSION['trajet_a_reserver'])) {
     header("Location: recherche.php");
     exit;
 }
 $trajet = $_SESSION['trajet_a_reserver'];
 
-// On recalcule le prix pour l'afficher (sans encore réserver)
 $conn = OuvrirConnexionPDO($dbOracle, $db_usernameOracle, $db_passwordOracle);
 $noms = chargerNomsCommunes($conn);
 
-// Tranche tarifaire selon la distance
+// Tarif de base selon la distance
 $stmtTar = $conn->prepare("SELECT TAR_PRIX FROM VIK_TARIF WHERE :dist >= TAR_MIN_DIST AND :dist <= TAR_MAX_DIST");
 $stmtTar->execute([':dist' => $trajet['distance']]);
 $tarif = $stmtTar->fetch(PDO::FETCH_ASSOC);
@@ -43,6 +41,8 @@ $conn = null;
 
 $nomDep = $noms[$trajet['depart']]  ?? $trajet['depart'];
 $nomArr = $noms[$trajet['arrivee']] ?? $trajet['arrivee'];
+
+$estConnecte = isset($_SESSION['num_client']);
 ?>
 <!doctype html>
 <html lang="fr">
@@ -60,13 +60,12 @@ $nomArr = $noms[$trajet['arrivee']] ?? $trajet['arrivee'];
 <main>
     <h1>Paiement</h1>
 
-    <!-- Bandeau de simulation OBLIGATOIRE -->
     <div class="bandeau-simulation">
         ⚠️ Paiement fictif — Ceci est une démonstration. N'entrez pas de vraies coordonnées bancaires.
     </div>
 
     <div class="paiement-grille">
-        <!-- Récapitulatif du trajet -->
+        <!-- Récapitulatif -->
         <section class="carte recap">
             <h2>Récapitulatif</h2>
             <p class="recap-trajet"><strong><?= htmlspecialchars($nomDep) ?></strong> → <strong><?= htmlspecialchars($nomArr) ?></strong></p>
@@ -78,28 +77,52 @@ $nomArr = $noms[$trajet['arrivee']] ?? $trajet['arrivee'];
             <p class="recap-total">Total à payer : <strong><?= $prixFinal ?> €</strong></p>
         </section>
 
-        <!-- Faux formulaire de carte -->
+        <!-- Formulaire -->
         <section class="carte paiement-form">
             <h2>Coordonnées de paiement</h2>
             <form action="traitement_reservation.php" method="post">
-                <div class="form-group">
-                    <label for="titulaire">Titulaire de la carte</label>
-                    <input type="text" id="titulaire" name="titulaire" placeholder="Jean Dupont" required>
-                </div>
-                <div class="form-group">
-                    <label for="carte">Numéro de carte</label>
-                    <input type="text" id="carte" name="carte" placeholder="4242 4242 4242 4242" maxlength="19" required>
-                </div>
-                <div class="form-row">
+
+                <?php if (!$estConnecte) { ?>
+                    <!-- Infos voyageur : uniquement pour les non-connectés -->
+                    <fieldset class="bloc-voyageur">
+                        <legend>Vos informations</legend>
+                        <div class="form-group">
+                            <label for="v_prenom">Prénom</label>
+                            <input type="text" id="v_prenom" name="v_prenom" placeholder="Jean" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="v_nom">Nom</label>
+                            <input type="text" id="v_nom" name="v_nom" placeholder="Dupont" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="v_email">Email</label>
+                            <input type="email" id="v_email" name="v_email" placeholder="jean.dupont@email.fr" required>
+                        </div>
+                    </fieldset>
+                <?php } ?>
+
+                <fieldset class="bloc-carte">
+                    <legend>Carte bancaire</legend>
                     <div class="form-group">
-                        <label for="expiration">Expiration</label>
-                        <input type="text" id="expiration" name="expiration" placeholder="MM/AA" maxlength="5" required>
+                        <label for="titulaire">Titulaire de la carte</label>
+                        <input type="text" id="titulaire" name="titulaire" placeholder="Jean Dupont" required>
                     </div>
                     <div class="form-group">
-                        <label for="cvc">CVC</label>
-                        <input type="text" id="cvc" name="cvc" placeholder="123" maxlength="3" required>
+                        <label for="carte">Numéro de carte</label>
+                        <input type="text" id="carte" name="carte" placeholder="4242 4242 4242 4242" maxlength="19" required>
                     </div>
-                </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="expiration">Expiration</label>
+                            <input type="text" id="expiration" name="expiration" placeholder="MM/AA" maxlength="5" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cvc">CVC</label>
+                            <input type="text" id="cvc" name="cvc" placeholder="123" maxlength="3" required>
+                        </div>
+                    </div>
+                </fieldset>
+
                 <input type="submit" value="Payer <?= $prixFinal ?> € et réserver">
             </form>
         </section>
