@@ -2,10 +2,11 @@
 // ════════════════════════════════════════════════════════════
 // moteur_trajet.php
 // Fonctions de recherche de trajet (graphe + Dijkstra)
-// Réutilisé par recherche.php ET traitement_reservation.php
 // ════════════════════════════════════════════════════════════
 
-// Construit le graphe bidirectionnel du réseau à partir de VIK_NOEUD
+// Construit le graphe du réseau à partir de VIK_NOEUD
+// IMPORTANT : on garde UNIQUEMENT les sens réels.
+// Le réseau est déjà bidirectionnel dans les données (ex: 5A aller, 5B retour).
 function chargerGraphe($conn)
 {
     $sql = "SELECT LIG_NUM, COM_CODE_INSEE_ARRET, COM_CODE_INSEE_SUIVANT,
@@ -32,11 +33,15 @@ function chargerGraphe($conn)
         }
     }
 
-    // Graphe bidirectionnel
+    // Graphe avec les SENS RÉELS uniquement (pas de duplication artificielle)
     $graphe = [];
     foreach ($minDuree as $c) {
-        $graphe[$c['depart']][] = ['vers' => $c['vers'], 'ligne' => $c['ligne'], 'duree' => $c['duree'], 'distance' => $c['distance']];
-        $graphe[$c['vers']][]   = ['vers' => $c['depart'], 'ligne' => $c['ligne'], 'duree' => $c['duree'], 'distance' => $c['distance']];
+        $graphe[$c['depart']][] = [
+            'vers'     => $c['vers'],
+            'ligne'    => $c['ligne'],
+            'duree'    => $c['duree'],
+            'distance' => $c['distance'],
+        ];
     }
     return $graphe;
 }
