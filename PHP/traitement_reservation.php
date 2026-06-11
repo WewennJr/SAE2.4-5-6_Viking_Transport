@@ -19,11 +19,10 @@ if (isset($_SESSION['num_client'])) {
     $stmtCli->execute([':num' => $cliNum]);
     $infoCli = $stmtCli->fetch(PDO::FETCH_ASSOC);
     $typNum = $infoCli['TYP_NUM'];
-    $nomVoyageur = null;   // inscrit : on prendra son nom depuis la base
+    $nomVoyageur = null;   
 } else {
-    $cliNum = 0;           // client invité unique
+    $cliNum = 0;           
     $typNum = null;
-    // Nom saisi sur la page de paiement (pour le billet)
     $prenom = trim($_POST['v_prenom'] ?? 'Voyageur');
     $nom    = trim($_POST['v_nom'] ?? 'invité');
     $email  = trim($_POST['v_email'] ?? '');
@@ -52,8 +51,36 @@ if ($typNum !== null) {
 }
 $prixFinal = (int)round($tarifBase * $pourcentagePaye / 100);
 
-// ── Points (non inscrit = 0) ──
-$points = ($cliNum == 0) ? 0 : calculerPoints($distanceTot);
+// ── Gestion de l'utilisation des points ──
+$pointsUtilises = 0;
+$remiseEuros = 0;
+
+if ($cliNum != 0 && isset($_POST['reduction_points']) && $_POST['reduction_points'] > 0) {
+    $pointsDemandes = (int)$_POST['reduction_points'];
+
+    // On vérifie que le client a bien assez de points
+    $stmtVerif = $conn->prepare("SELECT CLI_NB_POINTS_EC FROM VIK_CLIENT WHERE CLI_NUM = :num");
+    $stmtVerif->execute([':num' => $cliNum]);
+    $solde = (int)$stmtVerif->fetchColumn();
+
+    if ($solde >= $pointsDemandes) {
+        // On récupère la valeur en euros de cette réduction
+        $stmtRemise = $conn->prepare("SELECT VALEUR_REDUC FROM VIK_REDUCTION WHERE NB_POINTS = :pts");
+        $stmtRemise->execute([':pts' => $pointsDemandes]);
+        $valRemise = $stmtRemise->fetchColumn();
+
+        if ($valRemise !== false) {
+            $pointsUtilises = $pointsDemandes;
+            $remiseEuros = (float)$valRemise;
+        }
+    }
+}
+
+// On applique la remise sur le prix final (sans descendre en dessous de zéro)
+$prixFinal = max(0, $prixFinal - $remiseEuros);
+
+// ── Points gagnés sur ce trajet (non inscrit = 0) ──
+$pointsGagnes = ($cliNum == 0) ? 0 : calculerPoints($distanceTot);
 
 // ── Insertion en TRANSACTION ──
 try {
@@ -69,7 +96,7 @@ try {
     ");
     $stmtInsRes->execute([
         ':cli' => $cliNum, ':res' => $resNum, ':tranche' => $numTranche,
-        ':dateres' => $trajet['date'], ':points' => $points, ':prix' => $prixFinal,
+        ':dateres' => $trajet['date'], ':points' => $pointsGagnes, ':prix' => $prixFinal,
     ]);
 
     $segments = regrouperParLigne($trajet['chemin']);
@@ -86,13 +113,20 @@ try {
     }
 
     if ($cliNum != 0) {
+        // Mise à jour : on ajoute les points gagnés ET on soustrait les points utilisés
+        // (Attention : le TOTAL ne descend jamais, seul le solde EN COURS baisse)
         $stmtMajPts = $conn->prepare("
             UPDATE VIK_CLIENT
-            SET CLI_NB_POINTS_TOT = CLI_NB_POINTS_TOT + :pts,
-                CLI_NB_POINTS_EC  = CLI_NB_POINTS_EC + :pts2
+            SET CLI_NB_POINTS_TOT = CLI_NB_POINTS_TOT + :pts_gagnes,
+                CLI_NB_POINTS_EC  = CLI_NB_POINTS_EC + :pts_gagnes2 - :pts_utilises
             WHERE CLI_NUM = :num
         ");
-        $stmtMajPts->execute([':pts' => $points, ':pts2' => $points, ':num' => $cliNum]);
+        $stmtMajPts->execute([
+            ':pts_gagnes' => $pointsGagnes, 
+            ':pts_gagnes2' => $pointsGagnes, 
+            ':pts_utilises' => $pointsUtilises, 
+            ':num' => $cliNum
+        ]);
     }
 
     $conn->commit();
@@ -100,14 +134,12 @@ try {
     unset($_SESSION['trajet_a_reserver']);
     $_SESSION['resa_confirmee'] = [
         'cli_num' => $cliNum, 'res_num' => $resNum,
-        'prix' => $prixFinal, 'points' => $points, 'distance' => $distanceTot,
+        'prix' => $prixFinal, 'points' => $pointsGagnes, 'distance' => $distanceTot,
     ];
 
-    // Non-inscrit : on autorise le billet ET on garde le nom saisi pour l'afficher
     if ($cliNum == 0) {
         if (!isset($_SESSION['billets_invite'])) $_SESSION['billets_invite'] = [];
         $_SESSION['billets_invite'][] = $resNum;
-        // On stocke le nom du voyageur indexé par numéro de réservation
         if (!isset($_SESSION['noms_invite'])) $_SESSION['noms_invite'] = [];
         $_SESSION['noms_invite'][$resNum] = $nomVoyageur;
     }
