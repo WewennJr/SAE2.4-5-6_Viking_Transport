@@ -24,7 +24,7 @@ $connecte = isset($_SESSION["num_client"]);
         <li class="dropdown">
             <a href="#" class="dropdown-toggle">Voyager ▾</a>
             <ul class="dropdown-menu">
-                <li><a href="../PHP/recherche.php">Recherche</a></li>
+                <li><a href="../PHP/recherche.php">Réserver</a></li>
                 <li><a href="../PHP/lignes.php">Horaires</a></li>
             </ul>
         </li>
