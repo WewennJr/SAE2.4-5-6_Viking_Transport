@@ -56,15 +56,7 @@ if (isset($_SESSION['form_data'])) {
     <link rel="stylesheet" href="../CSS/style.css">
 </head>
 <body>
-    <nav>
-        <ul>
-            <a href="index.html"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport"></a>
-            <li><a href="recherche.html">Voyager</a></li>
-            <li><a href="VikingTransports.html">Notre entreprise</a></li>
-            <li><a href="services.html">Nos services</a></li>
-            <li id="profil"><a href="redirection.html">Mon profil</a></li>
-        </ul>
-    </nav>
+    <?php include_once "nav.php" ?>
     <main>
         <h1>Modifier mon profil</h1>
         <article>
@@ -132,10 +124,6 @@ if (isset($_SESSION['form_data'])) {
 
         </article>
     </main>
-    <footer>
-        <a href="contact.html">Nous contacter</a>
-        <div class="mentions"><a href="mentionslegales.html">Mentions légales</a></div>
-        <div class="credits">Site réalisé par T.UI.sto</div>
-    </footer>
+    <?php include_once "footer.php" ?>
 </body>
 </html>

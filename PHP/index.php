@@ -136,7 +136,7 @@ $connecte = isset($_SESSION["num_client"]);
             <div class="section-detail-texte">
                 <h2 class="section-titre">Mes points fidélité</h2>
                 <p>À chaque voyage avec Viking Transport, vous cumulez des points fidélité. Consultez votre solde et découvrez comment les utiliser pour obtenir des réductions sur vos prochains trajets.</p>
-                <a href="../PHP/points.php" class="btn">Voir mes points</a>
+                <a href="../PHP/espace_client.php" class="btn">Voir mes points</a>
             </div>
         </div>
     </section>
