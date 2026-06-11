@@ -38,6 +38,8 @@ a {
   color: inherit;
 }
 
+/* ── Nav ────────────────────────────────────────────────── */
+
 nav {
   background-color: var(--noir);
   border-bottom: 3px solid var(--rouge);
@@ -105,6 +107,187 @@ nav li#profil a:hover {
   background-color: var(--rouge-dark);
 }
 
+/* ── Menus déroulants ───────────────────────────────────── */
+
+nav ul li.dropdown {
+  position: relative;
+}
+
+nav ul li.dropdown .dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: var(--noir);
+  border-top: 3px solid var(--rouge);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  min-width: 180px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+  z-index: 200;
+}
+
+nav ul li.dropdown:hover .dropdown-menu,
+nav ul li.dropdown.dropdown--open .dropdown-menu {
+  display: block;
+}
+
+nav ul li.dropdown .dropdown-menu li {
+  display: block;
+  width: 100%;
+}
+
+nav ul li.dropdown .dropdown-menu li a {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--blanc);
+  border-bottom: 1px solid #2e2e2e;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+nav ul li.dropdown .dropdown-menu li:last-child a {
+  border-bottom: none;
+}
+
+nav ul li.dropdown .dropdown-menu li a:hover {
+  background-color: var(--rouge);
+  color: #fff;
+}
+
+/* ── Barre mobile (cachée sur desktop) ──────────────────── */
+
+.nav-topbar {
+  display: none;
+}
+
+#logo-mobile {
+  display: block;
+  height: 2.8rem;
+  width: auto;
+  object-fit: contain;
+}
+
+.nav-burger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 0.8rem;
+}
+
+.nav-burger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background-color: var(--blanc);
+  border-radius: 2px;
+  transition: transform 0.25s, opacity 0.25s;
+}
+
+.nav-burger--open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-burger--open span:nth-child(2) { opacity: 0; }
+.nav-burger--open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── Nav responsive ─────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* Barre logo + hamburger */
+  .nav-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.5rem;
+    min-height: 56px;
+  }
+
+  .nav-burger {
+    display: flex;
+  }
+
+  /* L'ul se déplie sous la barre */
+  nav ul {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    grid-template-columns: unset;
+  }
+
+  nav ul.nav-open {
+    display: flex;
+  }
+
+  /* Premier li (logo desktop) caché — remplacé par logo-mobile */
+  nav ul > li:first-child {
+    display: none;
+  }
+
+  nav li {
+    width: 100%;
+    border-bottom: 1px solid #2e2e2e;
+  }
+
+  nav a {
+    justify-content: flex-start;
+    padding: 0.9rem 1.2rem;
+  }
+
+  /* Profil pleine largeur */
+  nav li#profil {
+    flex-direction: row;
+  }
+
+  nav li#profil a {
+    flex: 1;
+    justify-content: flex-start;
+    padding: 0.9rem 1.2rem;
+  }
+
+  nav li#profil a.btn-deconnexion {
+    flex: 0 0 3.5rem;
+    border-left: 1px solid rgba(255,255,255,0.1);
+    justify-content: center;
+  }
+
+  /* Dropdowns inline */
+  nav ul li.dropdown .dropdown-menu {
+    position: static;
+    border-top: none;
+    border-left: 3px solid var(--rouge);
+    box-shadow: none;
+    background-color: #111;
+    margin-left: 1rem;
+    min-width: unset;
+  }
+
+  nav ul li.dropdown:hover .dropdown-menu {
+    display: none;
+  }
+
+  nav ul li.dropdown.dropdown--open .dropdown-menu {
+    display: block;
+  }
+
+  nav ul li.dropdown .dropdown-menu li a {
+    padding: 0.7rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* ── Main ───────────────────────────────────────────────── */
+
 main {
   flex: 1;
   padding: 3rem 8%;
@@ -151,7 +334,6 @@ article {
   margin-bottom: 1.75rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
-
 
 section {
   margin-bottom: 2rem;
@@ -390,6 +572,7 @@ footer a:hover {
   background-color: var(--rouge-dark);
   transform: translateY(-2px);
 }
+
 main.main-lignes {
   max-width: 1400px;
 }
@@ -474,111 +657,9 @@ main.main-lignes {
   position: absolute;
   left: -4px;
   color: var(--gris-clair);
-
 }
 
-/* ── Menus déroulants ───────────────────────────────────── */
-
-
-nav ul li.dropdown {
-
-  position: relative;
-
-}
-
-
-nav ul li.dropdown .dropdown-menu {
-
-  display: none;
-
-  position: absolute;
-
-  top: 100%;
-
-  left: 0;
-
-  background-color: var(--noir);
-
-  border-top: 3px solid var(--rouge);
-
-  list-style: none;
-
-  padding: 0;
-
-  margin: 0;
-
-  min-width: 180px;
-
-  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-
-  z-index: 200;
-
-}
-
-
-nav ul li.dropdown:hover .dropdown-menu {
-
-  display: block;
-
-}
-
-
-nav ul li.dropdown .dropdown-menu li {
-
-  display: block;
-
-  width: 100%;
-
-}
-
-
-nav ul li.dropdown .dropdown-menu li a {
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: flex-start;
-
-  width: 100%;
-
-  padding: 0.8rem 1.2rem;
-
-  font-family: var(--font-display);
-
-  font-weight: 600;
-
-  font-size: 0.9rem;
-
-  letter-spacing: 0.06em;
-
-  text-transform: uppercase;
-
-  color: var(--blanc);
-
-  border-bottom: 1px solid #2e2e2e;
-
-  transition: background-color 0.2s, color 0.2s;
-
-}
-
-
-nav ul li.dropdown .dropdown-menu li:last-child a {
-
-  border-bottom: none;
-
-}
-
-
-nav ul li.dropdown .dropdown-menu li a:hover {
-
-  background-color: var(--rouge);
-
-  color: #fff;
-
-}
-
-/* ── Responsive ─────────────────────────────────────────── */
+/* ── Responsive global ──────────────────────────────────── */
 
 @media (max-width: 900px) {
   main {
@@ -603,19 +684,6 @@ nav ul li.dropdown .dropdown-menu li a:hover {
 }
 
 @media (max-width: 640px) {
-  nav ul {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  nav li:last-child {
-    grid-column: span 2;
-  }
-
-  nav a {
-    border-bottom: 1px solid #333;
-    font-size: 0.9rem;
-  }
-
   h1 {
     font-size: 1.6rem;
   }
