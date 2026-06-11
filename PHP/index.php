@@ -29,7 +29,7 @@ $connecte = isset($_SESSION["num_client"]);
         <img id="hero-img" src="../images/viking.png" alt="équipe de vikings">
         <div class="hero-contenu">
             <span class="hero-badge">Normandie</span>
-            <h1>Viking Transport</h1>
+            <h1 id="copyright_titre">Viking Transport</h1>
             <p>Voyagez à travers la Normandie simplement, rapidement et à prix raisonnable.</p>
             <div class="hero-actions">
                 <a href="../PHP/recherche.php" class="btn">Rechercher un trajet</a>
@@ -147,7 +147,7 @@ $connecte = isset($_SESSION["num_client"]);
             <div class="section-detail-texte">
                 <h2 class="section-titre">Historique de mes voyages</h2>
                 <p>Retrouvez l'ensemble de vos trajets passés avec Viking Transport. Dates, lignes, montants — tout votre historique est disponible en un coup d'œil.</p>
-                <a href="../PHP/historique.php" class="btn">Voir mon historique</a>
+                <a href="../PHP/espace_client.php" class="btn">Voir mon historique</a>
             </div>
             <div class="section-detail-visuel">
                 <img src="../images/historique.png" alt="historique">

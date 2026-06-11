@@ -29,7 +29,11 @@
     <div class="footer-colonne footer-logo-col">
       <h3>T.UI.sto</h3>
       <img src="../images/tuisto.png" alt="Logo T.UI.sto">
+
+      © 2026 T.UI.sto — Tous droits réservés.
     </div>
+
+  
 
   </div>
 </footer>

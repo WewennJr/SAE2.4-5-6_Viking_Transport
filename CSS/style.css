@@ -713,3 +713,9 @@ main.main-lignes {
     max-height: 180px;
   }
 }
+
+
+#copyright_titre::after{
+  content: '®';
+  font-size: 2rem ;
+}
