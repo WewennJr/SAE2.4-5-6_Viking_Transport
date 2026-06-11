@@ -1,12 +1,9 @@
 <?php
 // ════════════════════════════════════════════════════════════
 // moteur_trajet.php
-// Fonctions de recherche de trajet (graphe + Dijkstra)
+// Fonctions de recherche de trajet (graphe + Dijkstra et K-Trajets)
 // ════════════════════════════════════════════════════════════
 
-// Construit le graphe du réseau à partir de VIK_NOEUD
-// IMPORTANT : on garde UNIQUEMENT les sens réels.
-// Le réseau est déjà bidirectionnel dans les données (ex: 5A aller, 5B retour).
 function chargerGraphe($conn)
 {
     $sql = "SELECT LIG_NUM, COM_CODE_INSEE_ARRET, COM_CODE_INSEE_SUIVANT,
@@ -15,7 +12,6 @@ function chargerGraphe($conn)
     $stmt = $conn->query($sql);
     $noeuds = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // On garde la durée minimale par trajet (commune -> suivante sur une ligne)
     $minDuree = [];
     foreach ($noeuds as $n) {
         $depart = trim($n['COM_CODE_INSEE_ARRET']);
@@ -33,7 +29,11 @@ function chargerGraphe($conn)
         }
     }
 
-    // Graphe avec les SENS RÉELS uniquement (pas de duplication artificielle)
+    $liaisonsReelles = [];
+    foreach ($minDuree as $c) {
+        $liaisonsReelles[$c['depart'] . '>' . $c['vers']] = true;
+    }
+
     $graphe = [];
     foreach ($minDuree as $c) {
         $graphe[$c['depart']][] = [
@@ -43,23 +43,35 @@ function chargerGraphe($conn)
             'distance' => $c['distance'],
         ];
     }
+
+    foreach ($minDuree as $c) {
+        $cleInverse = $c['vers'] . '>' . $c['depart'];
+        if (!isset($liaisonsReelles[$cleInverse])) {
+            $graphe[$c['vers']][] = [
+                'vers'     => $c['depart'],
+                'ligne'    => $c['ligne'],
+                'duree'    => $c['duree'],
+                'distance' => $c['distance'],
+            ];
+        }
+    }
+
     return $graphe;
 }
 
-// Dijkstra : trajet le plus rapide entre deux communes
-function trouverTrajet($graphe, $depart, $arrivee)
+function trouverTrajet($graphe, $depart, $arrivee, $critere = 'duree')
 {
     if (!isset($graphe[$depart])) return null;
 
-    $durees   = [$depart => 0];
-    $parents  = [];
-    $visites  = [];
+    $cout    = [$depart => 0];
+    $parents = [];
+    $visites = [];
     $aTraiter = [$depart => 0];
 
     while (!empty($aTraiter)) {
         asort($aTraiter);
         $commune = array_key_first($aTraiter);
-        $dureeActuelle = $aTraiter[$commune];
+        $coutActuel = $aTraiter[$commune];
         unset($aTraiter[$commune]);
 
         if (isset($visites[$commune])) continue;
@@ -69,18 +81,19 @@ function trouverTrajet($graphe, $depart, $arrivee)
 
         foreach ($graphe[$commune] as $conn) {
             $voisine = $conn['vers'];
-            $nouvelleDuree = $dureeActuelle + $conn['duree'];
-            if (!isset($durees[$voisine]) || $nouvelleDuree < $durees[$voisine]) {
-                $durees[$voisine]  = $nouvelleDuree;
+            $poids = ($critere === 'distance') ? $conn['distance'] : $conn['duree'];
+            $nouveauCout = $coutActuel + $poids;
+
+            if (!isset($cout[$voisine]) || $nouveauCout < $cout[$voisine]) {
+                $cout[$voisine]    = $nouveauCout;
                 $parents[$voisine] = ['depuis' => $commune, 'ligne' => $conn['ligne'], 'duree' => $conn['duree'], 'distance' => $conn['distance']];
-                $aTraiter[$voisine] = $nouvelleDuree;
+                $aTraiter[$voisine] = $nouveauCout;
             }
         }
     }
 
-    if (!isset($durees[$arrivee])) return null;
+    if (!isset($cout[$arrivee])) return null;
 
-    // Reconstruction du chemin
     $chemin = [];
     $courant = $arrivee;
     while (isset($parents[$courant])) {
@@ -88,10 +101,23 @@ function trouverTrajet($graphe, $depart, $arrivee)
         $chemin[] = ['de' => $p['depuis'], 'vers' => $courant, 'ligne' => $p['ligne'], 'duree' => $p['duree'], 'distance' => $p['distance']];
         $courant = $p['depuis'];
     }
-    return ['chemin' => array_reverse($chemin), 'dureeTotale' => $durees[$arrivee]];
+    $chemin = array_reverse($chemin);
+
+    $dureeTot = 0;
+    $distTot = 0;
+    foreach ($chemin as $e) {
+        $dureeTot += $e['duree'];
+        $distTot  += $e['distance'];
+    }
+
+    return [
+        'chemin'      => $chemin,
+        'dureeTotale' => $dureeTot,
+        'distanceTotale' => $distTot,
+        'critere'     => $critere,
+    ];
 }
 
-// Récupère les noms de communes (code INSEE -> nom)
 function chargerNomsCommunes($conn)
 {
     $stmt = $conn->query("SELECT COM_CODE_INSEE, COM_NOM FROM VIK_COMMUNE");
@@ -102,7 +128,6 @@ function chargerNomsCommunes($conn)
     return $noms;
 }
 
-// Regroupe les étapes consécutives sur une même ligne
 function regrouperParLigne($chemin)
 {
     $segments = [];
@@ -121,7 +146,6 @@ function regrouperParLigne($chemin)
     return $segments;
 }
 
-// Calcule la distance totale d'un chemin
 function distanceTotale($chemin)
 {
     $d = 0;
@@ -129,9 +153,91 @@ function distanceTotale($chemin)
     return $d;
 }
 
-// Calcule les points gagnés (règle sujet : 1 pt / 10 km, arrondi inférieur, min 1)
 function calculerPoints($distance)
 {
     return max(1, (int)floor($distance / 10));
+}
+
+function trouverKTrajets($graphe, $depart, $arrivee, $critere = 'duree', $k_max = 5) {
+    if (!isset($graphe[$depart])) return [];
+
+    $aTraiter = [[
+        'cout'    => 0,
+        'noeud'   => $depart,
+        'chemin'  => [],
+        'visites' => [$depart => true]
+    ]];
+
+    $cheminsTrouves = [];
+    $compteNoeuds = [];
+
+    while (!empty($aTraiter)) {
+        $minIndex = 0;
+        $minCout = $aTraiter[0]['cout'];
+        foreach ($aTraiter as $i => $item) {
+            if ($item['cout'] < $minCout) {
+                $minCout = $item['cout'];
+                $minIndex = $i;
+            }
+        }
+        $courant = $aTraiter[$minIndex];
+        unset($aTraiter[$minIndex]);
+        $aTraiter = array_values($aTraiter);
+
+        $noeudCourant = $courant['noeud'];
+
+        if (!isset($compteNoeuds[$noeudCourant])) $compteNoeuds[$noeudCourant] = 0;
+        $compteNoeuds[$noeudCourant]++;
+        if ($compteNoeuds[$noeudCourant] > 80) continue;
+
+        if ($noeudCourant === $arrivee) {
+            $dureeTot = 0;
+            $distTot = 0;
+            foreach ($courant['chemin'] as $e) {
+                $dureeTot += $e['duree'];
+                $distTot += $e['distance'];
+            }
+
+            $cheminsTrouves[] = [
+                'chemin'         => $courant['chemin'],
+                'dureeTotale'    => $dureeTot,
+                'distanceTotale' => $distTot,
+                'critere'        => $critere,
+            ];
+
+            if (count($cheminsTrouves) >= $k_max) break;
+            continue;
+        }
+
+        if (!isset($graphe[$noeudCourant])) continue;
+
+        foreach ($graphe[$noeudCourant] as $conn) {
+            $voisine = $conn['vers'];
+
+            if (isset($courant['visites'][$voisine])) continue;
+
+            $poids = ($critere === 'distance') ? $conn['distance'] : $conn['duree'];
+
+            $nouveauChemin = $courant['chemin'];
+            $nouveauChemin[] = [
+                'de'       => $noeudCourant,
+                'vers'     => $voisine,
+                'ligne'    => $conn['ligne'],
+                'duree'    => $conn['duree'],
+                'distance' => $conn['distance']
+            ];
+
+            $nouvellesVisites = $courant['visites'];
+            $nouvellesVisites[$voisine] = true;
+
+            $aTraiter[] = [
+                'cout'    => $courant['cout'] + $poids,
+                'noeud'   => $voisine,
+                'chemin'  => $nouveauChemin,
+                'visites' => $nouvellesVisites
+            ];
+        }
+    }
+    return $cheminsTrouves;
 }
 ?>

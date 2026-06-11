@@ -145,3 +145,47 @@
     text-align: left;
   }
 }
+
+/* ── Choix du critère (rapide / court) ── */
+.choix-critere {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.radio-critere {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid #d5d5d5;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+  margin-bottom: 0;
+  font-weight: 500;
+}
+
+.radio-critere:hover {
+  border-color: var(--rouge, #C0392B);
+}
+
+/* Quand le radio est coché, on met en valeur le label parent */
+.radio-critere input[type="radio"] {
+  accent-color: var(--rouge, #C0392B);
+  cursor: pointer;
+}
+
+.radio-critere:has(input:checked) {
+  border-color: var(--rouge, #C0392B);
+  background-color: rgba(192, 57, 43, 0.06);
+}
+
+/* Sous-titre du critère dans le résultat */
+.trajet-critere {
+  font-size: 0.85rem;
+  color: var(--gris, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.8rem;
+}

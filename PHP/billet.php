@@ -106,9 +106,7 @@ foreach ($etapes as $e) $distanceTotale += $e['ETA_DISTANCE'];
 
 $conn = null;
 
-$contenuQR = "VIKING TRANSPORT | Billet #{$resa['RES_NUM']} | "
-           . "{$resa['CLI_PRENOM']} {$resa['CLI_NOM']} | "
-           . "$villeDepart -> $villeArrivee | {$resa['RES_DATE']}";
+$contenuQR = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 $urlQR = "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=" . urlencode($contenuQR);
 ?>
 <!doctype html>

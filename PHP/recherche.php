@@ -6,45 +6,68 @@ include_once "moteur_trajet.php";
 
 $conn = OuvrirConnexionPDO($dbOracle, $db_usernameOracle, $db_passwordOracle);
 
-// Liste de toutes les communes pour les menus déroulants (triées par nom)
 $stmtCom = $conn->query("SELECT COM_CODE_INSEE, COM_NOM FROM VIK_COMMUNE ORDER BY COM_NOM");
 $communes = $stmtCom->fetchAll(PDO::FETCH_ASSOC);
 
-// Variables de résultat
-$resultat   = null;
-$segments   = [];
 $erreur     = "";
 $depart     = $_POST['depart']  ?? '';
 $arrivee    = $_POST['arrivee'] ?? '';
 $dateVoyage = $_POST['date']    ?? date('Y-m-d');
+$critere    = $_POST['critere'] ?? 'duree';
 
-// Traitement de la recherche
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($depart) || empty($arrivee)) {
         $erreur = "Veuillez choisir une commune de départ et d'arrivée.";
     } elseif ($depart === $arrivee) {
         $erreur = "Le départ et l'arrivée doivent être différents.";
     } else {
-        $graphe   = chargerGraphe($conn);
-        $noms     = chargerNomsCommunes($conn);
-        $resultat = trouverTrajet($graphe, $depart, $arrivee);
+        $graphe    = chargerGraphe($conn);
+        $noms      = chargerNomsCommunes($conn);
+        $resultats = trouverKTrajets($graphe, $depart, $arrivee, $critere, 5);
 
-        if ($resultat === null) {
+        if (empty($resultats)) {
             $erreur = "Aucun trajet trouvé entre ces deux communes.";
         } else {
-            $segments = regrouperParLigne($resultat['chemin']);
-            $distTot  = distanceTotale($resultat['chemin']);
-            $points   = calculerPoints($distTot);
-            // On mémorise le trajet en session pour pouvoir le réserver ensuite
-            $_SESSION['trajet_a_reserver'] = [
-                'depart'   => $depart,
-                'arrivee'  => $arrivee,
-                'date'     => $dateVoyage,
-                'chemin'   => $resultat['chemin'],
-                'duree'    => $resultat['dureeTotale'],
-                'distance' => $distTot,
-                'points'   => $points,
-            ];
+            // Détermination de la réduction si le client est connecté
+            $pourcentagePaye = 100;
+            if (isset($_SESSION['num_client'])) {
+                $stmtCli = $conn->prepare("
+                    SELECT t.TYP_REDUC 
+                    FROM VIK_CLIENT c JOIN VIK_TYPE_CLIENT t ON c.TYP_NUM = t.TYP_NUM 
+                    WHERE c.CLI_NUM = :num
+                ");
+                $stmtCli->execute([':num' => $_SESSION['num_client']]);
+                $niv = $stmtCli->fetch(PDO::FETCH_ASSOC);
+                if ($niv) {
+                    $pourcentagePaye = (float)$niv['TYP_REDUC'];
+                }
+            }
+
+            // Préparation de la requête de tarification
+            $stmtTar = $conn->prepare("SELECT TAR_PRIX FROM VIK_TARIF WHERE :dist >= TAR_MIN_DIST AND :dist <= TAR_MAX_DIST");
+
+            $_SESSION['trajets_trouves'] = [];
+            foreach ($resultats as $index => $res) {
+                $distTot = $res['distanceTotale'];
+                
+                // Calcul du prix pour cette option spécifique
+                $stmtTar->execute([':dist' => $distTot]);
+                $tarif = $stmtTar->fetch(PDO::FETCH_ASSOC);
+                $tarifBase = $tarif ? (float)$tarif['TAR_PRIX'] : 0;
+                $prixFinal = (int)round($tarifBase * $pourcentagePaye / 100);
+
+                $_SESSION['trajets_trouves'][$index] = [
+                    'depart'   => $depart,
+                    'arrivee'  => $arrivee,
+                    'date'     => $dateVoyage,
+                    'chemin'   => $res['chemin'],
+                    'duree'    => $res['dureeTotale'],
+                    'distance' => $distTot,
+                    'prix'     => $prixFinal,
+                    'points'   => calculerPoints($distTot),
+                    'segments' => regrouperParLigne($res['chemin'])
+                ];
+            }
         }
     }
 }
@@ -59,6 +82,8 @@ $conn = null;
     <title>Rechercher un trajet - Viking Transport</title>
     <link rel="stylesheet" href="../CSS/style.css">
     <link rel="stylesheet" href="../CSS/recherche.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="../CSS/flatpickr-viking.css">
 </head>
 <body>
 
@@ -67,7 +92,6 @@ $conn = null;
 <main>
     <h1>Rechercher un trajet</h1>
 
-    <!-- Formulaire de recherche -->
     <section class="carte-recherche-form">
         <form action="recherche.php" method="post">
             <div class="form-row">
@@ -94,11 +118,28 @@ $conn = null;
                     </select>
                 </div>
             </div>
-            <div class="form-group">
-                <label for="date">Date du voyage</label>
-                <input type="date" name="date" id="date" value="<?= htmlspecialchars($dateVoyage) ?>" required>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date">Date du voyage</label>
+                    <input type="text" name="date" id="date" value="<?= htmlspecialchars($dateVoyage) ?>" required readonly>
+                </div>
+                <div class="form-group">
+                    <label>Critère de recherche</label>
+                    <div class="choix-critere">
+                        <label class="radio-critere">
+                            <input type="radio" name="critere" value="duree" <?= ($critere === 'duree') ? 'checked' : '' ?>>
+                            <span>Le plus rapide</span>
+                        </label>
+                        <label class="radio-critere">
+                            <input type="radio" name="critere" value="distance" <?= ($critere === 'distance') ? 'checked' : '' ?>>
+                            <span>Le plus court</span>
+                        </label>
+                    </div>
+                </div>
             </div>
-            <input type="submit" value="Rechercher le meilleur trajet">
+
+            <input type="submit" value="Rechercher le trajet">
         </form>
     </section>
 
@@ -106,48 +147,82 @@ $conn = null;
         <p id="erreur"><?= htmlspecialchars($erreur) ?></p>
     <?php } ?>
 
-    <!-- Résultat de la recherche -->
-    <?php if ($resultat !== null && empty($erreur)) {
-        // On recharge les noms de communes pour l'affichage
+    <?php if (!empty($_SESSION['trajets_trouves']) && empty($erreur)) {
         $connAff = OuvrirConnexionPDO($dbOracle, $db_usernameOracle, $db_passwordOracle);
         $noms = chargerNomsCommunes($connAff);
         $connAff = null;
 
-        $h = intdiv($resultat['dureeTotale'], 60);
-        $m = $resultat['dureeTotale'] % 60;
+        $meilleur = $_SESSION['trajets_trouves'][0];
+        $valeurRef = ($critere === 'distance') ? $meilleur['distance'] : $meilleur['duree'];
+        $prixRef = $meilleur['prix'];
+        $unite = ($critere === 'distance') ? 'km' : 'min';
     ?>
-        <section class="carte-trajet">
-            <div class="trajet-entete">
-                <h2><?= htmlspecialchars($noms[$depart] ?? $depart) ?> → <?= htmlspecialchars($noms[$arrivee] ?? $arrivee) ?></h2>
-                <div class="trajet-resume">
-                    <span class="resume-item"><strong><?= $h ?>h<?= str_pad($m, 2, '0', STR_PAD_LEFT) ?></strong> de trajet</span>
-                    <span class="resume-item"><strong><?= $distTot ?> km</strong></span>
-                    <span class="resume-item"><strong><?= count($segments) - 1 ?></strong> correspondance(s)</span>
-                    <span class="resume-item points"><strong>+<?= $points ?></strong> points</span>
+        <h2 style="margin-top: 2rem;">Résultats : <?= htmlspecialchars($noms[$depart] ?? $depart) ?> → <?= htmlspecialchars($noms[$arrivee] ?? $arrivee) ?></h2>
+
+        <?php foreach ($_SESSION['trajets_trouves'] as $index => $trajet) {
+            $h = intdiv($trajet['duree'], 60);
+            $m = $trajet['duree'] % 60;
+            $segments = $trajet['segments'];
+
+            if ($index === 0) {
+                $diffTexte = "— Le plus " . ($critere === 'distance' ? 'court' : 'rapide');
+                $diffPrixTexte = "";
+            } else {
+                $diff = ($critere === 'distance') ? ($trajet['distance'] - $valeurRef) : ($trajet['duree'] - $valeurRef);
+                $diffPrix = $trajet['prix'] - $prixRef;
+                
+                $diffTexte = "(+ {$diff} {$unite})";
+                $diffPrixTexte = ($diffPrix >= 0) ? "(+ {$diffPrix} €)" : "({$diffPrix} €)";
+            }
+        ?>
+            <section class="carte-trajet" style="margin-bottom: 1.5rem;">
+                <div class="trajet-entete">
+                    <h3 style="margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Option <?= $index + 1 ?> <span style="color:var(--rouge); font-size:0.9rem; margin-left:0.5rem;"><?= $diffTexte ?></span></span>
+                        <span style="font-family:var(--font-display); font-size:1.4rem; color:var(--noir);"><?= $trajet['prix'] ?> € <span style="font-size:0.85rem; color:var(--rouge); font-weight:normal;"><?= $diffPrixTexte ?></span></span>
+                    </h3>
+                    <div class="trajet-resume">
+                        <span class="resume-item"><strong><?= $h ?>h<?= str_pad($m, 2, '0', STR_PAD_LEFT) ?></strong> de trajet</span>
+                        <span class="resume-item"><strong><?= $trajet['distance'] ?> km</strong></span>
+                        <span class="resume-item"><strong><?= count($segments) - 1 ?></strong> correspondance(s)</span>
+                        <span class="resume-item points"><strong>+<?= $trajet['points'] ?></strong> points</span>
+                    </div>
                 </div>
-            </div>
 
-            <ol class="trajet-etapes">
-                <?php foreach ($segments as $s) {
-                    $nomDep = $noms[$s['depart']]  ?? $s['depart'];
-                    $nomArr = $noms[$s['arrivee']] ?? $s['arrivee'];
-                ?>
-                    <li>
-                        <span class="etape-ligne">Ligne <?= htmlspecialchars($s['ligne']) ?></span>
-                        <span class="etape-trajet"><?= htmlspecialchars($nomDep) ?> → <?= htmlspecialchars($nomArr) ?></span>
-                        <span class="etape-info"><?= $s['duree'] ?> min · <?= $s['distance'] ?> km</span>
-                    </li>
-                <?php } ?>
-            </ol>
+                <ol class="trajet-etapes">
+                    <?php foreach ($segments as $s) {
+                        $nomDep = $noms[$s['depart']]  ?? $s['depart'];
+                        $nomArr = $noms[$s['arrivee']] ?? $s['arrivee'];
+                    ?>
+                        <li>
+                            <span class="etape-ligne">Ligne <?= htmlspecialchars($s['ligne']) ?></span>
+                            <span class="etape-trajet"><?= htmlspecialchars($nomDep) ?> → <?= htmlspecialchars($nomArr) ?></span>
+                            <span class="etape-info"><?= $s['duree'] ?> min · <?= $s['distance'] ?> km</span>
+                        </li>
+                    <?php } ?>
+                </ol>
 
-            <form action="paiement.php" method="post" class="form-reserver">
-                <input type="submit" value="Réserver ce trajet">
-            </form>
-        </section>
+                <form action="paiement.php" method="post" class="form-reserver">
+                    <input type="hidden" name="index_trajet" value="<?= $index ?>">
+                    <input type="submit" value="Réserver cette option">
+                </form>
+            </section>
+        <?php } ?>
     <?php } ?>
 </main>
 
 <?php include_once "footer.php"; ?>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/fr.js"></script>
+<script>
+flatpickr("#date", {
+    locale: "fr",
+    dateFormat: "Y-m-d",
+    minDate: "today",
+    defaultDate: "<?= htmlspecialchars($dateVoyage) ?>"
+});
+</script>
 
 </body>
 </html>
