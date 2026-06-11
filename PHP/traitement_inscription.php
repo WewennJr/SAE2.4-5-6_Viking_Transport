@@ -45,6 +45,13 @@
         }
     }
 
+    // Vérification du format du courriel
+    if (!ctype_digit($tel)) {
+        $_SESSION['erreur'] = "Le numéro de téléphone doit être composé de chiffres.";
+        header("Location: formulaire_inscription.php");
+        exit();
+    }
+
     // Vérification de la correspondance des mots de passe
     if ($mdp !== $confirm_mdp) {
         $_SESSION['erreur'] = "Les mots de passe ne correspondent pas.";
