@@ -171,8 +171,6 @@
   color: var(--noir);
 }
 
-
-
 .card-action h3 {
   font-family: var(--font-display);
   font-size: 1.05rem;
@@ -190,50 +188,69 @@
   line-height: 1.5;
 }
 
-/* ── Section carte ──────────────────────────────────────── */
+/* ── Sections détail ────────────────────────────────────── */
 
-.section-carte {
+.section-detail {
   padding: 5rem 8%;
   background-color: #fff;
 }
 
-.section-carte-inner {
+.section-detail:nth-child(even) {
+  background-color: var(--blanc);
+}
+
+.section-detail-inner {
   display: grid;
-  grid-template-columns: 1fr 1.6fr;
+  grid-template-columns: 1fr 1fr;
   gap: 4rem;
   align-items: center;
 }
 
-.section-carte-texte h2 {
+.section-detail-texte h2 {
   font-size: 2rem;
-  border: none;
   margin-bottom: 1rem;
 }
 
-.section-carte-texte p {
+.section-detail-texte p {
   font-size: 1rem;
   line-height: 1.7;
   margin-bottom: 1.5rem;
 }
 
-.section-carte img {
+.section-detail-visuel img {
   width: 100%;
   border-radius: 8px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.12);
 }
 
+.detail-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: var(--gris-clair);
+  border-radius: 8px;
+  border: 2px dashed #ccc;
+}
+
 /* ── Responsive ─────────────────────────────────────────── */
 
 @media (max-width: 900px) {
-  .section-carte-inner {
+  .section-detail-inner {
     grid-template-columns: 1fr;
     gap: 2rem;
+  }
+
+  .section-detail-alt .section-detail-visuel {
+    order: 1;
+  }
+
+  .section-detail-alt .section-detail-texte {
+    order: 2;
   }
 }
 
 @media (max-width: 640px) {
   .section-actions,
-  .section-carte {
+  .section-detail {
     padding: 3rem 5%;
   }
 
@@ -244,4 +261,32 @@
   .card-action {
     width: 100%;
   }
+}
+
+/* ── Bouton retour haut ─────────────────────────────────── */
+
+#back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 2.8rem;
+  height: 2.8rem;
+  background-color: var(--rouge);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: background-color 0.2s, transform 0.2s, opacity 0.3s;
+  z-index: 500;
+}
+
+#back-to-top:hover {
+  background-color: var(--rouge-dark);
+  transform: translateY(-3px);
 }

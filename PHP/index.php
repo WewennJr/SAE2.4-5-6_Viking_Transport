@@ -38,41 +38,42 @@ $connecte = isset($_SESSION["num_client"]);
         </div>
     </section>
 
+    <!-- Raccourcis -->
     <section class="section-actions">
         <h2 class="section-titre">Que souhaitez-vous faire ?</h2>
         <p class="section-sous-titre">Accédez rapidement à nos services</p>
         <div class="cards-grid">
 
-            <a href="../PHP/recherche.php" class="card-action">
+            <a href="#section-rechercher" class="card-action">
                 <h3>Rechercher</h3>
                 <p>Trouvez un trajet selon votre destination et vos horaires.</p>
             </a>
 
-            <a href="../PHP/lignes.php" class="card-action">
+            <a href="#section-horaires" class="card-action">
                 <h3>Horaires</h3>
                 <p>Retrouvez les horaires de passage de chaque ligne.</p>
             </a>
 
             <?php if ($connecte) { ?>
 
-                <a href="../PHP/recherche.php" class="card-action">
+                <a href="#section-acheter" class="card-action">
                     <h3>Acheter</h3>
                     <p>Achetez votre billet en quelques clics.</p>
                 </a>
 
-                <a href="../PHP/points.php" class="card-action">
+                <a href="#section-points" class="card-action">
                     <h3>Mes points</h3>
                     <p>Consultez votre solde de points fidélité.</p>
                 </a>
 
-                <a href="../PHP/historique.php" class="card-action">
+                <a href="#section-historique" class="card-action">
                     <h3>Historique</h3>
                     <p>Revoyez l'ensemble de vos voyages passés.</p>
                 </a>
 
             <?php } else { ?>
 
-                <a href="../PHP/formulaire_inscription.php" class="card-action">
+                <a href="#section-inscription" class="card-action">
                     <h3>Créer un compte</h3>
                     <p>Inscrivez-vous et cumulez des points à chaque voyage.</p>
                 </a>
@@ -82,17 +83,112 @@ $connecte = isset($_SESSION["num_client"]);
         </div>
     </section>
 
-    <section class="section-carte">
-        <div class="section-carte-inner">
-            <div class="section-carte-texte">
-                <h2 class="section-titre">Nos lignes en Normandie</h2>
-                <p>Viking Transport couvre l'ensemble de la région normande avec un réseau de lignes régulières. Trouvez facilement votre itinéraire sur la carte.</p>
-                <a href="../PHP/lignes.php" class="btn">Explorer les lignes</a>
+    <!-- Section Rechercher -->
+    <section class="section-detail" id="section-rechercher">
+        <div class="section-detail-inner">
+            <div class="section-detail-texte">
+                <h2 class="section-titre">Rechercher un trajet</h2>
+                <p>Entrez votre point de départ et votre destination pour trouver les meilleures options de trajet disponibles sur le réseau Viking Transport. Comparez les durées, les correspondances et les horaires en temps réel.</p>
+                <a href="../PHP/recherche.php" class="btn">Lancer une recherche</a>
             </div>
-            <img id="carte-image" src="../images/carte.png" alt="carte des lignes">
+            <div class="section-detail-visuel">
+                <img src="../images/bus.png" alt="Bus Viking Transport">
+            </div>
         </div>
     </section>
 
+    <!-- Section Horaires -->
+    <section class="section-detail section-detail-alt" id="section-horaires">
+        <div class="section-detail-inner">
+            <div class="section-detail-visuel">
+                <img id="carte-image" src="../images/carte.png" alt="carte des lignes">
+            </div>
+            <div class="section-detail-texte">
+                <h2 class="section-titre">Nos lignes &amp; horaires</h2>
+                <p>Consultez l'ensemble des lignes du réseau normand ainsi que leurs horaires de passage. Planifiez vos déplacements en toute sérénité grâce à nos fiches horaires détaillées.</p>
+                <a href="../PHP/lignes.php" class="btn">Voir les lignes</a>
+            </div>
+        </div>
+    </section>
+
+    <?php if ($connecte) { ?>
+
+    <!-- Section Acheter -->
+    <section class="section-detail" id="section-acheter">
+        <div class="section-detail-inner">
+            <div class="section-detail-texte">
+                <h2 class="section-titre">Acheter un billet</h2>
+                <p>Réservez et achetez vos billets directement en ligne, en quelques clics. Choisissez votre ligne, votre date et votre horaire, puis procédez au paiement en toute sécurité.</p>
+                <a href="../PHP/recherche.php" class="btn">Acheter un billet</a>
+            </div>
+            <div class="section-detail-visuel">
+                <img src="../images/ticket.jpeg" alt="ticket">
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Mes points -->
+    <section class="section-detail section-detail-alt" id="section-points">
+        <div class="section-detail-inner">
+            <div class="section-detail-visuel">
+                <img src="../images/fidelite.png" alt="fidelite">
+            </div>
+            <div class="section-detail-texte">
+                <h2 class="section-titre">Mes points fidélité</h2>
+                <p>À chaque voyage avec Viking Transport, vous cumulez des points fidélité. Consultez votre solde et découvrez comment les utiliser pour obtenir des réductions sur vos prochains trajets.</p>
+                <a href="../PHP/points.php" class="btn">Voir mes points</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Historique -->
+    <section class="section-detail" id="section-historique">
+        <div class="section-detail-inner">
+            <div class="section-detail-texte">
+                <h2 class="section-titre">Historique de mes voyages</h2>
+                <p>Retrouvez l'ensemble de vos trajets passés avec Viking Transport. Dates, lignes, montants — tout votre historique est disponible en un coup d'œil.</p>
+                <a href="../PHP/historique.php" class="btn">Voir mon historique</a>
+            </div>
+            <div class="section-detail-visuel">
+                <img src="../images/historique.png" alt="historique">
+            </div>
+        </div>
+    </section>
+
+    <?php } else { ?>
+
+    <!-- Section Inscription -->
+    <section class="section-detail" id="section-inscription">
+        <div class="section-detail-inner">
+            <div class="section-detail-texte">
+                <h2 class="section-titre">Créer un compte</h2>
+                <p>Rejoignez Viking Transport et profitez de l'espace client : achat de billets en ligne, cumul de points fidélité, historique de vos voyages et bien plus encore.</p>
+                <a href="../PHP/formulaire_inscription.php" class="btn">S'inscrire gratuitement</a>
+            </div>
+            <div class="section-detail-visuel">
+                <img src="../images/phare.jpg" alt="Phare de Gatteville, Normandie">
+            </div>
+        </div>
+    </section>
+
+    <?php } ?>
+
     <?php include_once("../PHP/footer.php"); ?>
+
+    <!-- Bouton retour en haut -->
+    <button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Retour en haut">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="18 15 12 9 6 15"/>
+        </svg>
+    </button>
+
+    <script>
+        const btn = document.getElementById('back-to-top');
+        window.addEventListener('scroll', () => {
+            btn.style.opacity = window.scrollY > 300 ? '1' : '0';
+            btn.style.pointerEvents = window.scrollY > 300 ? 'auto' : 'none';
+        });
+    </script>
+
 </body>
 </html>
