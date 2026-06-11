@@ -601,7 +601,7 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
                             </div>
                             <div>
                                 <label>Points</label>
-                                <input type="number" name="cli_nb_points_ec" value="<?php echo $client['CLI_NB_POINTS_EC']; ?>" min="0">
+                                <input type="number" name="cli_nb_points_ec" value="<?php echo $client['CLI_NB_POINTS_EC']; ?>" min="0" max="9999">
                             </div>
                             <div>
                                 <label>Rôle</label>
