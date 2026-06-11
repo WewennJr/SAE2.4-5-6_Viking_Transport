@@ -9,7 +9,7 @@
 --      Date de dernière modification : 13/3/2026 18:07:49
 -- -----------------------------------------------------------------------------
 
-DROP TABLE VIK_DEPARTEMENT CASCADE CONSTRAINTS;
+/*DROP TABLE VIK_DEPARTEMENT CASCADE CONSTRAINTS;
 DROP TABLE VIK_TYPE_CLIENT CASCADE CONSTRAINTS;
 DROP TABLE VIK_TARIF CASCADE CONSTRAINTS;
 DROP TABLE VIK_COMMUNE CASCADE CONSTRAINTS;
@@ -18,7 +18,7 @@ DROP TABLE VIK_CLIENT CASCADE CONSTRAINTS;
 DROP TABLE VIK_REDUCTION CASCADE CONSTRAINTS;
 DROP TABLE vik_reservation CASCADE CONSTRAINTS;
 DROP TABLE VIK_ETAPE CASCADE CONSTRAINTS;
-DROP TABLE VIK_NOEUD CASCADE CONSTRAINTS;
+DROP TABLE VIK_NOEUD CASCADE CONSTRAINTS;*/
 
 CREATE TABLE VIK_DEPARTEMENT
 ( 
@@ -91,8 +91,9 @@ CREATE TABLE VIK_CLIENT
 ALTER TABLE VIK_CLIENT
 MODIFY CLI_COURRIEL VARCHAR2(640);
 
+
 CREATE SEQUENCE cli_num_seq
-    START WITH 34
+    START WITH 45
     INCREMENT BY 1
     NOCACHE
     NOCYCLE;
@@ -5948,7 +5949,8 @@ where lower(cD.com_nom) = 'deauville'
   and nD.noe_heure_passage < nA.noe_heure_passage
 order by nD.noe_heure_passage ;
 
-select * from vik_client;
+select * from vik_client
+order by cli_num;
 
 
 
@@ -6018,6 +6020,82 @@ where to_char(res_date, 'DD/MM/YYYY') = '10/04/2026'
 group by lig_num, to_char(eta_heure, 'hh:mi'), res_date
 order by count(*) desc;
 
+/* Les heures les plus fréquenté */
+
+    /* Version 1 ville */
+select lig_num as NumeroDeLigne, to_char(eta_heure, 'hh24') || 'h' as heure, count(*) as nb_passager
+from vik_etape e
+where lig_num = '4A'
+group by lig_num, to_char(eta_heure, 'hh24')
+order by to_char(eta_heure, 'hh24');
+
+    /* Version top 10 des lignes */
+select *
+from (
+    Select lig_num as NumeroDeLigne, to_char(eta_heure, 'hh24') || 'h' as heure, count(*) as nb_passager
+    from vik_etape e
+    group by lig_num, to_char(eta_heure, 'hh24')
+    order by count(*) desc
+)
+where rownum <= 10;
+
+
+   /* Version top 10 des heures sur le réseaux*/
+select *
+from (
+    Select to_char(eta_heure, 'hh24') || 'h' as heure, count(*) as nb_passager
+    from vik_etape e
+    group by to_char(eta_heure, 'hh24')
+    order by count(*) desc
+)
+where rownum <= 10;
+
+
+/* Les lignes les plus frequenté */
+    /* Lignes globalement les plus uilisé */
+select lig_num, count(*) as NbVoyageur
+from vik_etape
+group by lig_num
+order by count(*) desc;
+
+    /* Lignes les plus utilisé tel jour */
+select lig_num,  to_char(res_date, 'DD/MM/YYYY') as res_date, count(*) as NbVoyageur
+from vik_etape e
+join vik_reservation r using(cli_num,res_num)
+group by lig_num,  to_char(res_date, 'DD/MM/YYYY')
+order by count(*) desc;
+
+select lig_num,  to_char(res_date, 'DD/MM/YYYY') as res_date, count(*) as NbVoyageur
+from vik_etape e
+join vik_reservation r using(cli_num,res_num)
+where to_char(res_date, 'DD/MM/YYYY') = '10/04/2026'
+group by lig_num,  to_char(res_date, 'DD/MM/YYYY')
+order by count(*) desc;
+
+    /* Lignes les plus utilisé tel jour et tel heure */
+select lig_num, to_char(eta_heure, 'hh:mi') as heure, res_date, count(*) as NbVoyageur
+from vik_etape e
+join vik_reservation r using(cli_num,res_num)
+group by lig_num, to_char(eta_heure, 'hh:mi'), res_date
+order by count(*) desc;
+select lig_num, to_char(eta_heure, 'hh:mi') as heure, res_date, count(*) as NbVoyageur
+from vik_etape e
+join vik_reservation r using(cli_num,res_num)
+where to_char(res_date, 'DD/MM/YYYY') = '10/04/2026'
+group by lig_num, to_char(eta_heure, 'hh:mi'), res_date
+order by count(*) desc;
+
+
+
+
 
 select * from vik_client
 order by cli_num;
+
+
+update vik_client
+set cli_grade = 'administrateur'
+where cli_num = 58;
+
+commit;
+
