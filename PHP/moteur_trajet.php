@@ -4,9 +4,10 @@
 // Fonctions de recherche de trajet (graphe + Dijkstra)
 // ════════════════════════════════════════════════════════════
 
-// Construit le graphe du réseau à partir de VIK_NOEUD
-// IMPORTANT : on garde UNIQUEMENT les sens réels.
-// Le réseau est déjà bidirectionnel dans les données (ex: 5A aller, 5B retour).
+// Construit le graphe du réseau à partir de VIK_NOEUD.
+// On garde les sens réels, ET on ajoute le sens inverse UNIQUEMENT
+// quand il n'existe pas déjà (pour que les communes terminus puissent
+// servir de départ, sans dupliquer les liaisons déjà bidirectionnelles).
 function chargerGraphe($conn)
 {
     $sql = "SELECT LIG_NUM, COM_CODE_INSEE_ARRET, COM_CODE_INSEE_SUIVANT,
@@ -15,7 +16,7 @@ function chargerGraphe($conn)
     $stmt = $conn->query($sql);
     $noeuds = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // On garde la durée minimale par trajet (commune -> suivante sur une ligne)
+    // Durée minimale par liaison (depart -> vers) sur une ligne donnée
     $minDuree = [];
     foreach ($noeuds as $n) {
         $depart = trim($n['COM_CODE_INSEE_ARRET']);
@@ -33,7 +34,13 @@ function chargerGraphe($conn)
         }
     }
 
-    // Graphe avec les SENS RÉELS uniquement (pas de duplication artificielle)
+    // 1) On note quelles liaisons (depart->vers) existent réellement
+    $liaisonsReelles = [];
+    foreach ($minDuree as $c) {
+        $liaisonsReelles[$c['depart'] . '>' . $c['vers']] = true;
+    }
+
+    // 2) Construction du graphe : sens réels d'abord
     $graphe = [];
     foreach ($minDuree as $c) {
         $graphe[$c['depart']][] = [
@@ -43,23 +50,42 @@ function chargerGraphe($conn)
             'distance' => $c['distance'],
         ];
     }
+
+    // 3) Sens inverse SEULEMENT si la liaison inverse n'existe pas déjà
+    //    (évite de dupliquer les lignes déjà bidirectionnelles type 5A/5B,
+    //     mais donne une sortie aux communes terminus comme Bréval)
+    foreach ($minDuree as $c) {
+        $cleInverse = $c['vers'] . '>' . $c['depart'];
+        if (!isset($liaisonsReelles[$cleInverse])) {
+            $graphe[$c['vers']][] = [
+                'vers'     => $c['depart'],
+                'ligne'    => $c['ligne'],   // on réutilise la même ligne (sens retour implicite)
+                'duree'    => $c['duree'],
+                'distance' => $c['distance'],
+            ];
+        }
+    }
+
     return $graphe;
 }
 
-// Dijkstra : trajet le plus rapide entre deux communes
-function trouverTrajet($graphe, $depart, $arrivee)
+// Dijkstra : trajet optimal entre deux communes selon un critère.
+// $critere = 'duree' (le plus rapide) ou 'distance' (le plus court)
+function trouverTrajet($graphe, $depart, $arrivee, $critere = 'duree')
 {
     if (!isset($graphe[$depart])) return null;
 
-    $durees   = [$depart => 0];
-    $parents  = [];
-    $visites  = [];
+    // Le poids d'une arête dépend du critère choisi
+    // (on minimise la durée OU la distance cumulée)
+    $cout    = [$depart => 0];   // coût cumulé minimal selon le critère
+    $parents = [];
+    $visites = [];
     $aTraiter = [$depart => 0];
 
     while (!empty($aTraiter)) {
         asort($aTraiter);
         $commune = array_key_first($aTraiter);
-        $dureeActuelle = $aTraiter[$commune];
+        $coutActuel = $aTraiter[$commune];
         unset($aTraiter[$commune]);
 
         if (isset($visites[$commune])) continue;
@@ -69,18 +95,21 @@ function trouverTrajet($graphe, $depart, $arrivee)
 
         foreach ($graphe[$commune] as $conn) {
             $voisine = $conn['vers'];
-            $nouvelleDuree = $dureeActuelle + $conn['duree'];
-            if (!isset($durees[$voisine]) || $nouvelleDuree < $durees[$voisine]) {
-                $durees[$voisine]  = $nouvelleDuree;
+            // Poids de l'arête selon le critère
+            $poids = ($critere === 'distance') ? $conn['distance'] : $conn['duree'];
+            $nouveauCout = $coutActuel + $poids;
+
+            if (!isset($cout[$voisine]) || $nouveauCout < $cout[$voisine]) {
+                $cout[$voisine]    = $nouveauCout;
                 $parents[$voisine] = ['depuis' => $commune, 'ligne' => $conn['ligne'], 'duree' => $conn['duree'], 'distance' => $conn['distance']];
-                $aTraiter[$voisine] = $nouvelleDuree;
+                $aTraiter[$voisine] = $nouveauCout;
             }
         }
     }
 
-    if (!isset($durees[$arrivee])) return null;
+    if (!isset($cout[$arrivee])) return null;
 
-    // Reconstruction du chemin
+    // Reconstruction
     $chemin = [];
     $courant = $arrivee;
     while (isset($parents[$courant])) {
@@ -88,10 +117,25 @@ function trouverTrajet($graphe, $depart, $arrivee)
         $chemin[] = ['de' => $p['depuis'], 'vers' => $courant, 'ligne' => $p['ligne'], 'duree' => $p['duree'], 'distance' => $p['distance']];
         $courant = $p['depuis'];
     }
-    return ['chemin' => array_reverse($chemin), 'dureeTotale' => $durees[$arrivee]];
+    $chemin = array_reverse($chemin);
+
+    // On calcule TOUJOURS la durée et la distance totales du chemin trouvé
+    // (peu importe le critère, pour pouvoir afficher les deux infos)
+    $dureeTot = 0;
+    $distTot = 0;
+    foreach ($chemin as $e) {
+        $dureeTot += $e['duree'];
+        $distTot  += $e['distance'];
+    }
+
+    return [
+        'chemin'      => $chemin,
+        'dureeTotale' => $dureeTot,
+        'distanceTotale' => $distTot,
+        'critere'     => $critere,
+    ];
 }
 
-// Récupère les noms de communes (code INSEE -> nom)
 function chargerNomsCommunes($conn)
 {
     $stmt = $conn->query("SELECT COM_CODE_INSEE, COM_NOM FROM VIK_COMMUNE");
@@ -102,7 +146,6 @@ function chargerNomsCommunes($conn)
     return $noms;
 }
 
-// Regroupe les étapes consécutives sur une même ligne
 function regrouperParLigne($chemin)
 {
     $segments = [];
@@ -121,7 +164,6 @@ function regrouperParLigne($chemin)
     return $segments;
 }
 
-// Calcule la distance totale d'un chemin
 function distanceTotale($chemin)
 {
     $d = 0;
@@ -129,7 +171,6 @@ function distanceTotale($chemin)
     return $d;
 }
 
-// Calcule les points gagnés (règle sujet : 1 pt / 10 km, arrondi inférieur, min 1)
 function calculerPoints($distance)
 {
     return max(1, (int)floor($distance / 10));
