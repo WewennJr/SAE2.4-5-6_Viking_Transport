@@ -49,11 +49,6 @@ $connecte = isset($_SESSION["num_client"]);
             </a>
 
             <a href="../PHP/lignes.php" class="card-action">
-                <h3>Nos lignes</h3>
-                <p>Consultez toutes les lignes disponibles en Normandie.</p>
-            </a>
-
-            <a href="../PHP/horaire_ligne.php" class="card-action">
                 <h3>Horaires</h3>
                 <p>Retrouvez les horaires de passage de chaque ligne.</p>
             </a>
