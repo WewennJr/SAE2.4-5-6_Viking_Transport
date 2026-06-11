@@ -23,17 +23,51 @@ $ville    = $client['CLI_VILLE'];
 $tel      = $client['CLI_TELEPHONE'];
 $dep      = $client['DEP_NUM'];
 $points   = $client['CLI_NB_POINTS_TOT'];
-$grade    = $client['CLI_GRADE'];   // pour tester si l'utilisateur est admin
+$grade    = $client['CLI_GRADE'];
 
-// --- Réservations du client ---
+// --- Réservations du client (en-tête simple) ---
 $stmtResa = $conn->prepare("
-    SELECT *
+    SELECT RES_NUM, RES_DATE, RES_PRIX_TOT, RES_NB_POINTS
     FROM VIK_RESERVATION
     WHERE CLI_NUM = :num
     ORDER BY RES_DATE DESC
 ");
 $stmtResa->execute([':num' => $_SESSION['num_client']]);
 $reservations = $stmtResa->fetchAll(PDO::FETCH_ASSOC);
+
+// --- Pour chaque réservation, on récupère le départ et l'arrivée du voyage ---
+// Le vrai départ = la commune de départ qui n'est l'arrivée d'aucune autre étape
+// Le vrai arrivée = la commune d'arrivée qui n'est le départ d'aucune autre étape
+$stmtDA = $conn->prepare("
+    SELECT
+        (SELECT c.COM_NOM FROM VIK_ETAPE e
+         JOIN VIK_COMMUNE c ON e.COM_CODE_INSEE_DEPART = c.COM_CODE_INSEE
+         WHERE e.CLI_NUM = :cli1 AND e.RES_NUM = :res1
+           AND e.COM_CODE_INSEE_DEPART NOT IN (
+               SELECT e2.COM_CODE_INSEE_ARRIVEE FROM VIK_ETAPE e2
+               WHERE e2.CLI_NUM = :cli2 AND e2.RES_NUM = :res2)
+           AND ROWNUM = 1) AS DEPART,
+        (SELECT c.COM_NOM FROM VIK_ETAPE e
+         JOIN VIK_COMMUNE c ON e.COM_CODE_INSEE_ARRIVEE = c.COM_CODE_INSEE
+         WHERE e.CLI_NUM = :cli3 AND e.RES_NUM = :res3
+           AND e.COM_CODE_INSEE_ARRIVEE NOT IN (
+               SELECT e2.COM_CODE_INSEE_DEPART FROM VIK_ETAPE e2
+               WHERE e2.CLI_NUM = :cli4 AND e2.RES_NUM = :res4)
+           AND ROWNUM = 1) AS ARRIVEE
+    FROM DUAL
+");
+
+foreach ($reservations as $i => $resa) {
+    $stmtDA->execute([
+        ':cli1' => $_SESSION['num_client'], ':res1' => $resa['RES_NUM'],
+        ':cli2' => $_SESSION['num_client'], ':res2' => $resa['RES_NUM'],
+        ':cli3' => $_SESSION['num_client'], ':res3' => $resa['RES_NUM'],
+        ':cli4' => $_SESSION['num_client'], ':res4' => $resa['RES_NUM'],
+    ]);
+    $da = $stmtDA->fetch(PDO::FETCH_ASSOC);
+    $reservations[$i]['DEPART']  = $da['DEPART']  ?? '-';
+    $reservations[$i]['ARRIVEE'] = $da['ARRIVEE'] ?? '-';
+}
 
 $conn = null;
 ?>
@@ -92,18 +126,18 @@ $conn = null;
                     <th>Date</th>
                     <th>Départ</th>
                     <th>Arrivée</th>
-                    <th>Statut</th>
+                    <th>Prix</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (count($reservations) > 0) { ?>
                     <?php foreach ($reservations as $resa) { ?>
                         <tr>
-                            <td><?= htmlspecialchars($resa['RES_NUM'] ?? '') ?></td>
-                            <td><?= htmlspecialchars($resa['RES_DATE'] ?? '') ?></td>
-                            <td><?= htmlspecialchars($resa['RES_DEPART'] ?? '-') ?></td>
-                            <td><?= htmlspecialchars($resa['RES_ARRIVEE'] ?? '-') ?></td>
-                            <td><?= htmlspecialchars($resa['RES_STATUT'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($resa['RES_NUM']) ?></td>
+                            <td><?= htmlspecialchars($resa['RES_DATE']) ?></td>
+                            <td><?= htmlspecialchars($resa['DEPART']) ?></td>
+                            <td><?= htmlspecialchars($resa['ARRIVEE']) ?></td>
+                            <td><?= htmlspecialchars($resa['RES_PRIX_TOT']) ?> €</td>
                         </tr>
                     <?php } ?>
                 <?php } else { ?>
