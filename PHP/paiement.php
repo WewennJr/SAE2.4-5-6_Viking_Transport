@@ -13,13 +13,11 @@ $trajet = $_SESSION['trajet_a_reserver'];
 $conn = OuvrirConnexionPDO($dbOracle, $db_usernameOracle, $db_passwordOracle);
 $noms = chargerNomsCommunes($conn);
 
-// Tarif de base selon la distance
 $stmtTar = $conn->prepare("SELECT TAR_PRIX FROM VIK_TARIF WHERE :dist >= TAR_MIN_DIST AND :dist <= TAR_MAX_DIST");
 $stmtTar->execute([':dist' => $trajet['distance']]);
 $tarif = $stmtTar->fetch(PDO::FETCH_ASSOC);
 $tarifBase = $tarif ? (float)$tarif['TAR_PRIX'] : 0;
 
-// Réduction selon le niveau (si connecté)
 $pourcentagePaye = 100;
 $nomNiveau = "Non inscrit";
 if (isset($_SESSION['num_client'])) {
@@ -60,10 +58,6 @@ $estConnecte = isset($_SESSION['num_client']);
 <main>
     <h1>Paiement</h1>
 
-    <div class="bandeau-simulation">
-        ⚠️ Paiement fictif — Ceci est une démonstration. N'entrez pas de vraies coordonnées bancaires.
-    </div>
-
     <div class="paiement-grille">
         <!-- Récapitulatif -->
         <section class="carte recap">
@@ -80,12 +74,11 @@ $estConnecte = isset($_SESSION['num_client']);
         <!-- Formulaire -->
         <section class="carte paiement-form">
             <h2>Coordonnées de paiement</h2>
-            <form action="traitement_reservation.php" method="post">
+            <form action="traitement_reservation.php" method="post" id="form-paiement" novalidate>
 
                 <?php if (!$estConnecte) { ?>
-                    <!-- Infos voyageur : uniquement pour les non-connectés -->
-                    <fieldset class="bloc-voyageur">
-                        <legend>Vos informations</legend>
+                    <div class="bloc-form">
+                        <p class="bloc-titre">Vos informations</p>
                         <div class="form-group">
                             <label for="v_prenom">Prénom</label>
                             <input type="text" id="v_prenom" name="v_prenom" placeholder="Jean" required>
@@ -98,30 +91,34 @@ $estConnecte = isset($_SESSION['num_client']);
                             <label for="v_email">Email</label>
                             <input type="email" id="v_email" name="v_email" placeholder="jean.dupont@email.fr" required>
                         </div>
-                    </fieldset>
+                    </div>
                 <?php } ?>
 
-                <fieldset class="bloc-carte">
-                    <legend>Carte bancaire</legend>
+                <div class="bloc-form">
+                    <p class="bloc-titre">Carte bancaire</p>
                     <div class="form-group">
                         <label for="titulaire">Titulaire de la carte</label>
                         <input type="text" id="titulaire" name="titulaire" placeholder="Jean Dupont" required>
+                        <span class="erreur-champ" id="err-titulaire"></span>
                     </div>
                     <div class="form-group">
                         <label for="carte">Numéro de carte</label>
-                        <input type="text" id="carte" name="carte" placeholder="4242 4242 4242 4242" maxlength="19" required>
+                        <input type="text" id="carte" name="carte" placeholder="4242 4242 4242 4242" maxlength="19" inputmode="numeric" required>
+                        <span class="erreur-champ" id="err-carte"></span>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="expiration">Expiration</label>
-                            <input type="text" id="expiration" name="expiration" placeholder="MM/AA" maxlength="5" required>
+                            <input type="text" id="expiration" name="expiration" placeholder="MM/AA" maxlength="5" inputmode="numeric" required>
+                            <span class="erreur-champ" id="err-expiration"></span>
                         </div>
                         <div class="form-group">
                             <label for="cvc">CVC</label>
-                            <input type="text" id="cvc" name="cvc" placeholder="123" maxlength="3" required>
+                            <input type="text" id="cvc" name="cvc" placeholder="123" maxlength="3" inputmode="numeric" required>
+                            <span class="erreur-champ" id="err-cvc"></span>
                         </div>
                     </div>
-                </fieldset>
+                </div>
 
                 <input type="submit" value="Payer <?= $prixFinal ?> € et réserver">
             </form>
@@ -130,6 +127,74 @@ $estConnecte = isset($_SESSION['num_client']);
 </main>
 
 <?php include_once "footer.php"; ?>
+
+<script>
+const form  = document.getElementById('form-paiement');
+const carte = document.getElementById('carte');
+const exp   = document.getElementById('expiration');
+const cvc   = document.getElementById('cvc');
+
+carte.addEventListener('input', function () {
+    let v = this.value.replace(/\D/g, '').substring(0, 16);
+    this.value = v.replace(/(.{4})/g, '$1 ').trim();
+});
+
+exp.addEventListener('input', function () {
+    let v = this.value.replace(/\D/g, '').substring(0, 4);
+    if (v.length >= 3) {
+        this.value = v.substring(0, 2) + '/' + v.substring(2);
+    } else {
+        this.value = v;
+    }
+});
+
+cvc.addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '').substring(0, 3);
+});
+
+form.addEventListener('submit', function (e) {
+    let ok = true;
+    document.querySelectorAll('.erreur-champ').forEach(s => s.textContent = '');
+
+    const titulaire = document.getElementById('titulaire');
+    if (titulaire.value.trim() === '') {
+        document.getElementById('err-titulaire').textContent = "Veuillez indiquer le titulaire.";
+        ok = false;
+    }
+
+    const numCarte = carte.value.replace(/\s/g, '');
+    if (!/^\d{16}$/.test(numCarte)) {
+        document.getElementById('err-carte').textContent = "Le numéro doit comporter 16 chiffres.";
+        ok = false;
+    }
+
+    const m = exp.value.match(/^(\d{2})\/(\d{2})$/);
+    if (!m) {
+        document.getElementById('err-expiration').textContent = "Format attendu : MM/AA.";
+        ok = false;
+    } else {
+        const mois = parseInt(m[1], 10);
+        const annee = 2000 + parseInt(m[2], 10);
+        if (mois < 1 || mois > 12) {
+            document.getElementById('err-expiration').textContent = "Mois invalide.";
+            ok = false;
+        } else {
+            const finMois = new Date(annee, mois, 0, 23, 59, 59);
+            if (finMois < new Date()) {
+                document.getElementById('err-expiration').textContent = "Carte expirée.";
+                ok = false;
+            }
+        }
+    }
+
+    if (!/^\d{3}$/.test(cvc.value)) {
+        document.getElementById('err-cvc').textContent = "Le CVC doit comporter 3 chiffres.";
+        ok = false;
+    }
+
+    if (!ok) e.preventDefault();
+});
+</script>
 
 </body>
 </html>
