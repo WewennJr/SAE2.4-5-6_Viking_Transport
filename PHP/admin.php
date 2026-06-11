@@ -20,11 +20,11 @@ if (!isset($tab[0]['CLI_GRADE']) || $tab[0]['CLI_GRADE'] != 'admin') {
     exit();
 }
 
-// ── Stat 1 : Lignes les plus fréquentées ──────────────────────────────────
+// Stat 1 : Lignes les plus fréquentées
 $sql1 = "SELECT lig_num, count(*) AS NB FROM vik_etape GROUP BY lig_num ORDER BY count(*) DESC";
 $lignes_pop = LireDonneesPDO3($conn, $sql1, $t1);
 
-// ── Stat 2 : Top 10 heures les plus fréquentées sur le réseau ────────────
+// Stat 2 : Top 10 heures les plus fréquentées
 $sql2 = "SELECT * FROM (
     SELECT to_char(eta_heure, 'HH24') || 'h' AS HEURE, count(*) AS NB
     FROM vik_etape
@@ -33,7 +33,7 @@ $sql2 = "SELECT * FROM (
 ) WHERE rownum <= 10";
 $heures_pop = LireDonneesPDO3($conn, $sql2, $t2);
 
-// ── Stat 3 : Meilleurs clients (top 10 par nb réservations) ──────────────
+// Stat 3 : Top 10 meilleurs clients
 $sql3 = "SELECT * FROM (
     SELECT cli_prenom || ' ' || cli_nom AS CLIENT, count(*) AS NB
     FROM vik_reservation r
@@ -44,7 +44,7 @@ $sql3 = "SELECT * FROM (
 ) WHERE rownum <= 10";
 $top_clients = LireDonneesPDO3($conn, $sql3, $t3);
 
-// ── Stat 4 : Clients inactifs (pas connectés depuis > 1 an) ──────────────
+// Stat 4 : Clients inactifs (> 1 an sans connexion)
 $sql4 = "SELECT cli_prenom, cli_nom, cli_date_connec,
     ROUND(SYSDATE - cli_date_connec) AS JOURS
     FROM vik_client
@@ -53,7 +53,7 @@ $sql4 = "SELECT cli_prenom, cli_nom, cli_date_connec,
     ORDER BY cli_date_connec ASC";
 $inactifs = LireDonneesPDO3($conn, $sql4, $t4);
 
-// ── Préparer les données JSON pour Chart.js ───────────────────────────────
+// Préparer les données pour Chart.js
 $lignes_labels = [];
 $lignes_data   = [];
 foreach ($lignes_pop as $row) {
@@ -89,68 +89,62 @@ foreach ($top_clients as $row) {
 <main>
     <h1>Tableau de bord admin</h1>
 
-    <div class="admin-grid">
+    <!-- Lignes les plus fréquentées -->
+    <article>
+        <h2>Lignes les plus fréquentées</h2>
+        <canvas id="chartLignes"></canvas>
+    </article>
 
-        <!-- Lignes les plus fréquentées -->
-        <div class="stat-card">
-            <h2>Lignes les plus fréquentées</h2>
-            <canvas id="chartLignes"></canvas>
-        </div>
+    <!-- Heures de pointe -->
+    <article>
+        <h2>Top 10 des heures de pointe</h2>
+        <canvas id="chartHeures"></canvas>
+    </article>
 
-        <!-- Heures de pointe -->
-        <div class="stat-card">
-            <h2>Top 10 des heures de pointe</h2>
-            <canvas id="chartHeures"></canvas>
-        </div>
+    <!-- Meilleurs clients -->
+    <article>
+        <h2>Top 10 des meilleurs clients</h2>
+        <canvas id="chartClients"></canvas>
+    </article>
 
-        <!-- Meilleurs clients -->
-        <div class="stat-card stat-card-full">
-            <h2>Top 10 des meilleurs clients</h2>
-            <canvas id="chartClients"></canvas>
-        </div>
+    <!-- Clients inactifs -->
+    <article>
+        <h2>Clients inactifs (<?php echo count($inactifs); ?>)</h2>
+        <?php if (count($inactifs) == 0) { ?>
+            <p>Aucun client inactif depuis plus d'un an.</p>
+        <?php } else { ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Prénom</th>
+                        <th>Nom</th>
+                        <th>Dernière connexion</th>
+                        <th>Jours d'inactivité</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($inactifs as $client) { ?>
+                    <tr>
+                        <td><?php echo $client['CLI_PRENOM']; ?></td>
+                        <td><?php echo $client['CLI_NOM']; ?></td>
+                        <td><?php echo $client['CLI_DATE_CONNEC']; ?></td>
+                        <td>
+                            <?php
+                            $jours = (int)$client['JOURS'];
+                            if ($jours > 730) {
+                                echo $jours . " jours (à supprimer)";
+                            } else {
+                                echo $jours . " jours";
+                            }
+                            ?>
+                        </td>
+                    </tr>
+                    <?php } ?>
+                </tbody>
+            </table>
+        <?php } ?>
+    </article>
 
-        <!-- Clients inactifs -->
-        <div class="stat-card stat-card-full">
-            <h2>
-                Clients inactifs
-                <span class="badge-rouge"><?php echo count($inactifs); ?></span>
-            </h2>
-            <?php if (count($inactifs) == 0) { ?>
-                <p>Aucun client inactif depuis plus d'un an.</p>
-            <?php } else { ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Prénom</th>
-                            <th>Nom</th>
-                            <th>Dernière connexion</th>
-                            <th>Jours d'inactivité</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($inactifs as $client) { ?>
-                        <tr>
-                            <td><?php echo $client['CLI_PRENOM']; ?></td>
-                            <td><?php echo $client['CLI_NOM']; ?></td>
-                            <td><?php echo $client['CLI_DATE_CONNEC']; ?></td>
-                            <td>
-                                <?php
-                                $jours = (int)$client['JOURS'];
-                                if ($jours > 730) {
-                                    echo "<span class='badge-rouge'>" . $jours . " jours (à supprimer)</span>";
-                                } else {
-                                    echo $jours . " jours";
-                                }
-                                ?>
-                            </td>
-                        </tr>
-                        <?php } ?>
-                    </tbody>
-                </table>
-            <?php } ?>
-        </div>
-
-    </div>
 </main>
 
 <?php include_once "footer.php"; ?>
@@ -161,7 +155,6 @@ foreach ($top_clients as $row) {
     const noir       = '#1a1a1a';
     const gris       = '#4a4a4a';
 
-    // ── Chart 1 : Lignes ──────────────────────────────────────────────────
     new Chart(document.getElementById('chartLignes'), {
         type: 'bar',
         data: {
@@ -185,7 +178,6 @@ foreach ($top_clients as $row) {
         }
     });
 
-    // ── Chart 2 : Heures ─────────────────────────────────────────────────
     new Chart(document.getElementById('chartHeures'), {
         type: 'line',
         data: {
@@ -211,7 +203,6 @@ foreach ($top_clients as $row) {
         }
     });
 
-    // ── Chart 3 : Meilleurs clients ───────────────────────────────────────
     new Chart(document.getElementById('chartClients'), {
         type: 'bar',
         data: {
