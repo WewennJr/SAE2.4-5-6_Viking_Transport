@@ -496,11 +496,11 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
 
     <!-- ── Navigation rapide ── -->
     <div class="admin-nav">
-        <button class="btn" onclick="scrollSec('section-stats')">📊 Statistiques</button>
-        <button class="btn" onclick="scrollSec('section-stats-interactives')">🔍 Stats avancées</button>
-        <button class="btn" onclick="scrollSec('section-clients')">👥 Clients</button>
-        <button class="btn" onclick="scrollSec('section-inactifs')">💤 Clients inactifs</button>
-        <button class="btn" onclick="scrollSec('section-lignes')">🚌 Lignes &amp; Horaires</button>
+        <button class="btn" onclick="scrollSec('section-stats')">Statistiques</button>
+        <button class="btn" onclick="scrollSec('section-stats-interactives')">Stats avancées</button>
+        <button class="btn" onclick="scrollSec('section-clients')">Clients</button>
+        <button class="btn" onclick="scrollSec('section-inactifs')">Clients inactifs</button>
+        <button class="btn" onclick="scrollSec('section-lignes')">Lignes &amp; Horaires</button>
     </div>
 
     <div class="admin-layout">
@@ -583,7 +583,7 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
 
                 <!-- Panel modification client -->
                 <div class="edit-client-panel <?php echo ($msg_modif === "client_$cnum") ? 'open' : ''; ?>" id="edit-client-<?php echo $cnum; ?>">
-                    <form method="post" action="">
+                    <form method="post" action="#">
                         <input type="hidden" name="action"  value="modif_client">
                         <input type="hidden" name="cli_num" value="<?php echo $cnum; ?>">
                         <div class="edit-grid">
