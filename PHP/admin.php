@@ -66,19 +66,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 // ── Stats générales ───────────────────────────────────────────────────────────
-$sql_lignes = "SELECT lig_num, count(*) AS NB FROM vik_etape GROUP BY lig_num ORDER BY lig_num ASC";
+$sql_lignes = "SELECT lig_num AS lig_num, count(*) AS NB FROM vik_etape GROUP BY lig_num ORDER BY
+    TO_NUMBER(REGEXP_SUBSTR(lig_num, '^[0-9]+')),
+    REGEXP_SUBSTR(lig_num, '[A-Za-z]+$')";
 $lignes_pop = LireDonneesPDO3($conn, $sql_lignes, $t);
 
 $sql_heures = "SELECT * FROM (
     SELECT to_char(eta_heure, 'HH24') || 'h' AS HEURE, count(*) AS NB
-    FROM vik_etape GROUP BY to_char(eta_heure, 'HH24') ORDER BY count(*) DESC
+    FROM vik_etape GROUP BY to_char(eta_heure, 'HH24') ORDER BY TO_NUMBER(to_char(eta_heure, 'HH24'))
 ) WHERE rownum <= 10";
 $heures_pop = LireDonneesPDO3($conn, $sql_heures, $t);
 
 $sql_lignes_heures = "SELECT * FROM (
-    SELECT lig_num AS LIGNE, to_char(eta_heure, 'HH24') || 'h' AS HEURE, count(*) AS NB
-    FROM vik_etape GROUP BY lig_num, to_char(eta_heure, 'HH24') ORDER BY count(*) DESC
-) WHERE rownum <= 10";
+        SELECT lig_num AS LIGNE, to_char(eta_heure, 'HH24') || 'h' AS HEURE, count(*) AS NB
+        FROM vik_etape GROUP BY lig_num, to_char(eta_heure, 'HH24') ORDER BY count(*) DESC
+    ) WHERE rownum <= 10";
 $lignes_heures = LireDonneesPDO3($conn, $sql_lignes_heures, $t);
 
 $sql_clients_top = "SELECT * FROM (
