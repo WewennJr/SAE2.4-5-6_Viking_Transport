@@ -25,6 +25,15 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 
 $id = (int)$_GET['id'];
 
+// Supprimer les étapes liées aux réservations du client
+$sql = "DELETE FROM vik_etape WHERE cli_num = $id";
+majDonneesPDO($conn, $sql);
+
+// Supprimer les réservations du client
+$sql = "DELETE FROM vik_reservation WHERE cli_num = $id";
+majDonneesPDO($conn, $sql);
+
+// Supprimer le client (jamais un admin)
 $sql = "DELETE FROM vik_client WHERE cli_num = $id AND cli_grade != 'administrateur'";
 majDonneesPDO($conn, $sql);
 

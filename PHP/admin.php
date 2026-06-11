@@ -20,11 +20,11 @@ if (!isset($tab[0]['CLI_GRADE']) || $tab[0]['CLI_GRADE'] != 'administrateur') {
     exit();
 }
 
-// ── Lignes les plus fréquentées ───────────────────────────────────────────
+// Lignes les plus fréquentées (ordre alphabétique)
 $sql_lignes = "SELECT lig_num, count(*) AS NB FROM vik_etape GROUP BY lig_num ORDER BY lig_num ASC";
 $lignes_pop = LireDonneesPDO3($conn, $sql_lignes, $t);
 
-// ── Top 10 heures de pointe sur le réseau ─────────────────────────────────
+// Top 10 heures de pointe
 $sql_heures = "SELECT * FROM (
     SELECT to_char(eta_heure, 'HH24') || 'h' AS HEURE, count(*) AS NB
     FROM vik_etape
@@ -33,7 +33,7 @@ $sql_heures = "SELECT * FROM (
 ) WHERE rownum <= 10";
 $heures_pop = LireDonneesPDO3($conn, $sql_heures, $t);
 
-// ── Top 10 lignes + heure (ligne, heure, nb) ──────────────────────────────
+// Top 10 lignes x heure
 $sql_lignes_heures = "SELECT * FROM (
     SELECT lig_num AS LIGNE, to_char(eta_heure, 'HH24') || 'h' AS HEURE, count(*) AS NB
     FROM vik_etape
@@ -42,7 +42,7 @@ $sql_lignes_heures = "SELECT * FROM (
 ) WHERE rownum <= 10";
 $lignes_heures = LireDonneesPDO3($conn, $sql_lignes_heures, $t);
 
-// ── Top 10 meilleurs clients ──────────────────────────────────────────────
+// Top 10 meilleurs clients
 $sql_clients_top = "SELECT * FROM (
     SELECT c.cli_prenom || ' ' || c.cli_nom AS CLIENT, count(*) AS NB
     FROM vik_reservation r
@@ -53,22 +53,14 @@ $sql_clients_top = "SELECT * FROM (
 ) WHERE rownum <= 10";
 $top_clients = LireDonneesPDO3($conn, $sql_clients_top, $t);
 
-// ── Réservations par mois ─────────────────────────────────────────────────
+// Réservations par mois
 $sql_mois = "SELECT to_char(res_date, 'MM/YYYY') AS MOIS, count(*) AS NB
     FROM vik_reservation
     GROUP BY to_char(res_date, 'MM/YYYY')
     ORDER BY to_char(res_date, 'MM/YYYY') ASC";
 $resas_mois = LireDonneesPDO3($conn, $sql_mois, $t);
 
-// ── Lignes les plus utilisées par jour ────────────────────────────────────
-$sql_lignes_jour = "SELECT lig_num AS LIGNE, to_char(res_date, 'DD/MM/YYYY') AS JOUR, count(*) AS NB
-    FROM vik_etape e
-    JOIN vik_reservation r ON e.cli_num = r.cli_num AND e.res_num = r.res_num
-    GROUP BY lig_num, to_char(res_date, 'DD/MM/YYYY')
-    ORDER BY count(*) DESC";
-$lignes_jour = LireDonneesPDO3($conn, $sql_lignes_jour, $t);
-
-// ── Clients inactifs > 1 an ───────────────────────────────────────────────
+// Clients inactifs > 1 an
 $sql_inactifs = "SELECT cli_num, cli_prenom, cli_nom, cli_date_connec,
     ROUND(SYSDATE - cli_date_connec) AS JOURS
     FROM vik_client
@@ -77,14 +69,14 @@ $sql_inactifs = "SELECT cli_num, cli_prenom, cli_nom, cli_date_connec,
     ORDER BY cli_date_connec ASC";
 $inactifs = LireDonneesPDO3($conn, $sql_inactifs, $t);
 
-// ── Liste des clients ─────────────────────────────────────────────────────
+// Liste des clients
 $sql_clients = "SELECT cli_num, cli_prenom, cli_nom, cli_courriel, cli_nb_points_ec
     FROM vik_client
     WHERE cli_grade != 'administrateur' AND cli_num != 0 AND cli_num != 1
     ORDER BY cli_nom ASC";
 $clients = LireDonneesPDO3($conn, $sql_clients, $t);
 
-// ── Réservations par client ───────────────────────────────────────────────
+// Réservations par client
 $reservations = [];
 foreach ($clients as $client) {
     $cnum = $client['CLI_NUM'];
@@ -101,7 +93,7 @@ foreach ($clients as $client) {
     $reservations[$cnum] = LireDonneesPDO3($conn, $sql_r, $t);
 }
 
-// ── JSON pour Chart.js ────────────────────────────────────────────────────
+// JSON pour Chart.js
 $lignes_labels = [];
 $lignes_data   = [];
 foreach ($lignes_pop as $row) {
@@ -248,12 +240,7 @@ foreach ($resas_mois as $row) {
         }
 
         .btn-toggle:hover { border-color: var(--rouge); color: var(--rouge); }
-
-        .btn-suppr:hover {
-            background-color: var(--rouge);
-            border-color: var(--rouge);
-            color: #fff;
-        }
+        .btn-suppr:hover { background-color: var(--rouge); border-color: var(--rouge); color: #fff; }
 
         .resas-panel {
             display: none;
@@ -313,7 +300,6 @@ foreach ($resas_mois as $row) {
         }
 
         .modal-box p { font-size: 0.95rem; color: var(--gris); margin-bottom: 1.5rem; }
-
         .modal-actions { display: flex; gap: 1rem; justify-content: flex-end; }
 
         .btn-annuler {
@@ -349,8 +335,13 @@ foreach ($resas_mois as $row) {
 
         .btn-confirmer:hover { background-color: var(--rouge-dark); border-color: var(--rouge-dark); }
 
+        .inactifs-wrap { margin-top: 2rem; }
+
         @media (max-width: 900px) {
             .admin-layout { grid-template-columns: 1fr; }
+            .admin-col-stats  { order: 1; }
+            .admin-col-clients { order: 2; }
+            .inactifs-wrap { order: 3; }
         }
     </style>
 </head>
@@ -361,8 +352,8 @@ foreach ($resas_mois as $row) {
 
     <div class="admin-layout">
 
-        <!-- ── Colonne gauche : statistiques ── -->
-        <div class="admin-col">
+        <!-- Colonne gauche : graphiques -->
+        <div class="admin-col admin-col-stats">
 
             <div class="stat-card">
                 <h3>Lignes les plus fréquentées</h3>
@@ -389,52 +380,15 @@ foreach ($resas_mois as $row) {
                 <canvas id="chartMois"></canvas>
             </div>
 
-            <div class="stat-card">
-                <h3>Clients inactifs (<?php echo count($inactifs); ?>)</h3>
-                <?php if (count($inactifs) == 0) { ?>
-                    <p>Aucun client inactif depuis plus d'un an.</p>
-                <?php } else { ?>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Prénom</th>
-                                <th>Nom</th>
-                                <th>Dernière connexion</th>
-                                <th>Inactivité</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($inactifs as $c) { ?>
-                            <tr>
-                                <td><?php echo $c['CLI_PRENOM']; ?></td>
-                                <td><?php echo $c['CLI_NOM']; ?></td>
-                                <td><?php echo $c['CLI_DATE_CONNEC']; ?></td>
-                                <td>
-                                    <?php
-                                    $j = (int)$c['JOURS'];
-                                    if ($j > 730) {
-                                        echo "<strong style='color:var(--rouge)'>" . $j . " j (à supprimer)</strong>";
-                                    } else {
-                                        echo $j . " j";
-                                    }
-                                    ?>
-                                </td>
-                            </tr>
-                            <?php } ?>
-                        </tbody>
-                    </table>
-                <?php } ?>
-            </div>
-
         </div>
 
-        <!-- ── Colonne droite : liste clients ── -->
-        <div class="admin-col">
+        <!-- Colonne droite : liste clients -->
+        <div class="admin-col admin-col-clients">
             <h2>Clients (<?php echo count($clients); ?>)</h2>
 
             <?php foreach ($clients as $client) { ?>
             <?php $cnum = $client['CLI_NUM']; ?>
-            <div class="client-card">
+            <div class="client-card" id="client-<?php echo $cnum; ?>">
                 <div class="client-header">
                     <div class="client-info">
                         <div class="client-nom"><?php echo $client['CLI_PRENOM'] . ' ' . $client['CLI_NOM']; ?></div>
@@ -468,6 +422,49 @@ foreach ($resas_mois as $row) {
         </div>
 
     </div>
+
+    <!-- Clients inactifs pleine largeur -->
+    <div class="inactifs-wrap">
+        <div class="stat-card">
+            <h3>Clients inactifs (<?php echo count($inactifs); ?>)</h3>
+            <?php if (count($inactifs) == 0) { ?>
+                <p>Aucun client inactif depuis plus d'un an.</p>
+            <?php } else { ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Prénom</th>
+                            <th>Nom</th>
+                            <th>Dernière connexion</th>
+                            <th>Inactivité</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($inactifs as $c) { ?>
+                        <tr>
+                            <td><?php echo $c['CLI_PRENOM']; ?></td>
+                            <td><?php echo $c['CLI_NOM']; ?></td>
+                            <td><?php echo $c['CLI_DATE_CONNEC']; ?></td>
+                            <td>
+                                <?php
+                                $j = (int)$c['JOURS'];
+                                if ($j > 730) {
+                                    echo "<strong style='color:var(--rouge)'>" . $j . " j (à supprimer)</strong>";
+                                } else {
+                                    echo $j . " j";
+                                }
+                                ?>
+                            </td>
+                            <td><a href="#client-<?php echo $c['CLI_NUM']; ?>" title="Aller au client">↗</a></td>
+                        </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
+            <?php } ?>
+        </div>
+    </div>
+
 </main>
 
 <!-- Modal confirmation suppression -->
