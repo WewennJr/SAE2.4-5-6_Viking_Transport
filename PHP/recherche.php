@@ -2,121 +2,152 @@
 session_start();
 include_once "pdo_agile.php";
 include_once "param_connexion_etu.php";
+include_once "moteur_trajet.php";
 
 $conn = OuvrirConnexionPDO($dbOracle, $db_usernameOracle, $db_passwordOracle);
 
-$sql_communes = "SELECT COM_NOM FROM VIK_COMMUNE ORDER BY COM_NOM ASC";
-$liste_communes = [];
-if ($conn) {
-    $liste_communes = LireDonneesPDO3($conn, $sql_communes, $t_communes);
-}
+// Liste de toutes les communes pour les menus déroulants (triées par nom)
+$stmtCom = $conn->query("SELECT COM_CODE_INSEE, COM_NOM FROM VIK_COMMUNE ORDER BY COM_NOM");
+$communes = $stmtCom->fetchAll(PDO::FETCH_ASSOC);
 
-$trajets = [];
-$recherche_faite = false;
+// Variables de résultat
+$resultat   = null;
+$segments   = [];
+$erreur     = "";
+$depart     = $_POST['depart']  ?? '';
+$arrivee    = $_POST['arrivee'] ?? '';
+$dateVoyage = $_POST['date']    ?? date('Y-m-d');
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['rechercher'])) {
-    $com_depart = $_POST['COM_DEPART'];
-    $com_arrivee = $_POST['COM_ARRIVEE'];
-    $date_voyage = $_POST['DATE_VOYAGE'];
-    $recherche_faite = true;
+// Traitement de la recherche
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (empty($depart) || empty($arrivee)) {
+        $erreur = "Veuillez choisir une commune de départ et d'arrivée.";
+    } elseif ($depart === $arrivee) {
+        $erreur = "Le départ et l'arrivée doivent être différents.";
+    } else {
+        $graphe   = chargerGraphe($conn);
+        $noms     = chargerNomsCommunes($conn);
+        $resultat = trouverTrajet($graphe, $depart, $arrivee);
 
-    if ($conn) {
-        $sql_recherche = "SELECT DISTINCT n1.LIG_NUM 
-                          FROM VIK_NOEUD n1
-                          JOIN VIK_NOEUD n2 ON n1.LIG_NUM = n2.LIG_NUM
-                          JOIN VIK_COMMUNE c1 ON n1.COM_CODE_INSEE_ARRET = c1.COM_CODE_INSEE
-                          JOIN VIK_COMMUNE c2 ON n2.COM_CODE_INSEE_ARRET = c2.COM_CODE_INSEE
-                          WHERE UPPER(c1.COM_NOM) = UPPER(:dep) 
-                          AND UPPER(c2.COM_NOM) = UPPER(:arr)";
-        
-        $stmt = $conn->prepare($sql_recherche);
-        if ($stmt) {
-            $stmt->execute([
-                ':dep' => $com_depart,
-                ':arr' => $com_arrivee
-            ]);
-            $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if ($resultat === null) {
+            $erreur = "Aucun trajet trouvé entre ces deux communes.";
+        } else {
+            $segments = regrouperParLigne($resultat['chemin']);
+            $distTot  = distanceTotale($resultat['chemin']);
+            $points   = calculerPoints($distTot);
+            // On mémorise le trajet en session pour pouvoir le réserver ensuite
+            $_SESSION['trajet_a_reserver'] = [
+                'depart'   => $depart,
+                'arrivee'  => $arrivee,
+                'date'     => $dateVoyage,
+                'chemin'   => $resultat['chemin'],
+                'duree'    => $resultat['dureeTotale'],
+                'distance' => $distTot,
+                'points'   => $points,
+            ];
         }
     }
 }
+
+$conn = null;
 ?>
 <!doctype html>
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Recherche de voyage – Viking Transport</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rechercher un trajet - Viking Transport</title>
     <link rel="stylesheet" href="../CSS/style.css">
+    <link rel="stylesheet" href="../CSS/recherche.css">
 </head>
 <body>
-    <?php include_once("../PHP/nav.php"); ?>
 
-    <main>
-        <h1>Recherche de voyage</h1>
-        
+<?php include_once "nav.php"; ?>
+
+<main>
+    <h1>Rechercher un trajet</h1>
+
+    <!-- Formulaire de recherche -->
+    <section class="carte-recherche-form">
         <form action="recherche.php" method="post">
-            <label for="COM_DEPART">Ville de départ :</label>
-            <select id="COM_DEPART" name="COM_DEPART" required>
-                <option value="">Sélectionnez une ville</option>
-                <?php foreach ($liste_communes as $commune) { ?>
-                    <option value="<?php echo htmlspecialchars($commune['COM_NOM']); ?>" <?php if (isset($_POST['COM_DEPART']) && $_POST['COM_DEPART'] == $commune['COM_NOM']) { echo 'selected'; } ?>>
-                        <?php echo htmlspecialchars($commune['COM_NOM']); ?>
-                    </option>
-                <?php } ?>
-            </select><br><br>
-
-            <label for="COM_ARRIVEE">Ville d'arrivée :</label>
-            <select id="COM_ARRIVEE" name="COM_ARRIVEE" required>
-                <option value="">Sélectionnez une ville</option>
-                <?php foreach ($liste_communes as $commune) { ?>
-                    <option value="<?php echo htmlspecialchars($commune['COM_NOM']); ?>" <?php if (isset($_POST['COM_ARRIVEE']) && $_POST['COM_ARRIVEE'] == $commune['COM_NOM']) { echo 'selected'; } ?>>
-                        <?php echo htmlspecialchars($commune['COM_NOM']); ?>
-                    </option>
-                <?php } ?>
-            </select><br><br>
-
-            <label for="DATE_VOYAGE">Date de voyage :</label>
-            <input type="date" id="DATE_VOYAGE" name="DATE_VOYAGE" value="<?php if (isset($_POST['DATE_VOYAGE'])) { echo htmlspecialchars($_POST['DATE_VOYAGE']); } ?>" required><br><br>
-
-            <input type="submit" name="rechercher" value="Rechercher">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="depart">Départ</label>
+                    <select name="depart" id="depart" required>
+                        <option value="">-- Choisir une commune --</option>
+                        <?php foreach ($communes as $c) {
+                            $code = trim($c['COM_CODE_INSEE']);
+                            $sel  = ($code === $depart) ? 'selected' : '';
+                            echo "<option value=\"$code\" $sel>" . htmlspecialchars($c['COM_NOM']) . "</option>";
+                        } ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="arrivee">Arrivée</label>
+                    <select name="arrivee" id="arrivee" required>
+                        <option value="">-- Choisir une commune --</option>
+                        <?php foreach ($communes as $c) {
+                            $code = trim($c['COM_CODE_INSEE']);
+                            $sel  = ($code === $arrivee) ? 'selected' : '';
+                            echo "<option value=\"$code\" $sel>" . htmlspecialchars($c['COM_NOM']) . "</option>";
+                        } ?>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="date">Date du voyage</label>
+                <input type="date" name="date" id="date" value="<?= htmlspecialchars($dateVoyage) ?>" required>
+            </div>
+            <input type="submit" value="Rechercher le meilleur trajet">
         </form>
+    </section>
 
-        <div id="resultats" style="margin-top: 2rem;">
-            <?php if ($recherche_faite) { ?>
-                <h2>Trajets disponibles</h2>
-                <?php if (count($trajets) === 0) { ?>
-                    <p>Aucun car direct disponible entre ces deux communes.</p>
-                <?php } else { ?>
-                    <table style="width:100%; border-collapse: collapse;">
-                        <thead>
-                            <tr>
-                                <th>Ligne disponible</th>
-                                <th>Départ</th>
-                                <th>Arrivée</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($trajets as $trajet) { ?>
-                                <tr>
-                                    <td>Ligne <?php echo htmlspecialchars($trajet['LIG_NUM']); ?></td>
-                                    <td><?php echo htmlspecialchars($com_depart); ?></td>
-                                    <td><?php echo htmlspecialchars($com_arrivee); ?></td>
-                                    <td>
-                                        <form action="traitement_reservation.php" method="post">
-                                            <input type="hidden" name="LIG_NUM" value="<?php echo htmlspecialchars($trajet['LIG_NUM']); ?>">
-                                            <input type="hidden" name="DATE_VOYAGE" value="<?php echo htmlspecialchars($date_voyage); ?>">
-                                            <input type="submit" value="Réserver ce voyage">
-                                        </form>
-                                    </td>
-                                </tr>
-                            <?php } ?>
-                        </tbody>
-                    </table>
+    <?php if (!empty($erreur)) { ?>
+        <p id="erreur"><?= htmlspecialchars($erreur) ?></p>
+    <?php } ?>
+
+    <!-- Résultat de la recherche -->
+    <?php if ($resultat !== null && empty($erreur)) {
+        // On recharge les noms de communes pour l'affichage
+        $connAff = OuvrirConnexionPDO($dbOracle, $db_usernameOracle, $db_passwordOracle);
+        $noms = chargerNomsCommunes($connAff);
+        $connAff = null;
+
+        $h = intdiv($resultat['dureeTotale'], 60);
+        $m = $resultat['dureeTotale'] % 60;
+    ?>
+        <section class="carte-trajet">
+            <div class="trajet-entete">
+                <h2><?= htmlspecialchars($noms[$depart] ?? $depart) ?> → <?= htmlspecialchars($noms[$arrivee] ?? $arrivee) ?></h2>
+                <div class="trajet-resume">
+                    <span class="resume-item"><strong><?= $h ?>h<?= str_pad($m, 2, '0', STR_PAD_LEFT) ?></strong> de trajet</span>
+                    <span class="resume-item"><strong><?= $distTot ?> km</strong></span>
+                    <span class="resume-item"><strong><?= count($segments) - 1 ?></strong> correspondance(s)</span>
+                    <span class="resume-item points"><strong>+<?= $points ?></strong> points</span>
+                </div>
+            </div>
+
+            <ol class="trajet-etapes">
+                <?php foreach ($segments as $s) {
+                    $nomDep = $noms[$s['depart']]  ?? $s['depart'];
+                    $nomArr = $noms[$s['arrivee']] ?? $s['arrivee'];
+                ?>
+                    <li>
+                        <span class="etape-ligne">Ligne <?= htmlspecialchars($s['ligne']) ?></span>
+                        <span class="etape-trajet"><?= htmlspecialchars($nomDep) ?> → <?= htmlspecialchars($nomArr) ?></span>
+                        <span class="etape-info"><?= $s['duree'] ?> min · <?= $s['distance'] ?> km</span>
+                    </li>
                 <?php } ?>
-            <?php } ?>
-        </div>
-    </main>
+            </ol>
 
-    <?php include_once("../PHP/footer.php"); ?>
+            <form action="traitement_reservation.php" method="post" class="form-reserver">
+                <input type="submit" value="Réserver ce trajet">
+            </form>
+        </section>
+    <?php } ?>
+</main>
+
+<?php include_once "footer.php"; ?>
+
 </body>
 </html>

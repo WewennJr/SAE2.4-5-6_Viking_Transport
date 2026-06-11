@@ -1,0 +1,147 @@
+/* ════════════════════════════════════════════════════════════
+   recherche.css — Page de recherche de trajet
+   À charger APRÈS style.css
+   ════════════════════════════════════════════════════════════ */
+
+/* Formulaire de recherche */
+.carte-recherche-form {
+  background-color: #fff;
+  border-left: 5px solid var(--rouge);
+  border-radius: 0 6px 6px 0;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  margin-bottom: 2rem;
+}
+
+/* Carte du trajet trouvé */
+.carte-trajet {
+  background-color: #fff;
+  border-left: 5px solid var(--rouge);
+  border-radius: 0 6px 6px 0;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.trajet-entete {
+  border-bottom: 2px solid var(--gris-clair);
+  padding-bottom: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.trajet-entete h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  color: var(--noir);
+  margin-bottom: 1rem;
+}
+
+/* Bandeau résumé (durée, distance, correspondances, points) */
+.trajet-resume {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.resume-item {
+  font-size: 0.95rem;
+  color: var(--gris);
+}
+
+.resume-item strong {
+  color: var(--noir);
+  font-family: var(--font-display);
+}
+
+.resume-item.points strong {
+  color: var(--rouge);
+}
+
+/* Liste des étapes du trajet */
+.trajet-etapes {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem 0;
+  counter-reset: etape;
+}
+
+.trajet-etapes li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--gris-clair);
+  position: relative;
+  padding-left: 2.5rem;
+}
+
+.trajet-etapes li:last-child {
+  border-bottom: none;
+}
+
+/* Numérotation automatique des étapes */
+.trajet-etapes li::before {
+  counter-increment: etape;
+  content: counter(etape);
+  position: absolute;
+  left: 0;
+  width: 1.8rem;
+  height: 1.8rem;
+  background-color: var(--rouge);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.etape-ligne {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--rouge);
+  background-color: rgba(192, 57, 43, 0.1);
+  padding: 0.3rem 0.7rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.etape-trajet {
+  font-weight: 600;
+  color: var(--noir);
+}
+
+.etape-info {
+  font-size: 0.85rem;
+  color: var(--gris);
+  white-space: nowrap;
+}
+
+/* Bouton réserver */
+.form-reserver {
+  margin-top: 1rem;
+}
+
+.form-reserver input[type="submit"] {
+  width: 100%;
+  font-size: 1.1rem;
+  padding: 1rem;
+}
+
+@media (max-width: 640px) {
+  .trajet-etapes li {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+
+  .etape-info {
+    text-align: left;
+  }
+}
