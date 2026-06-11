@@ -1,0 +1,90 @@
+/* ════════════════════════════════════════════════════════════
+   paiement.css — Page de paiement fictive
+   À charger APRÈS style.css
+   ════════════════════════════════════════════════════════════ */
+
+/* Bandeau d'avertissement simulation */
+.bandeau-simulation {
+  background-color: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 6px;
+  color: #856404;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Disposition : récap à gauche, formulaire à droite */
+.paiement-grille {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 1.5rem;
+}
+
+.carte {
+  background-color: #fff;
+  border-left: 5px solid var(--rouge);
+  border-radius: 0 6px 6px 0;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.carte h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--noir);
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--gris-clair);
+}
+
+/* Récapitulatif */
+.recap p {
+  margin-bottom: 0.6rem;
+}
+
+.recap-trajet {
+  font-size: 1.15rem;
+  color: var(--noir);
+}
+
+.recap hr {
+  border: none;
+  border-top: 1px solid var(--gris-clair);
+  margin: 1rem 0;
+}
+
+.recap-total {
+  font-size: 1.3rem;
+  color: var(--noir);
+}
+
+.recap-total strong {
+  color: var(--rouge);
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+}
+
+/* Formulaire de paiement */
+.paiement-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.paiement-form input[type="submit"] {
+  width: 100%;
+  font-size: 1.1rem;
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .paiement-grille {
+    grid-template-columns: 1fr;
+  }
+}
