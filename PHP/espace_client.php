@@ -30,7 +30,7 @@ $stmtResa = $conn->prepare("
     SELECT RES_NUM, RES_DATE, RES_PRIX_TOT, RES_NB_POINTS
     FROM VIK_RESERVATION
     WHERE CLI_NUM = :num
-    ORDER BY RES_DATE DESC
+    ORDER BY RES_DATE ASC
 ");
 $stmtResa->execute([':num' => $_SESSION['num_client']]);
 $reservations = $stmtResa->fetchAll(PDO::FETCH_ASSOC);
