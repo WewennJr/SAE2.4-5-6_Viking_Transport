@@ -15,6 +15,7 @@ $depart     = $_POST['depart']  ?? '';
 $arrivee    = $_POST['arrivee'] ?? '';
 $dateVoyage = $_POST['date']    ?? date('Y-m-d');
 $critere    = $_POST['critere'] ?? 'duree';
+$heureDepart = $_POST['heure']  ?? '08:00';   // heure de départ souhaitée
 $noms       = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -31,9 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $erreur = "Aucun trajet trouvé entre ces deux communes.";
         } else {
             // On mémorise les trajets proposés en session pour la réservation
+            $heureSouhaiteeMin = hhmmEnMinutes($heureDepart);
             $_SESSION['trajets_proposes'] = [];
             foreach ($trajets as $i => $t) {
                 $dist = $t['distanceTotale'];
+                $segs = regrouperParLigne($t['chemin']);
+                $horaires = calculerHorairesTrajet($conn, $segs, $heureSouhaiteeMin);
                 $_SESSION['trajets_proposes'][$i] = [
                     'depart'   => $depart,
                     'arrivee'  => $arrivee,
@@ -42,6 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'duree'    => $t['dureeTotale'],
                     'distance' => $dist,
                     'points'   => calculerPoints($dist),
+                    'prix'     => calculerTarif($conn, $dist),
+                    'horaires' => $horaires,
                 ];
             }
         }
@@ -101,6 +107,10 @@ $conn = null;
                     <input type="text" name="date" id="date" value="<?= htmlspecialchars($dateVoyage) ?>" required readonly>
                 </div>
                 <div class="form-group">
+                    <label for="heure">Heure de départ souhaitée</label>
+                    <input type="time" name="heure" id="heure" value="<?= htmlspecialchars($heureDepart) ?>" required>
+                </div>
+                <div class="form-group">
                     <label>Trier par</label>
                     <div class="choix-critere">
                         <label class="radio-critere">
@@ -142,6 +152,7 @@ $conn = null;
                 $m = $t['dureeTotale'] % 60;
                 $segments = regrouperParLigne($t['chemin']);
                 $points = calculerPoints($t['distanceTotale']);
+                $prix = $_SESSION['trajets_proposes'][$i]['prix'];
                 $estMeilleur = ($i === 0);
 
                 // Calcul de l'écart par rapport au meilleur, selon le critère
@@ -170,17 +181,37 @@ $conn = null;
                                 <span class="option-detail"><?= $t['distanceTotale'] ?> km · <?= count($segments) - 1 ?> corresp. · +<?= $points ?> pts</span>
                             <?php } ?>
                         </div>
+                        <div class="option-prix"><?= $prix ?> €</div>
                     </div>
 
-                    <ol class="option-etapes">
-                        <?php foreach ($segments as $s) {
+                    <?php
+                    $horaires = $_SESSION['trajets_proposes'][$i]['horaires'];
+                    if (!$horaires['realisable']) { ?>
+                        <p class="trajet-non-realisable">⚠ Ce trajet n'est pas réalisable à partir de <?= htmlspecialchars($heureDepart) ?> (dernière correspondance déjà passée). Essayez une heure plus matinale.</p>
+                    <?php } ?>
+
+                    <ol class="option-etapes-horaires">
+                        <?php foreach ($horaires['etapes'] as $e) {
+                            $s = $e['segment'];
                             $nomDep = $noms[$s['depart']]  ?? $s['depart'];
                             $nomArr = $noms[$s['arrivee']] ?? $s['arrivee'];
                         ?>
-                            <li>
-                                <span class="mini-ligne">L<?= htmlspecialchars($s['ligne']) ?></span>
-                                <span class="mini-trajet"><?= htmlspecialchars($nomDep) ?> → <?= htmlspecialchars($nomArr) ?></span>
-                            </li>
+                            <?php if (!$e['realisable']) { ?>
+                                <li class="etape-ko">
+                                    <span class="mini-ligne">L<?= htmlspecialchars($s['ligne']) ?></span>
+                                    <span class="etape-villes"><?= htmlspecialchars($nomDep) ?> → <?= htmlspecialchars($nomArr) ?></span>
+                                    <span class="etape-ko-txt">Plus de car</span>
+                                </li>
+                            <?php } else { ?>
+                                <?php if ($e['attente'] > 0) { ?>
+                                    <li class="etape-attente">⏱ <?= $e['attente'] ?> min d'attente</li>
+                                <?php } ?>
+                                <li class="etape-ok">
+                                    <span class="mini-ligne">L<?= htmlspecialchars($s['ligne']) ?></span>
+                                    <span class="etape-villes"><?= htmlspecialchars($nomDep) ?> → <?= htmlspecialchars($nomArr) ?></span>
+                                    <span class="etape-horaire"><?= minutesEnHhmm($e['depart']) ?> → <?= minutesEnHhmm($e['arrivee']) ?></span>
+                                </li>
+                            <?php } ?>
                         <?php } ?>
                     </ol>
 

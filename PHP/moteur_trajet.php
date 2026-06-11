@@ -255,8 +255,106 @@ function distanceTotale($chemin)
     return $d;
 }
 
+// ════════════════════════════════════════════════════════════
+// HORAIRES avec correspondances réelles (priorité 18)
+// ════════════════════════════════════════════════════════════
+
+// Convertit "HH:MM" en minutes depuis minuit (ex: "05:36" -> 336)
+function hhmmEnMinutes($hhmm)
+{
+    list($h, $m) = explode(':', $hhmm);
+    return (int)$h * 60 + (int)$m;
+}
+
+// Convertit des minutes depuis minuit en "HHhMM" (ex: 336 -> "05h36")
+function minutesEnHhmm($minutes)
+{
+    $h = intdiv($minutes, 60);
+    $m = $minutes % 60;
+    return str_pad($h, 2, '0', STR_PAD_LEFT) . 'h' . str_pad($m, 2, '0', STR_PAD_LEFT);
+}
+
+// Calcule les horaires réels d'un trajet à partir d'une heure de départ souhaitée.
+// Pour chaque segment : on prend le 1er car qui part APRÈS l'heure courante,
+// on calcule l'arrivée (départ + durée), et l'attente = départ - arrivée précédente.
+// $segments : résultat de regrouperParLigne (depart, arrivee, ligne, duree, distance)
+// $heureSouhaitee : minutes depuis minuit (ex: 480 pour 8h00)
+// Renvoie un tableau avec pour chaque segment : depart, arrivee, attente (minutes),
+// et un flag 'realisable' global.
+function calculerHorairesTrajet($conn, $segments, $heureSouhaitee)
+{
+    $stmt = $conn->prepare("
+        SELECT DISTINCT TO_CHAR(NOE_HEURE_PASSAGE, 'HH24:MI') AS H
+        FROM VIK_NOEUD
+        WHERE TRIM(LIG_NUM) = :lig AND TRIM(COM_CODE_INSEE_ARRET) = :arret
+        ORDER BY 1
+    ");
+
+    $etapes = [];
+    $heureCourante = $heureSouhaitee;
+    $realisable = true;
+
+    foreach ($segments as $s) {
+        $stmt->execute([':lig' => trim($s['ligne']), ':arret' => trim($s['depart'])]);
+        $heures = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        // Premier départ disponible >= heure courante
+        $heureDep = null;
+        foreach ($heures as $h) {
+            $min = hhmmEnMinutes($h);
+            if ($min >= $heureCourante) { $heureDep = $min; break; }
+        }
+
+        if ($heureDep === null) {
+            // Plus aucun car pour ce segment après l'heure courante
+            $etapes[] = ['segment' => $s, 'realisable' => false];
+            $realisable = false;
+            break;
+        }
+
+        $attente  = $heureDep - $heureCourante;
+        $heureArr = $heureDep + (int)$s['duree'];
+
+        $etapes[] = [
+            'segment'  => $s,
+            'depart'   => $heureDep,
+            'arrivee'  => $heureArr,
+            'attente'  => $attente,
+            'realisable' => true,
+        ];
+
+        $heureCourante = $heureArr;
+    }
+
+    return [
+        'etapes'     => $etapes,
+        'realisable' => $realisable,
+        'arriveeFinale' => $realisable ? $heureCourante : null,
+    ];
+}
+
 function calculerPoints($distance)
 {
     return max(1, (int)floor($distance / 10));
+}
+
+// Prix de base d'un trajet selon sa distance totale (table VIK_TARIF).
+// Renvoie le prix de la tranche correspondante ; si la distance dépasse
+// toutes les tranches, on prend la tranche la plus haute.
+function calculerTarif($conn, $distance)
+{
+    $stmt = $conn->prepare("
+        SELECT TAR_PRIX FROM VIK_TARIF
+        WHERE :dist >= TAR_MIN_DIST AND :dist <= TAR_MAX_DIST
+    ");
+    $stmt->execute([':dist' => $distance]);
+    $tarif = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$tarif) {
+        // Distance hors tranches : on prend la tranche maximale
+        $stmtMax = $conn->query("SELECT TAR_PRIX FROM VIK_TARIF ORDER BY TAR_MAX_DIST DESC FETCH FIRST 1 ROWS ONLY");
+        $tarif = $stmtMax->fetch(PDO::FETCH_ASSOC);
+    }
+    return $tarif ? (int)$tarif['TAR_PRIX'] : 0;
 }
 ?>
