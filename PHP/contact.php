@@ -20,9 +20,9 @@
 			<p>Une question sur une réservation, un voyage ou nos services ? Remplissez le formulaire ci-dessous, nous
 				vous répondons sous 48h ouvrées.</p>
 
-			<form action="traitement_contact.php" method="post">
-				<label for="prenom">Prénom *</label>
-				<input type="text" id="prenom" name="prenom" placeholder="Votre prénom" required>
+      <form  method="post">
+        <label for="prenom">Prénom *</label>
+        <input type="text" id="prenom" name="prenom" placeholder="Votre prénom" required>
 
 				<label for="nom">Nom *</label>
 				<input type="text" id="nom" name="nom" placeholder="Votre nom" required>

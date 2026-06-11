@@ -731,3 +731,29 @@ main.main-lignes {
   content: '®';
   font-size: 2rem ;
 }
+
+#back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 999;
+  background-color: var(--rouge);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 2.8rem;
+  height: 2.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, background-color 0.2s, transform 0.1s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+#back-to-top:hover {
+  background-color: var(--rouge-dark);
+  transform: translateY(-2px);
+}
