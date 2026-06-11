@@ -470,12 +470,6 @@ footer {
   background-color: var(--noir);
   border-top: 3px solid var(--rouge);
   color: var(--gris-clair);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 1.4rem 8%;
   font-size: 0.95rem;
 }
 
@@ -700,9 +694,5 @@ main.main-lignes {
     grid-template-columns: 1fr;
   }
 
-  footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
+
 }
