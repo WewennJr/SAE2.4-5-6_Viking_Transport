@@ -2,12 +2,110 @@
 
 .admin-grid {
   display: grid;
+<<<<<<< HEAD
   grid-template-columns: 1fr 1fr;
   gap: 1.75rem;
   margin-top: 1rem;
 }
 
 .stat-card {
+=======
+  grid-template-columns: repeat(4, 1fr);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  align-items: stretch;
+}
+
+nav li {
+  list-style: none;
+  display: flex;
+  align-items: stretch;
+}
+
+nav a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.5rem;
+  width: 100%;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--blanc);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+nav a:hover {
+  background-color: var(--rouge);
+  color: #fff;
+}
+
+nav li#profil {
+  display: flex;
+  align-items: stretch;
+}
+
+nav li#profil a {
+  background-color: var(--rouge);
+  color: #fff;
+  font-weight: 700;
+  flex: 1;
+}
+
+nav li#profil a.btn-deconnexion {
+  flex: 0 0 10rem;
+  font-size: 1.2rem;
+  padding: 0;
+}
+
+nav li#profil a:hover {
+  background-color: var(--rouge-dark);
+}
+
+main {
+  flex: 1;
+  padding: 3rem 8%;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--noir);
+  margin-bottom: 2rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 4px solid var(--rouge);
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--noir);
+  margin-bottom: 1rem;
+}
+
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: var(--gris);
+  margin-bottom: 0.75rem;
+}
+
+article {
+>>>>>>> a413bc373514c10d6bf8385c0aac71634ef569c6
   background-color: #fff;
   border-left: 4px solid var(--rouge);
   border-radius: 0 6px 6px 0;
