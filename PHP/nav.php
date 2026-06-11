@@ -1,5 +1,7 @@
 <?php
-
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 $connecte = isset($_SESSION["num_client"]);
 
 ?>
@@ -23,7 +25,9 @@ $connecte = isset($_SESSION["num_client"]);
 
                 <li><a href="../PHP/recherche.php">Recherche</a></li>
 
-                <li><a href="../PHP/lignes.php">Horaires</a></li>
+                <li><a href="../PHP/lignes.php">Lignes</a></li>
+
+                <li><a href="../PHP/horaire_ligne.php">Horaires</a></li>
 
             </ul>
 
