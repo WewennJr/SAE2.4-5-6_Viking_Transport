@@ -1,197 +1,118 @@
+<?php
+session_start();
+include_once "pdo_agile.php";
+include_once "param_connexion_etu.php";
+
+$conn = OuvrirConnexionPDO($dbOracle, $db_usernameOracle, $db_passwordOracle);
+
+$sql_communes = "SELECT COM_NOM FROM VIK_COMMUNE ORDER BY COM_NOM ASC";
+$liste_communes = [];
+if ($conn) {
+    $liste_communes = LireDonneesPDO3($conn, $sql_communes, $t_communes);
+}
+
+$trajets = [];
+$recherche_faite = false;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['rechercher'])) {
+    $com_depart = $_POST['COM_DEPART'];
+    $com_arrivee = $_POST['COM_ARRIVEE'];
+    $date_voyage = $_POST['DATE_VOYAGE'];
+    $recherche_faite = true;
+
+    $sql_recherche = "SELECT n1.LIG_NUM 
+                      FROM VIK_NOEUD n1
+                      JOIN VIK_NOEUD n2 ON n1.LIG_NUM = n2.LIG_NUM
+                      JOIN VIK_COMMUNE c1 ON n1.COM_CODE_INSEE = c1.COM_CODE_INSEE
+                      JOIN VIK_COMMUNE c2 ON n2.COM_CODE_INSEE = c2.COM_CODE_INSEE
+                      WHERE UPPER(c1.COM_NOM) = UPPER(:dep) 
+                      AND UPPER(c2.COM_NOM) = UPPER(:arr)";
+    
+    $stmt = $conn->prepare($sql_recherche);
+    $stmt->execute([
+        ':dep' => $com_depart,
+        ':arr' => $com_arrivee
+    ]);
+    $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+?>
 <!doctype html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="utf-8">
-    <meta name="Viking Transports">
-    <meta author="T.UI.sto">
     <title>Recherche de voyage – Viking Transport</title>
     <link rel="stylesheet" href="../CSS/style.css">
 </head>
 <body>
-    <?php 
-    include_once("../PHP/nav.php");
-  ?>
+    <?php include_once("../PHP/nav.php"); ?>
 
     <main>
         <h1>Recherche de voyage</h1>
-        <label for="COM_DEPART">Ville de départ :</label>
-        <select id="COM_DEPART" name="COM_DEPART" required>
-            <option value="">Sélectionnez une ville</option>
-            <option value="Alençon">Alençon</option>
-            <option value="Argentan">Argentan</option>
-            <option value="Aunay-sur-Odon">Aunay-sur-Odon</option>
-            <option value="Avranches">Avranches</option>
-            <option value="Bagnoles de l'Orne Normandie">Bagnoles de l'Orne Normandie</option>
-            <option value="Barneville-Carteret">Barneville-Carteret</option>
-            <option value="Bayeux">Bayeux</option>
-            <option value="Bellême">Bellême</option>
-            <option value="Bernay">Bernay</option>
-            <option value="Bolbec">Bolbec</option>
-            <option value="Briouze">Briouze</option>
-            <option value="Buchy">Buchy</option>
-            <option value="Caen">Caen</option>
-            <option value="Carentan-les-Marais">Carentan-les-Marais</option>
-            <option value="Caumont-l'Éventé">Caumont-l'Éventé</option>
-            <option value="Cherbourg-en-Cotentin">Cherbourg-en-Cotentin</option>
-            <option value="Condé-en-Normandie">Condé-en-Normandie</option>
-            <option value="Courseulles-sur-Mer">Courseulles-sur-Mer</option>
-            <option value="Coutances">Coutances</option>
-            <option value="Deauville">Deauville</option>
-            <option value="Dieppe">Dieppe</option>
-            <option value="Domfront-en-Poiraie">Domfront-en-Poiraie</option>
-            <option value="Elbeuf">Elbeuf</option>
-            <option value="Épaignes">Épaignes</option>
-            <option value="Évreux">Évreux</option>
-            <option value="Falaise">Falaise</option>
-            <option value="Fécamp">Fécamp</option>
-            <option value="Flamanville">Flamanville</option>
-            <option value="Flers">Flers</option>
-            <option value="Gacé">Gacé</option>
-            <option value="Gaillon">Gaillon</option>
-            <option value="Gamaches">Gamaches</option>
-            <option value="Gatteville-le-Phare">Gatteville-le-Phare</option>
-            <option value="Gisors">Gisors</option>
-            <option value="Gournay-en-Bray">Gournay-en-Bray</option>
-            <option value="Grandcamp-Maisy">Grandcamp-Maisy</option>
-            <option value="Granville">Granville</option>
-            <option value="Honfleur">Honfleur</option>
-            <option value="L'Aigle">L'Aigle</option>
-            <option value="L'habit">L'habit</option>
-            <option value="La Ferté Macé">La Ferté Macé</option>
-            <option value="La Hague">La Hague</option>
-            <option value="Le Havre">Le Havre</option>
-            <option value="Le Mont-Saint-Michel">Le Mont-Saint-Michel</option>
-            <option value="Le Tréport">Le Tréport</option>
-            <option value="Lisieux">Lisieux</option>
-            <option value="Lison">Lison</option>
-            <option value="Londinières">Londinières</option>
-            <option value="Louviers">Louviers</option>
-            <option value="Mamers">Mamers</option>
-            <option value="Mézidon-Canon">Mézidon-Canon</option>
-            <option value="Mesnils-sur-Iton">Mesnils-sur-Iton</option>
-            <option value="Mortagne-au-Perche">Mortagne-au-Perche</option>
-            <option value="Moult-Chicheboville">Moult-Chicheboville</option>
-            <option value="Neufchâtel-en-Bray">Neufchâtel-en-Bray</option>
-            <option value="Nogent-le-Rotrou">Nogent-le-Rotrou</option>
-            <option value="Orbec">Orbec</option>
-            <option value="Pacy-sur-Eure">Pacy-sur-Eure</option>
-            <option value="Périers">Périers</option>
-            <option value="Petit-Caux">Petit-Caux</option>
-            <option value="Pont-Audemer">Pont-Audemer</option>
-            <option value="Pont-l'Évêque">Pont-l'Évêque</option>
-            <option value="Rouen">Rouen</option>
-            <option value="Saint-Lô">Saint-Lô</option>
-            <option value="Saint-Pierre-en-Auge">Saint-Pierre-en-Auge</option>
-            <option value="Saint-Valery-en-Caux">Saint-Valery-en-Caux</option>
-            <option value="Sées">Sées</option>
-            <option value="Taillepied">Taillepied</option>
-            <option value="Tinchebray-Bocage">Tinchebray-Bocage</option>
-            <option value="Tôtes">Tôtes</option>
-            <option value="Val-de-Reuil">Val-de-Reuil</option>
-            <option value="Valognes">Valognes</option>
-            <option value="Vernon">Vernon</option>
-            <option value="Verneuil d'Avre et d'Iton">Verneuil d'Avre et d'Iton</option>
-            <option value="Villedieu-les-Poêles-Rouffigny">Villedieu-les-Poêles-Rouffigny</option>
-            <option value="Vimoutiers">Vimoutiers</option>
-            <option value="Vire Normandie">Vire Normandie</option>
-            <option value="Yvetot">Yvetot</option>
-        </select><br><br>
+        
+        <form action="recherche.php" method="post">
+            <label for="COM_DEPART">Ville de départ :</label>
+            <select id="COM_DEPART" name="COM_DEPART" required>
+                <option value="">Sélectionnez une ville</option>
+                <?php foreach ($liste_communes as $commune) { ?>
+                    <option value="<?php echo htmlspecialchars($commune['COM_NOM']); ?>" <?php if (isset($_POST['COM_DEPART']) && $_POST['COM_DEPART'] == $commune['COM_NOM']) { echo 'selected'; } ?>>
+                        <?php echo htmlspecialchars($commune['COM_NOM']); ?>
+                    </option>
+                <?php } ?>
+            </select><br><br>
 
-        <label for="COM_ARRIVEE">Ville d'arrivée :</label>
-        <select id="COM_ARRIVEE" name="COM_ARRIVEE" required>
-            <option value="">Sélectionnez une ville</option>
-            <option value="Alençon">Alençon</option>
-            <option value="Argentan">Argentan</option>
-            <option value="Aunay-sur-Odon">Aunay-sur-Odon</option>
-            <option value="Avranches">Avranches</option>
-            <option value="Bagnoles de l'Orne Normandie">Bagnoles de l'Orne Normandie</option>
-            <option value="Barneville-Carteret">Barneville-Carteret</option>
-            <option value="Bayeux">Bayeux</option>
-            <option value="Bellême">Bellême</option>
-            <option value="Bernay">Bernay</option>
-            <option value="Bolbec">Bolbec</option>
-            <option value="Briouze">Briouze</option>
-            <option value="Buchy">Buchy</option>
-            <option value="Caen">Caen</option>
-            <option value="Carentan-les-Marais">Carentan-les-Marais</option>
-            <option value="Caumont-l'Éventé">Caumont-l'Éventé</option>
-            <option value="Cherbourg-en-Cotentin">Cherbourg-en-Cotentin</option>
-            <option value="Condé-en-Normandie">Condé-en-Normandie</option>
-            <option value="Courseulles-sur-Mer">Courseulles-sur-Mer</option>
-            <option value="Coutances">Coutances</option>
-            <option value="Deauville">Deauville</option>
-            <option value="Dieppe">Dieppe</option>
-            <option value="Domfront-en-Poiraie">Domfront-en-Poiraie</option>
-            <option value="Elbeuf">Elbeuf</option>
-            <option value="Épaignes">Épaignes</option>
-            <option value="Évreux">Évreux</option>
-            <option value="Falaise">Falaise</option>
-            <option value="Fécamp">Fécamp</option>
-            <option value="Flamanville">Flamanville</option>
-            <option value="Flers">Flers</option>
-            <option value="Gacé">Gacé</option>
-            <option value="Gaillon">Gaillon</option>
-            <option value="Gamaches">Gamaches</option>
-            <option value="Gatteville-le-Phare">Gatteville-le-Phare</option>
-            <option value="Gisors">Gisors</option>
-            <option value="Gournay-en-Bray">Gournay-en-Bray</option>
-            <option value="Grandcamp-Maisy">Grandcamp-Maisy</option>
-            <option value="Granville">Granville</option>
-            <option value="Honfleur">Honfleur</option>
-            <option value="L'Aigle">L'Aigle</option>
-            <option value="L'habit">L'habit</option>
-            <option value="La Ferté Macé">La Ferté Macé</option>
-            <option value="La Hague">La Hague</option>
-            <option value="Le Havre">Le Havre</option>
-            <option value="Le Mont-Saint-Michel">Le Mont-Saint-Michel</option>
-            <option value="Le Tréport">Le Tréport</option>
-            <option value="Lisieux">Lisieux</option>
-            <option value="Lison">Lison</option>
-            <option value="Londinières">Londinières</option>
-            <option value="Louviers">Louviers</option>
-            <option value="Mamers">Mamers</option>
-            <option value="Mézidon-Canon">Mézidon-Canon</option>
-            <option value="Mesnils-sur-Iton">Mesnils-sur-Iton</option>
-            <option value="Mortagne-au-Perche">Mortagne-au-Perche</option>
-            <option value="Moult-Chicheboville">Moult-Chicheboville</option>
-            <option value="Neufchâtel-en-Bray">Neufchâtel-en-Bray</option>
-            <option value="Nogent-le-Rotrou">Nogent-le-Rotrou</option>
-            <option value="Orbec">Orbec</option>
-            <option value="Pacy-sur-Eure">Pacy-sur-Eure</option>
-            <option value="Périers">Périers</option>
-            <option value="Petit-Caux">Petit-Caux</option>
-            <option value="Pont-Audemer">Pont-Audemer</option>
-            <option value="Pont-l'Évêque">Pont-l'Évêque</option>
-            <option value="Rouen">Rouen</option>
-            <option value="Saint-Lô">Saint-Lô</option>
-            <option value="Saint-Pierre-en-Auge">Saint-Pierre-en-Auge</option>
-            <option value="Saint-Valery-en-Caux">Saint-Valery-en-Caux</option>
-            <option value="Sées">Sées</option>
-            <option value="Taillepied">Taillepied</option>
-            <option value="Tinchebray-Bocage">Tinchebray-Bocage</option>
-            <option value="Tôtes">Tôtes</option>
-            <option value="Val-de-Reuil">Val-de-Reuil</option>
-            <option value="Valognes">Valognes</option>
-            <option value="Vernon">Vernon</option>
-            <option value="Verneuil d'Avre et d'Iton">Verneuil d'Avre et d'Iton</option>
-            <option value="Villedieu-les-Poêles-Rouffigny">Villedieu-les-Poêles-Rouffigny</option>
-            <option value="Vimoutiers">Vimoutiers</option>
-            <option value="Vire Normandie">Vire Normandie</option>
-            <option value="Yvetot">Yvetot</option>
-        </select><br><br>
+            <label for="COM_ARRIVEE">Ville d'arrivée :</label>
+            <select id="COM_ARRIVEE" name="COM_ARRIVEE" required>
+                <option value="">Sélectionnez une ville</option>
+                <?php foreach ($liste_communes as $commune) { ?>
+                    <option value="<?php echo htmlspecialchars($commune['COM_NOM']); ?>" <?php if (isset($_POST['COM_ARRIVEE']) && $_POST['COM_ARRIVEE'] == $commune['COM_NOM']) { echo 'selected'; } ?>>
+                        <?php echo htmlspecialchars($commune['COM_NOM']); ?>
+                    </option>
+                <?php } ?>
+            </select><br><br>
 
-        <label for="DATE_VOYAGE">Date de voyage :</label>
-        <input type="date" id="DATE_VOYAGE" name="DATE_VOYAGE" required><br><br>
+            <label for="DATE_VOYAGE">Date de voyage :</label>
+            <input type="date" id="DATE_VOYAGE" name="DATE_VOYAGE" value="<?php if (isset($_POST['DATE_VOYAGE'])) { echo htmlspecialchars($_POST['DATE_VOYAGE']); } ?>" required><br><br>
 
-        <input type="submit" value="Rechercher">
-
+            <input type="submit" name="rechercher" value="Rechercher">
         </form>
-        <img id="carte-recherche" src="../images/carte.png" alt="Plan du réseau Viking Transport">
-        <div id="resultats"></div>
+
+        <div id="resultats" style="margin-top: 2rem;">
+            <?php if ($recherche_faite) { ?>
+                <h2>Trajets disponibles</h2>
+                <?php if (count($trajets) === 0) { ?>
+                    <p>Aucun car direct disponible entre ces deux communes.</p>
+                <?php } else { ?>
+                    <table style="width:100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th>Ligne disponible</th>
+                                <th>Départ</th>
+                                <th>Arrivée</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($trajets as $trajet) { ?>
+                                <tr>
+                                    <td>Ligne <?php echo htmlspecialchars($trajet['LIG_NUM']); ?></td>
+                                    <td><?php echo htmlspecialchars($com_depart); ?></td>
+                                    <td><?php echo htmlspecialchars($com_arrivee); ?></td>
+                                    <td>
+                                        <form action="traitement_reservation.php" method="post">
+                                            <input type="hidden" name="LIG_NUM" value="<?php echo htmlspecialchars($trajet['LIG_NUM']); ?>">
+                                            <input type="hidden" name="DATE_VOYAGE" value="<?php echo htmlspecialchars($date_voyage); ?>">
+                                            <input type="submit" value="Réserver ce voyage">
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                <?php } ?>
+            <?php } ?>
+        </div>
     </main>
 
-    <?php 
-    include_once("../PHP/footer.php");
-  ?>
+    <?php include_once("../PHP/footer.php"); ?>
 </body>
 </html>
