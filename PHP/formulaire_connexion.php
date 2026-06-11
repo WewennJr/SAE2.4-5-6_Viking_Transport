@@ -36,10 +36,14 @@
 				<input type="password" id="CLI_MDP" name="CLI_MDP" placeholder="••••••••" required>
 			</div>
 
+			<p>
+				<a class="link-rouge" href="#">Mot de passe oublié ?</a>
+			</p>
+
 			<button type="submit">Se connecter</button>
 		</form>
 
-		<p><a class="link-rouge">Mot de passe oublié ?</a></p>
+
 
 		<p>Pas encore de compte ? <a class="link-rouge" href="../PHP/formulaire_inscription.php">Inscrivez-vous</a></p>
 	</main>
@@ -49,3 +53,5 @@
 </body>
 
 </html>
+
+<p><a class="link-rouge">Mot de passe oublié ?</a></p>
