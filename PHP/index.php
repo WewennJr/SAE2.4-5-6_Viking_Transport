@@ -10,230 +10,18 @@ $connecte = isset($_SESSION["num_client"]);
     <meta name="description" content="Viking Transport">
     <title>Viking Transport</title>
     <link rel="stylesheet" href="../CSS/style.css">
-    <style>
-        /* ── Hero ───────────────────────────────────────────── */
-        #hero {
-            position: relative;
-            min-height: 88vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            background-color: var(--noir);
-        }
-
-        #hero-img {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.35;
-            filter: grayscale(30%);
-        }
-
-        .hero-contenu {
-            position: relative;
-            z-index: 1;
-            text-align: center;
-            padding: 2rem 8%;
-            max-width: 860px;
-        }
-
-        .hero-contenu h1 {
-            font-size: clamp(2.6rem, 6vw, 5rem);
-            color: var(--blanc);
-            border: none;
-            margin-bottom: 1rem;
-            padding-bottom: 0;
-            text-shadow: 0 2px 20px rgba(0,0,0,0.6);
-        }
-
-        .hero-contenu p {
-            font-size: clamp(1rem, 2vw, 1.25rem);
-            color: #ccc;
-            margin-bottom: 2.5rem;
-            line-height: 1.6;
-        }
-
-        .hero-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .hero-actions .btn {
-            font-size: 1rem;
-            padding: 0.85rem 2rem;
-        }
-
-        .btn-outline {
-            background-color: transparent;
-            border: 2px solid var(--blanc);
-            color: var(--blanc);
-        }
-
-        .btn-outline:hover {
-            background-color: var(--blanc);
-            color: var(--noir);
-            transform: translateY(-1px);
-        }
-
-        .hero-badge {
-            display: inline-block;
-            background-color: var(--rouge);
-            color: #fff;
-            font-family: var(--font-display);
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            padding: 0.35rem 1rem;
-            border-radius: 2rem;
-            margin-bottom: 1.2rem;
-        }
-
-        /* ── Message connecté ───────────────────────────────── */
-        .welcome-banner {
-            background-color: var(--rouge);
-            color: #fff;
-            text-align: center;
-            padding: 0.7rem 8%;
-            font-family: var(--font-display);
-            font-size: 1rem;
-            letter-spacing: 0.05em;
-        }
-
-        /* ── Section actions ────────────────────────────────── */
-        .section-actions {
-            padding: 5rem 8%;
-            background-color: var(--blanc);
-        }
-
-        .section-titre {
-            font-family: var(--font-display);
-            font-size: 1.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--noir);
-            margin-bottom: 0.4rem;
-        }
-
-        .section-sous-titre {
-            color: var(--gris);
-            font-size: 1rem;
-            margin-bottom: 2.5rem;
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 1.2rem;
-        }
-
-        .card-action {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 1.8rem 1.5rem;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-            text-decoration: none;
-            color: var(--noir);
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            border-top: 3px solid var(--rouge);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .card-action:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-            background-color: #fff;
-            color: var(--noir);
-        }
-
-        .card-icon {
-            font-size: 1.8rem;
-            line-height: 1;
-        }
-
-        .card-action h3 {
-            font-family: var(--font-display);
-            font-size: 1.05rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--noir);
-            margin: 0;
-        }
-
-        .card-action p {
-            font-size: 0.9rem;
-            color: var(--gris);
-            margin: 0;
-            line-height: 1.5;
-        }
-
-        /* ── Section carte ──────────────────────────────────── */
-        .section-carte {
-            padding: 5rem 8%;
-            background-color: #fff;
-        }
-
-        .section-carte-inner {
-            display: grid;
-            grid-template-columns: 1fr 1.6fr;
-            gap: 4rem;
-            align-items: center;
-        }
-
-        .section-carte-texte h2 {
-            font-size: 2rem;
-            border: none;
-            margin-bottom: 1rem;
-        }
-
-        .section-carte-texte p {
-            font-size: 1rem;
-            line-height: 1.7;
-            margin-bottom: 1.5rem;
-        }
-
-        .section-carte img {
-            width: 100%;
-            border-radius: 8px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.12);
-        }
-
-        /* ── Responsive ─────────────────────────────────────── */
-        @media (max-width: 900px) {
-            .section-carte-inner {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .section-actions,
-            .section-carte {
-                padding: 3rem 5%;
-            }
-
-            #hero {
-                min-height: 70vh;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../CSS/accueil.css">
 </head>
 <body>
 
     <?php include_once("../PHP/nav.php"); ?>
 
     <?php if ($connecte) { ?>
-        <div class="welcome-banner">
-            ⚡ Content de vous revoir, <?= htmlspecialchars($_SESSION["prenom"]) ?> !
+        <div class="welcome-banner" id="welcome-banner">
+            Content de vous revoir, <?= htmlspecialchars($_SESSION["prenom"]) ?> !
+            <button class="welcome-banner-close" onclick="document.getElementById('welcome-banner').style.display='none'" aria-label="Fermer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
         </div>
     <?php } ?>
 
@@ -250,62 +38,157 @@ $connecte = isset($_SESSION["num_client"]);
         </div>
     </section>
 
+    <!-- Raccourcis -->
     <section class="section-actions">
         <h2 class="section-titre">Que souhaitez-vous faire ?</h2>
         <p class="section-sous-titre">Accédez rapidement à nos services</p>
         <div class="cards-grid">
-            <a href="../PHP/recherche.php" class="card-action">
-                <span class="card-icon">🔍</span>
+
+            <a href="#section-rechercher" class="card-action">
                 <h3>Rechercher</h3>
                 <p>Trouvez un trajet selon votre destination et vos horaires.</p>
             </a>
-            <a href="../PHP/lignes.php" class="card-action">
-                <span class="card-icon">🗺️</span>
-                <h3>Nos lignes</h3>
-                <p>Consultez toutes les lignes disponibles en Normandie.</p>
-            </a>
-            <a href="../PHP/horaire_ligne.php" class="card-action">
-                <span class="card-icon">🕐</span>
+
+            <a href="#section-horaires" class="card-action">
                 <h3>Horaires</h3>
                 <p>Retrouvez les horaires de passage de chaque ligne.</p>
             </a>
+
             <?php if ($connecte) { ?>
-                <a href="../PHP/recherche.php" class="card-action">
-                    <span class="card-icon">🎫</span>
+
+                <a href="#section-acheter" class="card-action">
                     <h3>Acheter</h3>
                     <p>Achetez votre billet en quelques clics.</p>
                 </a>
-                <a href="../PHP/points.php" class="card-action">
-                    <span class="card-icon">⭐</span>
+
+                <a href="#section-points" class="card-action">
                     <h3>Mes points</h3>
                     <p>Consultez votre solde de points fidélité.</p>
                 </a>
-                <a href="../PHP/historique.php" class="card-action">
-                    <span class="card-icon">📋</span>
+
+                <a href="#section-historique" class="card-action">
                     <h3>Historique</h3>
                     <p>Revoyez l'ensemble de vos voyages passés.</p>
                 </a>
+
             <?php } else { ?>
-                <a href="../PHP/formulaire_inscription.php" class="card-action">
-                    <span class="card-icon">⭐</span>
-                    <h3>Points fidélité</h3>
-                    <p>Créez un compte et cumulez des points à chaque voyage.</p>
+
+                <a href="#section-inscription" class="card-action">
+                    <h3>Créer un compte</h3>
+                    <p>Inscrivez-vous et cumulez des points à chaque voyage.</p>
                 </a>
+
             <?php } ?>
+
         </div>
     </section>
 
-    <section class="section-carte">
-        <div class="section-carte-inner">
-            <div class="section-carte-texte">
-                <h2 class="section-titre">Nos lignes en Normandie</h2>
-                <p>Viking Transport couvre l'ensemble de la région normande avec un réseau de lignes régulières. Trouvez facilement votre itinéraire sur la carte.</p>
-                <a href="../PHP/lignes.php" class="btn">Explorer les lignes</a>
+    <!-- Section Rechercher -->
+    <section class="section-detail" id="section-rechercher">
+        <div class="section-detail-inner">
+            <div class="section-detail-texte">
+                <h2 class="section-titre">Rechercher un trajet</h2>
+                <p>Entrez votre point de départ et votre destination pour trouver les meilleures options de trajet disponibles sur le réseau Viking Transport. Comparez les durées, les correspondances et les horaires en temps réel.</p>
+                <a href="../PHP/recherche.php" class="btn">Lancer une recherche</a>
             </div>
-            <img id="carte-image" src="../images/carte.png" alt="carte des lignes">
+            <div class="section-detail-visuel">
+                <img src="../images/bus.png" alt="Bus Viking Transport">
+            </div>
         </div>
     </section>
+
+    <!-- Section Horaires -->
+    <section class="section-detail section-detail-alt" id="section-horaires">
+        <div class="section-detail-inner">
+            <div class="section-detail-visuel">
+                <img id="carte-image" src="../images/carte.png" alt="carte des lignes">
+            </div>
+            <div class="section-detail-texte">
+                <h2 class="section-titre">Nos lignes &amp; horaires</h2>
+                <p>Consultez l'ensemble des lignes du réseau normand ainsi que leurs horaires de passage. Planifiez vos déplacements en toute sérénité grâce à nos fiches horaires détaillées.</p>
+                <a href="../PHP/lignes.php" class="btn">Voir les lignes</a>
+            </div>
+        </div>
+    </section>
+
+    <?php if ($connecte) { ?>
+
+    <!-- Section Acheter -->
+    <section class="section-detail" id="section-acheter">
+        <div class="section-detail-inner">
+            <div class="section-detail-texte">
+                <h2 class="section-titre">Acheter un billet</h2>
+                <p>Réservez et achetez vos billets directement en ligne, en quelques clics. Choisissez votre ligne, votre date et votre horaire, puis procédez au paiement en toute sécurité.</p>
+                <a href="../PHP/recherche.php" class="btn">Acheter un billet</a>
+            </div>
+            <div class="section-detail-visuel">
+                <img src="../images/ticket.jpeg" alt="ticket">
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Mes points -->
+    <section class="section-detail section-detail-alt" id="section-points">
+        <div class="section-detail-inner">
+            <div class="section-detail-visuel">
+                <img src="../images/fidelite.png" alt="fidelite">
+            </div>
+            <div class="section-detail-texte">
+                <h2 class="section-titre">Mes points fidélité</h2>
+                <p>À chaque voyage avec Viking Transport, vous cumulez des points fidélité. Consultez votre solde et découvrez comment les utiliser pour obtenir des réductions sur vos prochains trajets.</p>
+                <a href="../PHP/espace_client.php" class="btn">Voir mes points</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Historique -->
+    <section class="section-detail" id="section-historique">
+        <div class="section-detail-inner">
+            <div class="section-detail-texte">
+                <h2 class="section-titre">Historique de mes voyages</h2>
+                <p>Retrouvez l'ensemble de vos trajets passés avec Viking Transport. Dates, lignes, montants — tout votre historique est disponible en un coup d'œil.</p>
+                <a href="../PHP/historique.php" class="btn">Voir mon historique</a>
+            </div>
+            <div class="section-detail-visuel">
+                <img src="../images/historique.png" alt="historique">
+            </div>
+        </div>
+    </section>
+
+    <?php } else { ?>
+
+    <!-- Section Inscription -->
+    <section class="section-detail" id="section-inscription">
+        <div class="section-detail-inner">
+            <div class="section-detail-texte">
+                <h2 class="section-titre">Créer un compte</h2>
+                <p>Rejoignez Viking Transport et profitez de l'espace client : achat de billets en ligne, cumul de points fidélité, historique de vos voyages et bien plus encore.</p>
+                <a href="../PHP/formulaire_inscription.php" class="btn">S'inscrire gratuitement</a>
+            </div>
+            <div class="section-detail-visuel">
+                <img src="../images/phare.jpg" alt="Phare de Gatteville, Normandie">
+            </div>
+        </div>
+    </section>
+
+    <?php } ?>
 
     <?php include_once("../PHP/footer.php"); ?>
+
+    <!-- Bouton retour en haut -->
+    <button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Retour en haut">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="18 15 12 9 6 15"/>
+        </svg>
+    </button>
+
+    <script>
+        const btn = document.getElementById('back-to-top');
+        window.addEventListener('scroll', () => {
+            btn.style.opacity = window.scrollY > 300 ? '1' : '0';
+            btn.style.pointerEvents = window.scrollY > 300 ? 'auto' : 'none';
+        });
+    </script>
+
 </body>
 </html>

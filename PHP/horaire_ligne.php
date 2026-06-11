@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="fr">
+<html lang="fr">
 <head>
     <meta charset="utf-8">
     <title>Horaires – Viking Transport</title>
@@ -322,6 +323,8 @@ if ($ligNum === null) {
     <a href="lignes.php" class="retour-lien">Retour aux lignes</a>
 </main>
 
+<?php include_once("../PHP/footer.php"); ?>
+</body>
 <?php include_once("../PHP/footer.php"); ?>
 </body>
 </html>

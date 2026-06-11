@@ -1,0 +1,264 @@
+/* ════════════════════════════════════════════════════════════
+   compte.css — Espace client Viking Transport
+   À charger APRÈS style.css (qui définit les variables :root)
+   ════════════════════════════════════════════════════════════ */
+
+/* En-tête de la page : titre + petit sous-texte de bienvenue */
+.compte-entete {
+  margin-bottom: 2.5rem;
+}
+
+.compte-entete .sous-titre {
+  font-size: 0.95rem;
+  color: var(--gris);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: -1rem;
+}
+
+/* Lien vers le tableau de bord admin (visible uniquement pour les admins) */
+.lien-admin {
+  display: inline-block;
+  margin-top: 1rem;
+  background-color: var(--noir);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.7rem 1.5rem;
+  border-radius: 4px;
+  border-left: 4px solid var(--rouge);
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.lien-admin:hover {
+  background-color: var(--rouge-dark);
+  transform: translateY(-1px);
+  color: #fff;
+}
+
+/* ── Disposition générale en grille ──────────────────────────
+   Infos + points côte à côte en haut, réservations en pleine
+   largeur en dessous */
+.compte-grille {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Carte générique (même esprit que .ligne-carte) ──────────── */
+.carte {
+  background-color: #fff;
+  border-left: 5px solid var(--rouge);
+  border-radius: 0 6px 6px 0;
+  padding: 1.8rem 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.carte:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.10);
+}
+
+.carte h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--noir);
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--gris-clair);
+}
+
+/* ── Liste des informations personnelles ─────────────────────
+   Chaque ligne : libellé à gauche (gras), valeur à droite */
+.info-liste {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+}
+
+.info-liste li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--gris-clair);
+  font-size: 1rem;
+}
+
+.info-liste li:last-child {
+  border-bottom: none;
+}
+
+.info-liste .libelle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.85rem;
+  color: var(--gris);
+}
+
+.info-liste .valeur {
+  color: var(--noir);
+  font-weight: 500;
+  text-align: right;
+}
+
+/* Bouton "Modifier mes informations" */
+.lien-modifier {
+  display: inline-block;
+  background-color: var(--rouge);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.7rem 1.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.lien-modifier:hover {
+  background-color: var(--rouge-dark);
+  transform: translateY(-1px);
+  color: #fff;
+}
+
+/* ── Carte points de fidélité (mise en avant) ────────────────── */
+.carte-points {
+  background-color: var(--noir);
+  border-left: 5px solid var(--rouge);
+  border-radius: 0 6px 6px 0;
+  padding: 1.8rem 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.carte-points h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--blanc);
+  margin-bottom: 0.8rem;
+}
+
+.points-valeur {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 3.5rem;
+  line-height: 1;
+  color: var(--rouge);
+}
+
+.points-label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gris-clair);
+  margin-top: 0.4rem;
+}
+
+/* ── Tableau des réservations ────────────────────────────────── */
+.carte-reservations {
+  background-color: #fff;
+  border-left: 5px solid var(--rouge);
+  border-radius: 0 6px 6px 0;
+  padding: 1.8rem 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.carte-reservations h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--noir);
+  margin-bottom: 1.2rem;
+}
+
+.table-reservations {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.table-reservations thead th {
+  background-color: var(--noir);
+  color: var(--blanc);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  padding: 0.9rem 1rem;
+}
+
+.table-reservations thead th:first-child {
+  border-radius: 4px 0 0 0;
+}
+
+.table-reservations thead th:last-child {
+  border-radius: 0 4px 0 0;
+}
+
+.table-reservations tbody td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--gris-clair);
+  color: var(--gris);
+}
+
+/* Lignes alternées pour la lisibilité */
+.table-reservations tbody tr:nth-child(even) {
+  background-color: #faf9f9;
+}
+
+.table-reservations tbody tr:hover {
+  background-color: #f3eceb;
+}
+
+/* Message quand il n'y a aucune réservation */
+.table-reservations td.aucune-resa {
+  text-align: center;
+  font-style: italic;
+  color: var(--gris);
+  padding: 2rem 1rem;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .compte-grille {
+    grid-template-columns: 1fr;   /* infos et points l'un sous l'autre */
+  }
+
+  .points-valeur {
+    font-size: 2.8rem;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Le tableau peut déborder sur mobile : on permet le scroll horizontal */
+  .carte-reservations {
+    overflow-x: auto;
+  }
+
+  .table-reservations {
+    min-width: 540px;
+  }
+}
