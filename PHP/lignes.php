@@ -16,7 +16,7 @@
 
         <div class="lignes-grille">
 
-            <div class="ligne-carte" style="--couleur: #e63946">
+            <a href="horaire_ligne.php?lig=1A" class="ligne-carte" style="--couleur: #e63946; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 1</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">La Hague</span>
@@ -30,9 +30,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Caen</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #22ff0f">
+            <a href="horaire_ligne.php?lig=2A" class="ligne-carte" style="--couleur: #22ff0f; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 2</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Cherbourg-en-Cotentin</span>
@@ -46,9 +46,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Caen</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #8338ec">
+            <a href="horaire_ligne.php?lig=3A" class="ligne-carte" style="--couleur: #8338ec; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 3</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Caen</span>
@@ -63,9 +63,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Gatteville-le-Phare</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #519617">
+            <a href="horaire_ligne.php?lig=4A" class="ligne-carte" style="--couleur: #519617; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 4</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Caen</span>
@@ -78,9 +78,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Vire Normandie</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #e76f51">
+            <a href="horaire_ligne.php?lig=5A" class="ligne-carte" style="--couleur: #e76f51; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 5</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Flamanville</span>
@@ -92,9 +92,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Le Mont-Saint-Michel</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #ff697d">
+            <a href="horaire_ligne.php?lig=6A" class="ligne-carte" style="--couleur: #ff697d; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 6</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Granville</span>
@@ -106,9 +106,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Caen</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #664040">
+            <a href="horaire_ligne.php?lig=7A" class="ligne-carte" style="--couleur: #664040; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 7</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Caen</span>
@@ -126,9 +126,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Gamaches</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #8a8888">
+            <a href="horaire_ligne.php?lig=8A" class="ligne-carte" style="--couleur: #8a8888; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 8</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Caen</span>
@@ -141,9 +141,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Le Mont-Saint-Michel</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #40deba">
+            <a href="horaire_ligne.php?lig=9A" class="ligne-carte" style="--couleur: #40deba; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 9</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Caen</span>
@@ -158,9 +158,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Vernon</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #4a2f2b">
+            <a href="horaire_ligne.php?lig=10A" class="ligne-carte" style="--couleur: #4a2f2b; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 10</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Caen</span>
@@ -174,9 +174,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Bomfront en Poiraie</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #72288a">
+            <a href="horaire_ligne.php?lig=11A" class="ligne-carte" style="--couleur: #72288a; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 11</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Argentan</span>
@@ -190,9 +190,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Le Havre</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #db7740">
+            <a href="horaire_ligne.php?lig=12A" class="ligne-carte" style="--couleur: #db7740; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 12</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Nogent-le-Rotrou</span>
@@ -206,9 +206,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Alençon</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #33221d">
+            <a href="horaire_ligne.php?lig=13A" class="ligne-carte" style="--couleur: #33221d; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 13</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Rouen</span>
@@ -221,9 +221,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Lisieux</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #e8a0e3">
+            <a href="horaire_ligne.php?lig=14A" class="ligne-carte" style="--couleur: #e8a0e3; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 14</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Lisieux</span>
@@ -236,9 +236,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Buchy</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #fb5607">
+            <a href="horaire_ligne.php?lig=15A" class="ligne-carte" style="--couleur: #fb5607; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 15</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Rouen</span>
@@ -252,9 +252,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Gison</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #5e5b5b">
+            <a href="horaire_ligne.php?lig=16A" class="ligne-carte" style="--couleur: #5e5b5b; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 16</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Saint-Valéry-en-Caux</span>
@@ -269,9 +269,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Lisieux</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #219ebc">
+            <a href="horaire_ligne.php?lig=17A" class="ligne-carte" style="--couleur: #219ebc; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 17</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Gison</span>
@@ -283,9 +283,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Caen</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #d9e336">
+            <a href="horaire_ligne.php?lig=18A" class="ligne-carte" style="--couleur: #d9e336; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 18</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Le Havre</span>
@@ -297,9 +297,9 @@
                     </div>
                     <span class="ligne-ville arrivee">Sées</span>
                 </div>
-            </div>
+            </a>
 
-            <div class="ligne-carte" style="--couleur: #2e2c2c">
+            <a href="horaire_ligne.php?lig=19A" class="ligne-carte" style="--couleur: #2e2c2c; text-decoration:none; display:block;">
                 <div class="ligne-numero">Ligne 19</div>
                 <div class="ligne-trajet">
                     <span class="ligne-ville depart">Deauville</span>
@@ -311,7 +311,7 @@
                     </div>
                     <span class="ligne-ville arrivee">Alençon</span>
                 </div>
-            </div>
+            </a>
 
         </div>
     </main>
