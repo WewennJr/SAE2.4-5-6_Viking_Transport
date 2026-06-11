@@ -18,8 +18,8 @@
 	if (!empty($_POST["CLI_COURRIEL"])) {$courriel = $_POST["CLI_COURRIEL"];} else {$erreur = true;}
 	if (!empty($_POST["CLI_MDP"])) {$mdp = $_POST["CLI_MDP"];} else {$erreur = true;}
 	if (!empty($_POST["CLI_MDP_CONF"])) {$confirm_mdp = $_POST["CLI_MDP_CONF"];} else {$erreur = true;}
-    $nb_points_ec = 0;
-    $nb_points_tot = 0;
+    $nb_points_ec = 10;
+    $nb_points_tot = 10;
     $date_connec = date("Y-m-d H:i:s");
     $grade = "client";
 
