@@ -460,34 +460,30 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
             .edit-full { grid-column: span 1; }
         }
 
-        #btnTop {
+        #back-to-top {
             position: fixed;
-            bottom: 25px;
-            right: 25px;
-
-            width: 50px;
-            height: 50px;
-
+            bottom: 2rem;
+            right: 2rem;
+            width: 2.8rem;
+            height: 2.8rem;
+            background-color: var(--rouge);
+            color: #fff;
             border: none;
             border-radius: 50%;
-
-            background: var(--rouge);
-            color: white;
-
-            font-size: 1.4rem;
-            font-weight: bold;
-
             cursor: pointer;
-
-            display: none;
-
-            z-index: 1000;
-
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            opacity: 0;
+            pointer-events: none;
+            transition: background-color 0.2s, transform 0.2s, opacity 0.3s;
+            z-index: 500;
         }
 
-        #btnTop:hover {
-            background: var(--rouge-dark);
+        #back-to-top:hover {
+            background-color: var(--rouge-dark);
+            transform: translateY(-3px);
         }
     </style>
 </head>
@@ -848,7 +844,11 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
     </div>
 </div>
 
-<button id="btnTop" onclick="retourHaut()">↑</button>
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Retour en haut">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="18 15 12 9 6 15"/>
+        </svg>
+    </button>
 
 <?php include_once "footer.php"; ?>
 
@@ -936,22 +936,11 @@ foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (i
         document.getElementById('chevron-' + lnum).classList.toggle('open');
     }
 
-    const btnTop = document.getElementById('btnTop');
-
+    const btn = document.getElementById('back-to-top');
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 400) {
-            btnTop.style.display = 'block';
-        } else {
-            btnTop.style.display = 'none';
-        }
+        btn.style.opacity = window.scrollY > 300 ? '1' : '0';
+        btn.style.pointerEvents = window.scrollY > 300 ? 'auto' : 'none';
     });
-
-    function retourHaut() {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    }
 </script>
 </body>
 </html>
