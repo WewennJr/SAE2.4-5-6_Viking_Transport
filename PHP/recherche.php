@@ -19,6 +19,16 @@ $heureDepart = $_POST['heure']  ?? '08:00';   // heure de départ souhaitée
 $noms       = [];
 $modeActif  = 'auto';   // 'auto' (5 trajets) ou 'manuel' (composition)
 
+// Garde-fou serveur : si la date est aujourd'hui, l'heure ne peut pas être
+// avant l'heure actuelle. On la remonte à maintenant le cas échéant.
+// (Pour les jours suivants, toutes les heures restent permises.)
+function normaliserHeureMin($date, $heure) {
+    if ($date === date('Y-m-d') && $heure < date('H:i')) {
+        return date('H:i');
+    }
+    return $heure;
+}
+
 // ── Réservation MANUELLE : l'utilisateur a composé son trajet et clique Réserver ──
 // On recalcule côté serveur (sécurité) puis on enchaîne sur le paiement.
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reserver_manuel') {
@@ -29,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reser
     })) : [];
     $dateM  = $_POST['date']  ?? date('Y-m-d');
     $heureM = $_POST['heure'] ?? '08:00';
+    $heureM = normaliserHeureMin($dateM, $heureM);   // pas d'heure passée si c'est aujourd'hui
 
     if (count($communesM) >= 2) {
         $graphe = chargerGraphe($conn);
@@ -82,6 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === '') {
             $erreur = "Aucun trajet trouvé entre ces deux communes.";
         } else {
             // On mémorise les trajets proposés en session pour la réservation
+            $heureDepart = normaliserHeureMin($dateVoyage, $heureDepart);   // pas d'heure passée si aujourd'hui
             $heureSouhaiteeMin = hhmmEnMinutes($heureDepart);
             $_SESSION['trajets_proposes'] = [];
             foreach ($trajets as $i => $t) {
@@ -138,7 +150,7 @@ $conn = null;
                 <span id="btn-plan-texte">Voir le plan du réseau</span>
                 <span class="btn-plan-fleche" id="btn-plan-fleche">▾</span>
             </button>
-            <a href="lignes.php" class="btn-horaires" target="_blank">
+            <a href="lignes.php" class="btn-horaires">
                 <span class="btn-plan-icone">🕒</span>
                 <span>Consulter les lignes et horaires</span>
             </a>
@@ -358,11 +370,46 @@ $conn = null;
 <script>
 const MODE_INITIAL = "<?= $modeActif ?>";
 
+// ════════════════════════════════════════════════
+// Empêche de choisir une heure déjà passée si la date = aujourd'hui.
+// Si l'heure choisie est avant maintenant, on la remet à l'heure actuelle.
+// (Pour les jours suivants, toutes les heures restent valides.)
+// ════════════════════════════════════════════════
+function heureActuelleHHMM() {
+    const m = new Date();
+    return String(m.getHours()).padStart(2, '0') + ':' + String(m.getMinutes()).padStart(2, '0');
+}
+function dateDuJour() {
+    const m = new Date();
+    return m.getFullYear() + '-' + String(m.getMonth() + 1).padStart(2, '0') + '-' + String(m.getDate()).padStart(2, '0');
+}
+
+// idDate / idHeure : les deux champs d'un même mode
+function corrigerHeure(idDate, idHeure) {
+    const champDate = document.getElementById(idDate);
+    const champHeure = document.getElementById(idHeure);
+    if (!champDate || !champHeure) return;
+
+    // On ne contraint que si la date choisie est aujourd'hui
+    if (champDate.value === dateDuJour()) {
+        const maintenant = heureActuelleHHMM();
+        if (champHeure.value < maintenant) {
+            champHeure.value = maintenant;
+        }
+        // On empêche aussi de descendre sous l'heure actuelle via le sélecteur
+        champHeure.min = maintenant;
+    } else {
+        // Autre jour : plus de minimum
+        champHeure.removeAttribute('min');
+    }
+}
+
 flatpickr("#date", {
     locale: "fr",
     dateFormat: "Y-m-d",
     minDate: "today",
-    defaultDate: "<?= htmlspecialchars($dateVoyage) ?>"
+    defaultDate: "<?= htmlspecialchars($dateVoyage) ?>",
+    onChange: function () { corrigerHeure('date', 'heure'); }
 });
 
 // Calendrier du mode manuel
@@ -370,8 +417,17 @@ flatpickr("#date-m", {
     locale: "fr",
     dateFormat: "Y-m-d",
     minDate: "today",
-    defaultDate: "<?= htmlspecialchars($dateVoyage) ?>"
+    defaultDate: "<?= htmlspecialchars($dateVoyage) ?>",
+    onChange: function () { corrigerHeure('date-m', 'heure-m'); }
 });
+
+// Quand on change l'heure directement
+document.getElementById('heure').addEventListener('change', function () { corrigerHeure('date', 'heure'); });
+document.getElementById('heure-m').addEventListener('change', function () { corrigerHeure('date-m', 'heure-m'); });
+
+// Au chargement : on applique la contrainte tout de suite (date par défaut = aujourd'hui)
+corrigerHeure('date', 'heure');
+corrigerHeure('date-m', 'heure-m');
 
 // ════════════════════════════════════════════════
 // BASCULE Auto / Manuel
