@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $lig = trim($_POST['lig_num']);
     $insee_deb = trim($_POST['com_code_insee_debu']);
     $insee_term = trim($_POST['com_code_insee_term']);
-    $sql_ul = "UPDATE vik_ligne SET com_code_insee_debu = :debu, com_code_insee_term = :term WHERE lig_num = :lig";
+    $sql_ul = "UPDATE vik_ligne SET com_code_insee_debu = :debu, com_code_insee_term = :term WHERE TRIM(lig_num) = :lig";
     $cur = preparerRequetePDO($conn, $sql_ul);
     majDonneesPrepareesTabPDO($cur, [':debu' => $insee_deb, ':term' => $insee_term, ':lig' => $lig]);
     $conn->exec("COMMIT");
@@ -55,37 +55,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // ── Traitement modification noeud (horaire / distance) ───────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'modif_noeud') {
-    $lig = trim($_POST['lig_num']);
-    $arret = trim($_POST['com_code_insee_arret']);
-    $suivant = trim($_POST['com_code_insee_suivant']);
-    $heure_old = trim($_POST['noe_heure_passage_old']);
-    $heure_new = trim($_POST['noe_heure_passage']);
-    $dist_prochain = (float) str_replace(',', '.', $_POST['noe_distance_prochain']);
-    $duree_prochain = (float) str_replace(',', '.', $_POST['noe_duree_prochain']);
+    $lig       = trim($_POST['lig_num']);
+    $arret     = trim($_POST['com_code_insee_arret']);
+    $heure_old = trim($_POST['noe_heure_passage_old']);   // ex "08:32"
+    $heure_new = trim($_POST['noe_heure_passage']);       // ex "08:45"
+    // Valeurs en CHAÎNE avec un point comme séparateur
+    $dist_prochain  = str_replace(',', '.', trim($_POST['noe_distance_prochain']));
+    $duree_prochain = str_replace(',', '.', trim($_POST['noe_duree_prochain']));
 
-    $sql_un = "UPDATE vik_noeud
-               SET noe_heure_passage     = :heure_new,
-                   noe_distance_prochain = :dist,
-                   noe_duree_prochain    = :duree
-               WHERE lig_num                = :lig
-                 AND com_code_insee_arret   = :arret
-                 AND (com_code_insee_suivant = :suivant OR (com_code_insee_suivant IS NULL AND :suivant2 IS NULL))
-                 AND noe_heure_passage      = :heure_old";
-    $cur = preparerRequetePDO($conn, $sql_un);
-    $suivant_val = ($suivant === '') ? null : $suivant;
-    majDonneesPrepareesTabPDO($cur, [
-        ':heure_new' => $heure_new,
-        ':dist' => $dist_prochain,
-        ':duree' => $duree_prochain,
-        ':lig' => $lig,
+    $sql_dd = "UPDATE vik_noeud
+               SET noe_distance_prochain = TO_NUMBER(:dist, '99999999D999999', 'NLS_NUMERIC_CHARACTERS=''.,'''),
+                   noe_duree_prochain    = TO_NUMBER(:duree, '99999999D999999', 'NLS_NUMERIC_CHARACTERS=''.,''')
+               WHERE TRIM(lig_num) = :lig
+                 AND TRIM(com_code_insee_arret) = :arret";
+    $cur1 = $conn->prepare($sql_dd);
+    $cur1->execute([
+        ':dist'  => (string)$dist_prochain,
+        ':duree' => (string)$duree_prochain,
+        ':lig'   => $lig,
         ':arret' => $arret,
-        ':suivant' => $suivant_val,
-        ':suivant2' => $suivant_val,
+    ]);
+
+    // 2) Heure : on ne change QUE le passage concerné, en gardant sa date d'origine
+    $sql_h = "UPDATE vik_noeud
+              SET noe_heure_passage = TO_DATE(TO_CHAR(noe_heure_passage,'YYYY-MM-DD') || ' ' || :heure_new, 'YYYY-MM-DD HH24:MI')
+              WHERE TRIM(lig_num) = :lig
+                AND TRIM(com_code_insee_arret) = :arret
+                AND TO_CHAR(noe_heure_passage, 'HH24:MI') = :heure_old";
+    $cur2 = $conn->prepare($sql_h);
+    $cur2->execute([
+        ':heure_new' => $heure_new,
+        ':lig'       => $lig,
+        ':arret'     => $arret,
         ':heure_old' => $heure_old,
     ]);
+
     $conn->exec("COMMIT");
-    if ($msg_ligne === '')
-        $msg_ligne = $lig;
+    if ($msg_ligne === '') $msg_ligne = $lig;
 }
 
 // ── Stats générales ───────────────────────────────────────────────────────────
@@ -238,7 +244,7 @@ foreach ($all_lignes as $lig) {
 
     $sql_noeuds = "SELECT n.com_code_insee_arret,
                           n.com_code_insee_suivant,
-                          n.noe_heure_passage,
+                          TO_CHAR(n.noe_heure_passage, 'HH24:MI') AS NOE_HEURE_PASSAGE,
                           n.noe_distance_prochain,
                           n.noe_duree_prochain,
                           ca.com_nom AS NOM_ARRET,
