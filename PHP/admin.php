@@ -31,9 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $grade  = trim($_POST['cli_grade']);
     $grades_ok = ['client', 'administrateur'];
     if (!in_array($grade, $grades_ok)) $grade = 'client';
-    $sql_u = "UPDATE vik_client SET cli_prenom = ?, cli_nom = ?, cli_courriel = ?, cli_nb_points_ec = ?, cli_grade = ? WHERE cli_num = ?";
+    $sql_u = "UPDATE vik_client SET cli_prenom = :prenom, cli_nom = :nom, cli_courriel = :mail, cli_nb_points_ec = :points, cli_grade = :grade WHERE cli_num = :id";
     $cur   = preparerRequetePDO($conn, $sql_u);
-    majDonneesPrepareesTabPDO($cur, [$prenom, $nom, $mail, $points, $grade, $id]);
+    majDonneesPrepareesTabPDO($cur, [':prenom' => $prenom, ':nom' => $nom, ':mail' => $mail, ':points' => $points, ':grade' => $grade, ':id' => $id]);
     $conn->exec("COMMIT");
     $msg_modif = "client_$id";
 }
@@ -44,46 +44,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $lig        = trim($_POST['lig_num']);
     $insee_deb  = trim($_POST['com_code_insee_debu']);
     $insee_term = trim($_POST['com_code_insee_term']);
-    $sql_ul = "UPDATE vik_ligne SET com_code_insee_debu = ?, com_code_insee_term = ? WHERE lig_num = ?";
+    $sql_ul = "UPDATE vik_ligne SET com_code_insee_debu = :debu, com_code_insee_term = :term WHERE lig_num = :lig";
     $cur    = preparerRequetePDO($conn, $sql_ul);
-    majDonneesPrepareesTabPDO($cur, [$insee_deb, $insee_term, $lig]);
+    majDonneesPrepareesTabPDO($cur, [':debu' => $insee_deb, ':term' => $insee_term, ':lig' => $lig]);
     $conn->exec("COMMIT");
     $msg_ligne = $lig;
 }
 
-// ── Traitement modification étape ────────────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'modif_etape') {
-    $lig   = trim($_POST['lig_num']);
-    $cli   = (int)trim($_POST['cli_num']);
-    $res   = (int)trim($_POST['res_num']);
-    $heure = trim($_POST['eta_heure']);
-    $dist  = (float)str_replace(',', '.', $_POST['eta_distance']);
-    $sql_ue = "UPDATE vik_etape
-               SET eta_heure    = TO_DATE(TO_CHAR(eta_heure,'DD/MM/YY') || ' ' || ?, 'DD/MM/YY HH24:MI'),
-                   eta_distance = ?
-               WHERE lig_num = ? AND cli_num = ? AND res_num = ?";
-    $cur = preparerRequetePDO($conn, $sql_ue);
-    majDonneesPrepareesTabPDO($cur, [$heure, $dist, $lig, $cli, $res]);
+// ── Traitement modification noeud (horaire / distance) ───────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'modif_noeud') {
+    $lig          = trim($_POST['lig_num']);
+    $arret        = trim($_POST['com_code_insee_arret']);
+    $suivant      = trim($_POST['com_code_insee_suivant']);
+    $heure_old    = trim($_POST['noe_heure_passage_old']);   // ancienne heure (clé PK)
+    $heure_new    = trim($_POST['noe_heure_passage']);        // nouvelle heure saisie
+    $dist_prochain = (float)str_replace(',', '.', $_POST['noe_distance_prochain']);
+    $duree_prochain = (float)str_replace(',', '.', $_POST['noe_duree_prochain']);
+
+    // On met à jour heure_passage, distance et durée vers le noeud suivant
+    // Pour le dernier noeud (com_code_insee_suivant IS NULL), dist et durée ne s'appliquent pas
+    $sql_un = "UPDATE vik_noeud
+               SET noe_heure_passage     = :heure_new,
+                   noe_distance_prochain = :dist,
+                   noe_duree_prochain    = :duree
+               WHERE lig_num                = :lig
+                 AND com_code_insee_arret   = :arret
+                 AND (com_code_insee_suivant = :suivant OR (com_code_insee_suivant IS NULL AND :suivant2 IS NULL))
+                 AND noe_heure_passage      = :heure_old";
+    $cur = preparerRequetePDO($conn, $sql_un);
+    $suivant_val = ($suivant === '') ? null : $suivant;
+    majDonneesPrepareesTabPDO($cur, [
+        ':heure_new'  => $heure_new,
+        ':dist'       => $dist_prochain,
+        ':duree'      => $duree_prochain,
+        ':lig'        => $lig,
+        ':arret'      => $arret,
+        ':suivant'    => $suivant_val,
+        ':suivant2'   => $suivant_val,
+        ':heure_old'  => $heure_old,
+    ]);
     $conn->exec("COMMIT");
+    if ($msg_ligne === '') $msg_ligne = $lig;
 }
 
 // ── Stats générales ───────────────────────────────────────────────────────────
-$sql_lignes = "SELECT lig_num AS lig_num, count(*) AS NB FROM vik_etape GROUP BY lig_num ORDER BY
+$sql_lignes = "SELECT lig_num AS LIG_NUM, count(*) AS NB FROM vik_etape GROUP BY lig_num ORDER BY
     TO_NUMBER(REGEXP_SUBSTR(lig_num, '^[0-9]+')),
     REGEXP_SUBSTR(lig_num, '[A-Za-z]+$')";
 $lignes_pop = LireDonneesPDO3($conn, $sql_lignes, $t);
-
-$sql_heures = "SELECT * FROM (
-    SELECT to_char(eta_heure, 'HH24') || 'h' AS HEURE, count(*) AS NB
-    FROM vik_etape GROUP BY to_char(eta_heure, 'HH24') ORDER BY TO_NUMBER(to_char(eta_heure, 'HH24'))
-) WHERE rownum <= 10";
-$heures_pop = LireDonneesPDO3($conn, $sql_heures, $t);
-
-$sql_lignes_heures = "SELECT * FROM (
-    SELECT lig_num AS LIGNE, to_char(eta_heure, 'HH24') || 'h' AS HEURE, count(*) AS NB
-    FROM vik_etape GROUP BY lig_num, to_char(eta_heure, 'HH24') ORDER BY count(*) DESC
-) WHERE rownum <= 10";
-$lignes_heures = LireDonneesPDO3($conn, $sql_lignes_heures, $t);
 
 $sql_clients_top = "SELECT * FROM (
     SELECT c.cli_prenom || ' ' || c.cli_nom AS CLIENT, count(*) AS NB
@@ -94,14 +102,39 @@ $top_clients = LireDonneesPDO3($conn, $sql_clients_top, $t);
 
 $sql_mois = "SELECT to_char(res_date, 'MM/YYYY') AS MOIS, count(*) AS NB
     FROM vik_reservation GROUP BY to_char(res_date, 'MM/YYYY')
-    ORDER BY to_char(res_date, 'MM/YYYY') ASC";
+    ORDER BY MIN(res_date) ASC";
 $resas_mois = LireDonneesPDO3($conn, $sql_mois, $t);
 
+$sql_semaine = "SELECT TO_CHAR(res_date, 'D') AS JOUR_NUM, TO_CHAR(res_date, 'DY', 'NLS_DATE_LANGUAGE=FRENCH') AS JOUR, count(*) AS NB
+    FROM vik_reservation
+    GROUP BY TO_CHAR(res_date, 'D'), TO_CHAR(res_date, 'DY', 'NLS_DATE_LANGUAGE=FRENCH')
+    ORDER BY TO_CHAR(res_date, 'D')";
+$resas_semaine = LireDonneesPDO3($conn, $sql_semaine, $t);
+
+$sql_dist = "SELECT * FROM (
+    SELECT c.cli_prenom || ' ' || c.cli_nom AS CLIENT,
+        ROUND(SUM(e.eta_distance), 1) AS DIST_TOT
+    FROM vik_etape e
+    JOIN vik_client c ON c.cli_num = e.cli_num
+    WHERE e.cli_num != 0
+    GROUP BY c.cli_prenom || ' ' || c.cli_nom
+    ORDER BY DIST_TOT DESC
+) WHERE rownum <= 10";
+$dist_clients = LireDonneesPDO3($conn, $sql_dist, $t);
+
+$sql_dep = "SELECT d.dep_nom AS DEP, count(*) AS NB
+    FROM vik_reservation r
+    JOIN vik_client c ON c.cli_num = r.cli_num
+    JOIN vik_departement d ON d.dep_num = c.dep_num
+    WHERE r.cli_num != 0
+    GROUP BY d.dep_nom
+    ORDER BY count(*) DESC";
+$resas_dep = LireDonneesPDO3($conn, $sql_dep, $t);
+
 // ── Stats interactives ────────────────────────────────────────────────────────
-$sql_villes = "SELECT DISTINCT com_nom FROM vik_commune ORDER BY com_nom ASC";
+$sql_villes = "SELECT DISTINCT com_nom AS COM_NOM FROM vik_commune ORDER BY com_nom ASC";
 $villes_list = LireDonneesPDO3($conn, $sql_villes, $t);
 
-// Stat 1 : réservations entre 2 villes
 $stat_resa_villes = null;
 $stat_v1 = isset($_GET['v1']) ? trim($_GET['v1']) : '';
 $stat_v2 = isset($_GET['v2']) ? trim($_GET['v2']) : '';
@@ -113,15 +146,13 @@ if ($stat_v1 !== '' && $stat_v2 !== '') {
         JOIN VIK_COMMUNE c_arr ON c_arr.COM_CODE_INSEE = e.COM_CODE_INSEE_ARRIVEE
         JOIN VIK_RESERVATION r ON r.cli_num = e.cli_num AND r.res_num = e.res_num
         JOIN VIK_CLIENT c_cli ON c_cli.cli_num = r.cli_num
-        WHERE c_dep.COM_NOM = ?
-        AND c_arr.COM_NOM = ?
+        WHERE c_dep.COM_NOM = :v1 AND c_arr.COM_NOM = :v2
         ORDER BY r.res_date DESC";
     $cur_sv = preparerRequetePDO($conn, $sql_sv);
-    $cur_sv->execute([$stat_v1, $stat_v2]);
+    $cur_sv->execute([':v1' => $stat_v1, ':v2' => $stat_v2]);
     $stat_resa_villes = $cur_sv->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Stat 2 : lignes passant par une ville
 $stat_lignes_ville = null;
 $stat_lv = isset($_GET['lv']) ? trim($_GET['lv']) : '';
 if ($stat_lv !== '') {
@@ -132,14 +163,13 @@ if ($stat_lv !== '') {
         JOIN VIK_LIGNE l ON l.lig_num = n.lig_num
         JOIN VIK_COMMUNE cd ON cd.com_code_insee = l.com_code_insee_debu
         JOIN VIK_COMMUNE ct ON ct.com_code_insee = l.com_code_insee_term
-        WHERE c.COM_NOM = ?
+        WHERE c.COM_NOM = :lv
         ORDER BY n.LIG_NUM";
     $cur_slv = preparerRequetePDO($conn, $sql_slv);
-    $cur_slv->execute([$stat_lv]);
+    $cur_slv->execute([':lv' => $stat_lv]);
     $stat_lignes_ville = $cur_slv->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Stat 3 : départs / arrivées dans une ville
 $stat_dep_arr = null;
 $stat_dav = isset($_GET['dav']) ? trim($_GET['dav']) : '';
 if ($stat_dav !== '') {
@@ -151,10 +181,10 @@ if ($stat_dav !== '') {
             OR e.COM_CODE_INSEE_ARRIVEE = c.COM_CODE_INSEE
         JOIN VIK_RESERVATION r ON r.cli_num = e.cli_num AND r.res_num = e.res_num
         JOIN VIK_CLIENT c_cli ON c_cli.cli_num = r.cli_num
-        WHERE c.COM_NOM = ?
+        WHERE c.COM_NOM = :dav
         ORDER BY r.res_date DESC";
     $cur_sdav = preparerRequetePDO($conn, $sql_sdav);
-    $cur_sdav->execute([$stat_dav]);
+    $cur_sdav->execute([':dav' => $stat_dav]);
     $stat_dep_arr = $cur_sdav->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -187,41 +217,95 @@ foreach ($clients as $client) {
     $reservations[$cnum] = LireDonneesPDO3($conn, $sql_r, $t);
 }
 
-// ── Lignes & étapes ───────────────────────────────────────────────────────────
+// ── Lignes & noeuds (horaires) ────────────────────────────────────────────────
+// On récupère toutes les lignes
 $sql_all_lignes = "SELECT l.lig_num, l.com_code_insee_debu, l.com_code_insee_term,
     cd.com_nom AS NOM_DEBU, ct.com_nom AS NOM_TERM
     FROM vik_ligne l
     JOIN vik_commune cd ON l.com_code_insee_debu  = cd.com_code_insee
     JOIN vik_commune ct ON l.com_code_insee_term = ct.com_code_insee
-    ORDER BY l.lig_num ASC";
+    ORDER BY TO_NUMBER(REGEXP_SUBSTR(l.lig_num, '^[0-9]+')), REGEXP_SUBSTR(l.lig_num, '[A-Za-z]+$')";
 $all_lignes = LireDonneesPDO3($conn, $sql_all_lignes, $t);
 
-$etapes_par_ligne = [];
+// Pour chaque ligne, on reconstruit la séquence ordonnée des noeuds.
+// La chaîne commence au noeud dont COM_CODE_INSEE_ARRET = COM_CODE_INSEE_DEBU de la ligne.
+// Chaque noeud pointe vers le suivant via COM_CODE_INSEE_SUIVANT.
+// Le dernier noeud a COM_CODE_INSEE_SUIVANT IS NULL (ou = COM_CODE_INSEE_TERM).
+$noeuds_par_ligne = [];
 foreach ($all_lignes as $lig) {
-    $lnum = trim($lig['LIG_NUM']);
-    $sql_etapes = "SELECT e.cli_num, e.res_num, e.com_code_insee_depart, e.com_code_insee_arrivee,
-        to_char(e.eta_heure, 'HH24:MI') AS ETA_HEURE_HM, e.eta_distance,
-        cd.com_nom AS NOM_DEPART, ca.com_nom AS NOM_ARRIVEE
-        FROM vik_etape e
-        JOIN vik_commune cd ON e.com_code_insee_depart  = cd.com_code_insee
-        JOIN vik_commune ca ON e.com_code_insee_arrivee = ca.com_code_insee
-        WHERE e.lig_num = '" . addslashes($lnum) . "'
-        ORDER BY e.eta_heure ASC";
-    $etapes_par_ligne[$lnum] = LireDonneesPDO3($conn, $sql_etapes, $t);
+    $lnum      = trim($lig['LIG_NUM']);
+    $insee_deb = trim($lig['COM_CODE_INSEE_DEBU']);
+
+    // Récupère tous les noeuds de la ligne avec nom de l'arrêt et du suivant
+    $sql_noeuds = "SELECT n.com_code_insee_arret,
+                          n.com_code_insee_suivant,
+                          n.noe_heure_passage,
+                          n.noe_distance_prochain,
+                          n.noe_duree_prochain,
+                          ca.com_nom AS NOM_ARRET,
+                          cs.com_nom AS NOM_SUIVANT
+                   FROM vik_noeud n
+                   JOIN vik_commune ca ON ca.com_code_insee = n.com_code_insee_arret
+                   LEFT JOIN vik_commune cs ON cs.com_code_insee = n.com_code_insee_suivant
+                   WHERE n.lig_num = '" . addslashes($lnum) . "'";
+    $rows = LireDonneesPDO3($conn, $sql_noeuds, $t);
+
+    if (empty($rows)) {
+        $noeuds_par_ligne[$lnum] = [];
+        continue;
+    }
+
+    // Indexer par code INSEE d'arrêt pour reconstruire la chaîne
+    $by_arret = [];
+    foreach ($rows as $r) {
+        $by_arret[trim($r['COM_CODE_INSEE_ARRET'])] = $r;
+    }
+
+    // Reconstruire dans l'ordre : on part du premier arrêt de la ligne
+    $ordered = [];
+    $current = $insee_deb;
+    $visited = [];
+    while ($current !== null && isset($by_arret[$current]) && !isset($visited[$current])) {
+        $visited[$current] = true;
+        $node = $by_arret[$current];
+        $ordered[] = $node;
+        $suivant = isset($node['COM_CODE_INSEE_SUIVANT']) ? trim($node['COM_CODE_INSEE_SUIVANT']) : null;
+        $current = ($suivant === '' || $suivant === null) ? null : $suivant;
+    }
+
+    // Si le parcours n'a pas intégré tous les noeuds (chaîne cassée ou départ introuvable),
+    // on ajoute les noeuds manquants tels quels pour ne rien perdre
+    if (count($ordered) < count($rows)) {
+        foreach ($rows as $r) {
+            if (!isset($visited[trim($r['COM_CODE_INSEE_ARRET'])])) {
+                $ordered[] = $r;
+            }
+        }
+    }
+
+    $noeuds_par_ligne[$lnum] = $ordered;
 }
 
 // ── JSON Chart.js ─────────────────────────────────────────────────────────────
 $lignes_labels = []; $lignes_data = [];
 foreach ($lignes_pop as $row) { $lignes_labels[] = $row['LIG_NUM']; $lignes_data[] = (int)$row['NB']; }
-$heures_labels = []; $heures_data = [];
-foreach ($heures_pop as $row) { $heures_labels[] = $row['HEURE']; $heures_data[] = (int)$row['NB']; }
-$lh_labels = []; $lh_data = [];
-foreach ($lignes_heures as $row) { $lh_labels[] = $row['LIGNE'] . ' ' . $row['HEURE']; $lh_data[] = (int)$row['NB']; }
+
 $top_labels = []; $top_data = [];
 foreach ($top_clients as $row) { $top_labels[] = $row['CLIENT']; $top_data[] = (int)$row['NB']; }
+
 $mois_labels = []; $mois_data = [];
 foreach ($resas_mois as $row) { $mois_labels[] = $row['MOIS']; $mois_data[] = (int)$row['NB']; }
-$conn=null;
+
+$semaine_labels = []; $semaine_data = [];
+foreach ($resas_semaine as $row) { $semaine_labels[] = $row['JOUR']; $semaine_data[] = (int)$row['NB']; }
+
+$dist_labels = []; $dist_data = [];
+foreach ($dist_clients as $row) { $dist_labels[] = $row['CLIENT']; $dist_data[] = (float)$row['DIST_TOT']; }
+
+$dep_labels = []; $dep_data = [];
+foreach ($resas_dep as $row) { $dep_labels[] = $row['DEP']; $dep_data[] = (int)$row['NB']; }
+
+$conn = null;
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -236,7 +320,6 @@ $conn=null;
         .admin-nav .btn { font-size: 0.88rem; padding: 0.6rem 1.2rem; display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; border: none; }
         .admin-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
         .admin-col { min-width: 0; }
-        @media (max-width: 1100px) { .admin-layout { grid-template-columns: 1fr; } }
 
         .stat-card { background: #fff; border-left: 4px solid var(--rouge); border-radius: 0 6px 6px 0; padding: 1.5rem 2rem; margin-bottom: 1.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .stat-card h3 { font-family: var(--font-display); font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--noir); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--gris-clair); }
@@ -267,6 +350,7 @@ $conn=null;
         .search-clients:focus { outline: none; border-color: var(--rouge); }
         .client-card.hidden { display: none; }
         .client-extra { display: none; }
+        .inactif-extra { display: none; }
 
         .client-card { background: #fff; border-left: 4px solid var(--rouge); border-radius: 0 6px 6px 0; padding: 1rem 1.25rem; margin-bottom: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .client-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
@@ -316,8 +400,8 @@ $conn=null;
         .btn-confirmer:hover { background-color: var(--rouge-dark); border-color: var(--rouge-dark); }
 
         .inactifs-wrap { margin-top: 2rem; }
-        .btn-goto { background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--rouge); padding: 0; line-height: 1; }
-        .btn-goto:hover { opacity: 0.7; }
+        .btn-goto { background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--gris); padding: 0; line-height: 1; transition: color 0.2s; }
+        .btn-goto:hover { color: var(--rouge); }
 
         .lignes-horaires-wrap { margin-top: 2rem; }
         .ligne-edit-card { background: #fff; border-left: 4px solid var(--noir); border-radius: 0 6px 6px 0; padding: 1rem 1.25rem; margin-bottom: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -338,43 +422,53 @@ $conn=null;
         .etapes-table thead th { padding: 0.5rem 0.6rem; text-align: left; font-family: var(--font-display); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
         .etapes-table tbody tr:nth-child(even) { background: var(--gris-clair); }
         .etapes-table tbody td { padding: 0.4rem 0.6rem; color: var(--gris); vertical-align: middle; }
-        .etapes-table input[type="time"], .etapes-table input[type="number"] { padding: 0.3rem 0.5rem; border: 2px solid var(--gris-clair); border-radius: 3px; font-size: 0.85rem; width: 100%; color: var(--noir); transition: border-color 0.2s; }
+        .etapes-table input[type="time"],
+        .etapes-table input[type="number"] { padding: 0.3rem 0.5rem; border: 2px solid var(--gris-clair); border-radius: 3px; font-size: 0.85rem; width: 100%; color: var(--noir); transition: border-color 0.2s; }
         .etapes-table input:focus { outline: none; border-color: var(--rouge); }
-        .btn-save-etape { background: none; border: 2px solid var(--gris-clair); border-radius: 4px; width: 30px; height: 30px; cursor: pointer; font-size: 0.9rem; color: var(--gris); display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, color 0.2s; }
-        .btn-save-etape:hover { border-color: #27ae60; color: #27ae60; }
+        .noeud-dernier td { opacity: 0.65; }
+        .badge-premier { font-size: 0.7rem; background: var(--rouge); color: #fff; border-radius: 3px; padding: 0 4px; margin-left: 4px; vertical-align: middle; font-family: var(--font-display); text-transform: uppercase; }
+        .badge-dernier  { font-size: 0.7rem; background: var(--gris); color: #fff; border-radius: 3px; padding: 0 4px; margin-left: 4px; vertical-align: middle; font-family: var(--font-display); text-transform: uppercase; }
+        .btn-save-noeud { background: none; border: 2px solid var(--gris-clair); border-radius: 4px; width: 30px; height: 30px; cursor: pointer; font-size: 0.9rem; color: var(--gris); display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, color 0.2s; }
+        .btn-save-noeud:hover { border-color: #27ae60; color: #27ae60; }
         .btn-save-ligne { background-color: var(--rouge); border: 2px solid var(--rouge); border-radius: 4px; padding: 0.5rem 1.1rem; font-family: var(--font-display); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; color: #fff; white-space: nowrap; transition: background-color 0.2s; align-self: end; }
         .btn-save-ligne:hover { background-color: var(--rouge-dark); border-color: var(--rouge-dark); }
 
-        /* ── Bouton retour en haut ── */
-        #back-to-top {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            z-index: 999;
-            width: 2.8rem;
-            height: 2.8rem;
-            background-color: var(--rouge);
-            color: #fff;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s, background-color 0.2s, transform 0.1s;
-        }
-        #back-to-top:hover {
-            background-color: var(--rouge-dark);
-            transform: translateY(-2px);
-        }
+        #back-to-top { position: fixed; bottom: 2rem; right: 2rem; z-index: 999; width: 2.8rem; height: 2.8rem; background-color: var(--rouge); color: #fff; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); opacity: 0; pointer-events: none; transition: opacity 0.3s, background-color 0.2s, transform 0.1s; }
+        #back-to-top:hover { background-color: var(--rouge-dark); transform: translateY(-2px); }
 
-        @media (max-width: 700px) {
-            .ligne-infos-form { grid-template-columns: 1fr; }
+        @media (max-width: 1100px) { .admin-layout { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) {
+            .admin-nav .btn { font-size: 0.78rem; padding: 0.5rem 0.8rem; }
+            .clients-header { flex-direction: column; align-items: stretch; }
+            .search-clients { width: 100%; }
+            .client-details { white-space: normal; }
+            .btn-ic { width: 30px; height: 30px; font-size: 0.85rem; }
+            .resa-ligne { grid-template-columns: auto 1fr; }
+            .resa-date, .resa-prix { grid-column: 2; }
             .edit-grid { grid-template-columns: 1fr; }
             .edit-full { grid-column: span 1; }
+            .stat-interactive { flex-direction: column; align-items: stretch; }
+            .stat-interactive .si-group { min-width: unset; }
+            .stat-interactive .btn { width: 100%; justify-content: center; }
+            .stat-result-grid { grid-template-columns: 1fr; }
+            .ligne-infos-form { grid-template-columns: 1fr; }
+            .btn-save-ligne { width: 100%; }
+            .etapes-table { font-size: 0.75rem; }
+            .etapes-table thead th, .etapes-table tbody td { padding: 0.3rem 0.3rem; }
+            .modal-box { padding: 1.5rem; }
+            .stat-card { padding: 1rem 1.25rem; }
+        }
+        @media (max-width: 480px) {
+            .admin-nav { flex-direction: column; }
+            .admin-nav .btn { width: 100%; justify-content: center; }
+            .client-header { flex-wrap: wrap; }
+            .client-actions { width: 100%; justify-content: flex-end; margin-top: 0.5rem; }
+            .resa-ligne { grid-template-columns: 1fr; }
+            .resa-num, .resa-trajet, .resa-date, .resa-prix { grid-column: 1; }
+            table { font-size: 0.75rem; }
+            thead th, tbody td { padding: 0.35rem 0.4rem; }
+            .stat-result { font-size: 1.6rem; }
+            .ligne-edit-sous { font-size: 0.72rem; }
         }
     </style>
 </head>
@@ -396,24 +490,28 @@ $conn=null;
         <!-- Colonne gauche : graphiques -->
         <div class="admin-col" id="section-stats">
             <div class="stat-card">
-                <h3>Lignes les plus fréquentées</h3>
+                <h3>Voyages par ligne</h3>
                 <canvas id="chartLignes"></canvas>
             </div>
             <div class="stat-card">
-                <h3>Top 10 heures de pointe</h3>
-                <canvas id="chartHeures"></canvas>
-            </div>
-            <div class="stat-card">
-                <h3>Top 10 lignes × heure</h3>
-                <canvas id="chartLignesHeures"></canvas>
-            </div>
-            <div class="stat-card">
-                <h3>Top 10 meilleurs clients</h3>
+                <h3>Meilleurs clients</h3>
                 <canvas id="chartClients"></canvas>
             </div>
             <div class="stat-card">
                 <h3>Réservations par mois</h3>
                 <canvas id="chartMois"></canvas>
+            </div>
+            <div class="stat-card">
+                <h3>Réservations par jour de la semaine</h3>
+                <canvas id="chartSemaine"></canvas>
+            </div>
+            <div class="stat-card">
+                <h3>Distance totale parcourue par client</h3>
+                <canvas id="chartDist"></canvas>
+            </div>
+            <div class="stat-card">
+                <h3>Réservations par département</h3>
+                <canvas id="chartDep"></canvas>
             </div>
         </div>
 
@@ -442,7 +540,7 @@ $conn=null;
                         </div>
                     </div>
                     <div class="client-actions">
-                        <button class="btn-ic btn-toggle" onclick="toggleResas(<?php echo $cnum; ?>)" title="Voir les réservations">▼</button>
+                        <button class="btn-ic btn-toggle" onclick="toggleResas(<?php echo $cnum; ?>)" title="Réservations">▼</button>
                         <button class="btn-ic btn-edit"   onclick="toggleEditClient(<?php echo $cnum; ?>)" title="Modifier">✏️</button>
                         <button class="btn-ic btn-suppr"  onclick="demanderSuppr(<?php echo $cnum; ?>, '<?php echo addslashes($client['CLI_PRENOM'] . ' ' . $client['CLI_NOM']); ?>')" title="Supprimer">🗑</button>
                     </div>
@@ -551,12 +649,7 @@ $conn=null;
                     <thead><tr><th>#</th><th>Client</th><th>Date</th><th>Prix</th></tr></thead>
                     <tbody>
                     <?php foreach ($stat_resa_villes as $r) { ?>
-                        <tr>
-                            <td>#<?php echo $r['RES_NUM']; ?></td>
-                            <td><?php echo htmlspecialchars($r['CLIENT']); ?></td>
-                            <td><?php echo $r['RES_DATE']; ?></td>
-                            <td><?php echo $r['RES_PRIX_TOT']; ?> €</td>
-                        </tr>
+                        <tr><td>#<?php echo $r['RES_NUM']; ?></td><td><?php echo htmlspecialchars($r['CLIENT']); ?></td><td><?php echo $r['RES_DATE']; ?></td><td><?php echo $r['RES_PRIX_TOT']; ?> €</td></tr>
                     <?php } ?>
                     </tbody>
                 </table>
@@ -592,11 +685,7 @@ $conn=null;
                     <thead><tr><th>Ligne</th><th>Départ</th><th>Terminus</th></tr></thead>
                     <tbody>
                     <?php foreach ($stat_lignes_ville as $r) { ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($r['LIG_NUM']); ?></td>
-                            <td><?php echo htmlspecialchars($r['NOM_DEBU']); ?></td>
-                            <td><?php echo htmlspecialchars($r['NOM_TERM']); ?></td>
-                        </tr>
+                        <tr><td><?php echo htmlspecialchars($r['LIG_NUM']); ?></td><td><?php echo htmlspecialchars($r['NOM_DEBU']); ?></td><td><?php echo htmlspecialchars($r['NOM_TERM']); ?></td></tr>
                     <?php } ?>
                     </tbody>
                 </table>
@@ -629,25 +718,20 @@ $conn=null;
                 $nb_arr = count(array_filter($stat_dep_arr, function($r) { return $r['SENS'] === 'Arrivée'; }));
             ?>
                 <div class="stat-result-grid">
-                    <div class="stat-result-box"><div class="val"><?php echo $nb_dep; ?></div><div class="lbl">voyageur(s) au départ</div></div>
-                    <div class="stat-result-box"><div class="val"><?php echo $nb_arr; ?></div><div class="lbl">voyageur(s) à l'arrivée</div></div>
+                    <div class="stat-result-box"><div class="val"><?php echo $nb_dep; ?></div><div class="lbl">au départ</div></div>
+                    <div class="stat-result-box"><div class="val"><?php echo $nb_arr; ?></div><div class="lbl">à l'arrivée</div></div>
                 </div>
                 <?php if (count($stat_dep_arr) > 0) { ?>
                 <table style="margin-top:1rem">
                     <thead><tr><th>Client</th><th>Sens</th><th>Date</th><th>Prix</th></tr></thead>
                     <tbody>
                     <?php foreach ($stat_dep_arr as $r) { ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($r['CLIENT']); ?></td>
-                            <td><?php echo $r['SENS']; ?></td>
-                            <td><?php echo $r['RES_DATE']; ?></td>
-                            <td><?php echo $r['RES_PRIX_TOT']; ?> €</td>
-                        </tr>
+                        <tr><td><?php echo htmlspecialchars($r['CLIENT']); ?></td><td><?php echo $r['SENS']; ?></td><td><?php echo $r['RES_DATE']; ?></td><td><?php echo $r['RES_PRIX_TOT']; ?> €</td></tr>
                     <?php } ?>
                     </tbody>
                 </table>
                 <?php } ?>
-                <div class="stat-result-label" style="margin-top:0.5rem">pour la ville de <?php echo htmlspecialchars($stat_dav); ?></div>
+                <div class="stat-result-label" style="margin-top:0.5rem">pour <?php echo htmlspecialchars($stat_dav); ?></div>
             <?php } else if ($stat_dav !== '') { ?>
                 <p class="no-resa" style="margin-top:0.5rem">Aucune donnée pour cette ville.</p>
             <?php } ?>
@@ -665,8 +749,8 @@ $conn=null;
                 <table>
                     <thead><tr><th>Prénom</th><th>Nom</th><th>Dernière connexion</th><th>Inactivité</th><th></th></tr></thead>
                     <tbody>
-                    <?php foreach ($inactifs as $c) { ?>
-                        <tr>
+                    <?php foreach ($inactifs as $i => $c) { ?>
+                        <tr class="<?php echo $i >= 10 ? 'inactif-extra' : ''; ?>">
                             <td><?php echo htmlspecialchars($c['CLI_PRENOM']); ?></td>
                             <td><?php echo htmlspecialchars($c['CLI_NOM']); ?></td>
                             <td><?php echo $c['CLI_DATE_CONNEC']; ?></td>
@@ -675,11 +759,18 @@ $conn=null;
                                 if ($j > 730) echo "<strong style='color:var(--rouge)'>$j j (à supprimer)</strong>";
                                 else          echo "$j j";
                             ?></td>
-                            <td><button class="btn-goto" onclick="scrollToClient(<?php echo $c['CLI_NUM']; ?>)" title="Aller au client">↗</button></td>
+                            <td>
+                                <button class="btn-goto" onclick="demanderSuppr(<?php echo $c['CLI_NUM']; ?>, '<?php echo addslashes($c['CLI_PRENOM'] . ' ' . $c['CLI_NOM']); ?>')" title="Supprimer">🗑</button>
+                            </td>
                         </tr>
                     <?php } ?>
                     </tbody>
                 </table>
+                <?php if (count($inactifs) > 10) { ?>
+                <button class="btn" id="btn-voir-plus-inactifs" onclick="voirPlusInactifs()" style="width:100%;margin-top:0.75rem">
+                    Voir plus (<?php echo count($inactifs) - 10; ?> clients restants)
+                </button>
+                <?php } ?>
             <?php } ?>
         </div>
     </div>
@@ -690,8 +781,9 @@ $conn=null;
             <h3>Lignes &amp; Horaires (<?php echo count($all_lignes); ?> lignes)</h3>
             <?php foreach ($all_lignes as $lig) {
                 $lnum   = trim($lig['LIG_NUM']);
-                $etapes = $etapes_par_ligne[$lnum] ?? [];
+                $noeuds = $noeuds_par_ligne[$lnum] ?? [];
                 $isOpen = ($msg_ligne === $lnum);
+                $nb_noeuds = count($noeuds);
             ?>
             <div class="ligne-edit-card" id="ligne-<?php echo htmlspecialchars($lnum); ?>">
                 <div class="ligne-edit-header" onclick="toggleLigne('<?php echo addslashes($lnum); ?>')">
@@ -699,14 +791,16 @@ $conn=null;
                         <div class="ligne-edit-titre">Ligne <?php echo htmlspecialchars($lnum); ?></div>
                         <div class="ligne-edit-sous">
                             <?php echo htmlspecialchars($lig['NOM_DEBU']); ?> → <?php echo htmlspecialchars($lig['NOM_TERM']); ?>
-                            &nbsp;·&nbsp; <?php echo count($etapes); ?> étape(s)
+                            &nbsp;·&nbsp; <?php echo $nb_noeuds; ?> arrêt(s)
                         </div>
                     </div>
                     <span class="ligne-chevron <?php echo $isOpen ? 'open' : ''; ?>" id="chevron-<?php echo htmlspecialchars($lnum); ?>">▼</span>
                 </div>
 
                 <div class="ligne-edit-body <?php echo $isOpen ? 'open' : ''; ?>" id="body-<?php echo htmlspecialchars($lnum); ?>">
-                    <form method="post" action="#ligne-<?php echo htmlspecialchars($lnum); ?>">
+
+                    <!-- Modification des codes INSEE de la ligne -->
+                    <form method="post" action="">
                         <input type="hidden" name="action"  value="modif_ligne">
                         <input type="hidden" name="lig_num" value="<?php echo htmlspecialchars($lnum); ?>">
                         <div class="ligne-infos-form">
@@ -718,34 +812,88 @@ $conn=null;
                                 <label>Code INSEE terminus</label>
                                 <input type="text" name="com_code_insee_term" value="<?php echo htmlspecialchars($lig['COM_CODE_INSEE_TERM']); ?>" maxlength="10" required>
                             </div>
-                            <div>
-                                <button type="submit" class="btn-save-ligne">Enregistrer</button>
-                            </div>
+                            <div><button type="submit" class="btn-save-ligne">Enregistrer</button></div>
                         </div>
                     </form>
 
-                    <?php if (empty($etapes)) { ?>
-                        <p class="no-resa">Aucune étape enregistrée pour cette ligne.</p>
+                    <!-- Tableau des noeuds (arrêts avec horaires) -->
+                    <?php if (empty($noeuds)) { ?>
+                        <p class="no-resa">Aucun arrêt enregistré pour cette ligne.</p>
                     <?php } else { ?>
-                        <p class="etapes-titre">Étapes</p>
+                        <p class="etapes-titre">Arrêts &amp; horaires</p>
                         <table class="etapes-table">
-                            <thead><tr><th>Départ</th><th>Arrivée</th><th>Heure</th><th>Distance (km)</th><th></th></tr></thead>
-                            <tbody>
-                            <?php foreach ($etapes as $etape) {
-                                $form_id = 'form-etape-' . $etape['CLI_NUM'] . '-' . $etape['RES_NUM'];
-                            ?>
+                            <thead>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($etape['NOM_DEPART']); ?></td>
-                                    <td><?php echo htmlspecialchars($etape['NOM_ARRIVEE']); ?></td>
-                                    <td><input form="<?php echo $form_id; ?>" type="time"   name="eta_heure"    value="<?php echo htmlspecialchars($etape['ETA_HEURE_HM']); ?>"></td>
-                                    <td><input form="<?php echo $form_id; ?>" type="number" name="eta_distance" value="<?php echo str_replace(',', '.', $etape['ETA_DISTANCE']); ?>" step="0.1" min="0"></td>
-                                    <td><button form="<?php echo $form_id; ?>" type="submit" class="btn-save-etape" title="Enregistrer">✔</button></td>
+                                    <th>#</th>
+                                    <th>Arrêt</th>
+                                    <th>Heure de passage</th>
+                                    <th>Dist. suivant (km)</th>
+                                    <th>Durée suivant (min)</th>
+                                    <th></th>
                                 </tr>
-                                <form id="<?php echo $form_id; ?>" method="post" action="#ligne-<?php echo htmlspecialchars($lnum); ?>">
-                                    <input type="hidden" name="action"  value="modif_etape">
-                                    <input type="hidden" name="lig_num" value="<?php echo htmlspecialchars($lnum); ?>">
-                                    <input type="hidden" name="cli_num" value="<?php echo $etape['CLI_NUM']; ?>">
-                                    <input type="hidden" name="res_num" value="<?php echo $etape['RES_NUM']; ?>">
+                            </thead>
+                            <tbody>
+                            <?php foreach ($noeuds as $idx => $noeud) {
+                                $is_premier = ($idx === 0);
+                                $is_dernier = ($idx === $nb_noeuds - 1);
+                                $arret   = $noeud['COM_CODE_INSEE_ARRET'];
+                                $suivant = isset($noeud['COM_CODE_INSEE_SUIVANT']) ? trim($noeud['COM_CODE_INSEE_SUIVANT']) : '';
+                                // Identifiant unique pour ce formulaire
+                                $form_id = 'fnoeud-' . htmlspecialchars($lnum) . '-' . $idx;
+                                // Heure formatée pour input type="time" (HH:MM)
+                                $heure_raw = $noeud['NOE_HEURE_PASSAGE'] ?? '';
+                                // Oracle peut renvoyer "HH:MI" ou "HH:MI:SS" selon le format de session
+                                $heure_time = substr($heure_raw, 0, 5); // "HH:MM"
+                            ?>
+                                <tr class="<?php echo $is_dernier ? 'noeud-dernier' : ''; ?>">
+                                    <td style="font-weight:600;color:var(--rouge);font-size:0.8rem;">
+                                        <?php echo $idx + 1; ?>
+                                        <?php if ($is_premier) echo '<span class="badge-premier">départ</span>'; ?>
+                                        <?php if ($is_dernier) echo '<span class="badge-dernier">terminus</span>'; ?>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($noeud['NOM_ARRET']); ?></td>
+                                    <td>
+                                        <input form="<?php echo $form_id; ?>"
+                                               type="time"
+                                               name="noe_heure_passage"
+                                               value="<?php echo htmlspecialchars($heure_time); ?>"
+                                               required>
+                                    </td>
+                                    <td>
+                                        <?php if (!$is_dernier) { ?>
+                                        <input form="<?php echo $form_id; ?>"
+                                               type="number"
+                                               name="noe_distance_prochain"
+                                               value="<?php echo str_replace(',', '.', $noeud['NOE_DISTANCE_PROCHAIN'] ?? ''); ?>"
+                                               step="0.1" min="0">
+                                        <?php } else { ?>
+                                            <span style="color:var(--gris);font-style:italic;font-size:0.8rem;">—</span>
+                                            <input form="<?php echo $form_id; ?>" type="hidden" name="noe_distance_prochain" value="0">
+                                        <?php } ?>
+                                    </td>
+                                    <td>
+                                        <?php if (!$is_dernier) { ?>
+                                        <input form="<?php echo $form_id; ?>"
+                                               type="number"
+                                               name="noe_duree_prochain"
+                                               value="<?php echo str_replace(',', '.', $noeud['NOE_DUREE_PROCHAIN'] ?? ''); ?>"
+                                               step="1" min="0">
+                                        <?php } else { ?>
+                                            <span style="color:var(--gris);font-style:italic;font-size:0.8rem;">—</span>
+                                            <input form="<?php echo $form_id; ?>" type="hidden" name="noe_duree_prochain" value="0">
+                                        <?php } ?>
+                                    </td>
+                                    <td>
+                                        <button form="<?php echo $form_id; ?>" type="submit" class="btn-save-noeud" title="Enregistrer">✔</button>
+                                    </td>
+                                </tr>
+                                <!-- Formulaire caché pour ce noeud -->
+                                <form id="<?php echo $form_id; ?>" method="post" action="">
+                                    <input type="hidden" name="action"                   value="modif_noeud">
+                                    <input type="hidden" name="lig_num"                  value="<?php echo htmlspecialchars($lnum); ?>">
+                                    <input type="hidden" name="com_code_insee_arret"     value="<?php echo htmlspecialchars($arret); ?>">
+                                    <input type="hidden" name="com_code_insee_suivant"   value="<?php echo htmlspecialchars($suivant); ?>">
+                                    <input type="hidden" name="noe_heure_passage_old"    value="<?php echo htmlspecialchars($heure_raw); ?>">
                                 </form>
                             <?php } ?>
                             </tbody>
@@ -782,21 +930,13 @@ $conn=null;
     const rouge      = '#C0392B';
     const rougeClair = 'rgba(192, 57, 43, 0.7)';
     const gris       = '#4a4a4a';
+    const bleu       = 'rgba(41, 128, 185, 0.7)';
+    const vert       = 'rgba(39, 174, 96, 0.7)';
 
     new Chart(document.getElementById('chartLignes'), {
         type: 'bar',
         data: { labels: <?php echo json_encode($lignes_labels); ?>, datasets: [{ data: <?php echo json_encode($lignes_data); ?>, backgroundColor: rougeClair, borderColor: rouge, borderWidth: 2, borderRadius: 4 }] },
         options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: gris } }, x: { ticks: { color: gris, font: { size: 10 } } } } }
-    });
-    new Chart(document.getElementById('chartHeures'), {
-        type: 'line',
-        data: { labels: <?php echo json_encode($heures_labels); ?>, datasets: [{ data: <?php echo json_encode($heures_data); ?>, backgroundColor: 'rgba(192,57,43,0.15)', borderColor: rouge, borderWidth: 2, pointBackgroundColor: rouge, fill: true, tension: 0.3 }] },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: gris } }, x: { ticks: { color: gris } } } }
-    });
-    new Chart(document.getElementById('chartLignesHeures'), {
-        type: 'bar',
-        data: { labels: <?php echo json_encode($lh_labels); ?>, datasets: [{ data: <?php echo json_encode($lh_data); ?>, backgroundColor: rougeClair, borderColor: rouge, borderWidth: 2, borderRadius: 4 }] },
-        options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { color: gris } }, y: { ticks: { color: gris, font: { size: 9 } } } } }
     });
     new Chart(document.getElementById('chartClients'), {
         type: 'bar',
@@ -805,8 +945,23 @@ $conn=null;
     });
     new Chart(document.getElementById('chartMois'), {
         type: 'line',
-        data: { labels: <?php echo json_encode($mois_labels); ?>, datasets: [{ data: <?php echo json_encode($mois_data); ?>, backgroundColor: 'rgba(192,57,43,0.15)', borderColor: rouge, borderWidth: 2, pointBackgroundColor: rouge, fill: true, tension: 0.3 }] },
+        data: { labels: <?php echo json_encode($mois_labels); ?>, datasets: [{ data: <?php echo json_encode($mois_data); ?>, backgroundColor: rougeClair, borderColor: rouge, borderWidth: 2, pointBackgroundColor: rouge, fill: true, tension: 0.3 }] },
         options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: gris } }, x: { ticks: { color: gris } } } }
+    });
+    new Chart(document.getElementById('chartSemaine'), {
+        type: 'bar',
+        data: { labels: <?php echo json_encode($semaine_labels); ?>, datasets: [{ data: <?php echo json_encode($semaine_data); ?>, backgroundColor: rougeClair, borderColor: rouge, borderWidth: 2, borderRadius: 4 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: gris } }, x: { ticks: { color: gris } } } }
+    });
+    new Chart(document.getElementById('chartDist'), {
+        type: 'bar',
+        data: { labels: <?php echo json_encode($dist_labels); ?>, datasets: [{ data: <?php echo json_encode($dist_data); ?>, backgroundColor: rougeClair, borderColor: rouge, borderWidth: 2, borderRadius: 4 }] },
+        options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.raw + ' km' } } }, scales: { x: { beginAtZero: true, ticks: { color: gris } }, y: { ticks: { color: gris, font: { size: 10 } } } } }
+    });
+    new Chart(document.getElementById('chartDep'), {
+        type: 'doughnut',
+        data: { labels: <?php echo json_encode($dep_labels); ?>, datasets: [{ data: <?php echo json_encode($dep_data); ?>, backgroundColor: ['rgba(192,57,43,0.8)','rgba(41,128,185,0.8)','rgba(39,174,96,0.8)','rgba(243,156,18,0.8)','rgba(142,68,173,0.8)','rgba(26,188,156,0.8)','rgba(231,76,60,0.8)','rgba(52,152,219,0.8)','rgba(46,204,113,0.8)'], borderWidth: 2 }] },
+        options: { responsive: true, plugins: { legend: { position: 'right', labels: { color: gris, font: { size: 11 } } } } }
     });
 
     function scrollSec(id) {
@@ -841,6 +996,12 @@ $conn=null;
         if (btn) btn.style.display = 'none';
     }
 
+    function voirPlusInactifs() {
+        document.querySelectorAll('.inactif-extra').forEach(c => c.classList.remove('inactif-extra'));
+        const btn = document.getElementById('btn-voir-plus-inactifs');
+        if (btn) btn.style.display = 'none';
+    }
+
     function toggleResas(num) {
         document.getElementById('resas-' + num).classList.toggle('open');
     }
@@ -859,25 +1020,14 @@ $conn=null;
         document.getElementById('modal').classList.remove('open');
     }
 
-    function scrollToClient(num) {
-        const el = document.getElementById('client-' + num);
-        if (!el) return;
-        el.classList.remove('client-extra');
-        el.classList.remove('hidden');
-        const nav = document.querySelector('nav');
-        const offset = (nav ? nav.offsetHeight : 0) + 16;
-        window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
-    }
-
     function toggleLigne(lnum) {
         document.getElementById('body-'    + lnum).classList.toggle('open');
         document.getElementById('chevron-' + lnum).classList.toggle('open');
     }
 
-    // ── Bouton retour en haut ──
     const btnTop = document.getElementById('back-to-top');
     window.addEventListener('scroll', () => {
-        btnTop.style.opacity      = window.scrollY > 300 ? '1' : '0';
+        btnTop.style.opacity = window.scrollY > 300 ? '1' : '0';
         btnTop.style.pointerEvents = window.scrollY > 300 ? 'auto' : 'none';
     });
 </script>
