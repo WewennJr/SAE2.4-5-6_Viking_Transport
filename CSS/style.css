@@ -795,3 +795,32 @@ main.main-lignes {
   background-color: var(--rouge-dark);
   transform: translateY(-2px);
 }
+
+/* ════════ Bouton "Rechercher et réserver" sur la page des lignes ════════ */
+.btn-reserver-lignes {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background-color: #C0392B;
+  color: #fff;
+  border: 2px solid #C0392B;
+  border-radius: 8px;
+  padding: 0.8rem 1.5rem;
+  margin-bottom: 1.8rem;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.btn-reserver-lignes:hover {
+  background-color: #fff;
+  color: #C0392B;
+}
+
+.btn-reserver-icone {
+  font-size: 1.1rem;
+}

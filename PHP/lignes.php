@@ -14,6 +14,11 @@
         <h1>Lignes du réseau</h1>
         <p class="lignes-sous-titre">19 lignes de transport régional en Normandie</p>
 
+        <a href="recherche.php" class="btn-reserver-lignes">
+            <span class="btn-reserver-icone">🔍</span>
+            <span>Rechercher et réserver un trajet</span>
+        </a>
+
         <div class="lignes-grille">
 
             <a href="horaire_ligne.php?lig=1A" class="ligne-carte" style="--couleur: #e63946; text-decoration:none; display:block;">
