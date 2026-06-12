@@ -678,3 +678,64 @@ input[type="time"]#heure::-webkit-calendar-picker-indicator:hover,
 .sous-trajet .option-etapes-horaires {
   padding-left: 2rem;
 }
+
+/* ════════ Plan du réseau (dépliable) ════════ */
+.bloc-plan {
+  margin-bottom: 1.5rem;
+}
+
+.btn-plan {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid #d5d5d5;
+  border-radius: 8px;
+  padding: 0.8rem 1.2rem;
+  font-family: var(--font-display, 'Oswald', sans-serif);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--noir, #1a1a1a);
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.btn-plan:hover {
+  border-color: var(--rouge, #C0392B);
+  background-color: rgba(192, 57, 43, 0.03);
+}
+
+.btn-plan-icone {
+  font-size: 1.2rem;
+}
+
+.btn-plan-fleche {
+  margin-left: auto;
+  color: var(--rouge, #C0392B);
+  font-size: 0.9rem;
+}
+
+/* Conteneur de l'image : replié par défaut (hauteur 0), déplié via .ouvert */
+.conteneur-plan {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+  border-radius: 8px;
+}
+
+.conteneur-plan.ouvert {
+  max-height: 1200px;   /* assez grand pour contenir l'image */
+  margin-top: 0.8rem;
+}
+
+.image-plan {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background-color: #fff;
+}
