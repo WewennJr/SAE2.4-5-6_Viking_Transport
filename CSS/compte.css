@@ -268,49 +268,49 @@
 /* ── Mode sombre : cartes espace client ─────────────────────── */
 [data-theme="sombre"] .carte,
 [data-theme="sombre"] .carte-reservations {
-  background-color: #333333;
+  background-color: #242526;
 }
 
 [data-theme="sombre"] .carte-points {
-  background-color: #1e1e1e;
+  background-color: #111213;
 }
 
 [data-theme="sombre"] .carte h2,
 [data-theme="sombre"] .carte-reservations h2 {
-  color: #d4d4d4;
-  border-bottom-color: #3d3d3d;
+  color: #e4e6ea;
+  border-bottom-color: #3a3b3c;
 }
 
 [data-theme="sombre"] .info-liste li {
-  border-bottom-color: #3d3d3d;
+  border-bottom-color: #3a3b3c;
 }
 
 [data-theme="sombre"] .info-liste .valeur {
-  color: #d4d4d4;
+  color: #e4e6ea;
 }
 
 [data-theme="sombre"] .table-reservations tbody tr:nth-child(even) {
-  background-color: #2e2e2e;
+  background-color: #2d2e2f;
 }
 
 [data-theme="sombre"] .table-reservations tbody tr:hover {
-  background-color: #3d3d3d;
+  background-color: #3a3b3c;
 }
 
 [data-theme="sombre"] .table-reservations thead th {
-  background-color: #1e1e1e;
-  color: #d4d4d4;
+  background-color: #111213;
+  color: #e4e6ea;
 }
 
 [data-theme="sombre"] .table-reservations tbody td {
-  border-bottom-color: #3d3d3d;
-  color: #a0a0a0;
+  border-bottom-color: #3a3b3c;
+  color: #b0b3b8;
 }
 
 [data-theme="sombre"] .theme-option-btn {
-  background-color: #333333;
-  color: #d4d4d4;
-  border-color: #4a4a4a;
+  background-color: #2d2e2f;
+  color: #e4e6ea;
+  border-color: #4a4b4c;
 }
 .carte-theme {
   margin-top: 1.5rem;
@@ -366,5 +366,5 @@
 }
 
 [data-theme="sombre"] .theme-option-btn {
-  background-color: #242424;
+  background-color: #2d2e2f;
 }
