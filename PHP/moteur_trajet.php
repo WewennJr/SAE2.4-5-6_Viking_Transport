@@ -394,20 +394,30 @@ function calculerPoints($distance)
 // Prix de base d'un trajet selon sa distance totale (table VIK_TARIF).
 // Renvoie le prix de la tranche correspondante ; si la distance dépasse
 // toutes les tranches, on prend la tranche la plus haute.
+// Prix de base d'un trajet selon sa distance totale (table VIK_TARIF).
+// Si la distance dépasse toutes les tranches (> 500 km), on plafonne au tarif
+// de la tranche la plus élevée.
 function calculerTarif($conn, $distance)
 {
     $stmt = $conn->prepare("
         SELECT TAR_PRIX FROM VIK_TARIF
-        WHERE :dist >= TAR_MIN_DIST AND :dist <= TAR_MAX_DIST
+        WHERE :dist1 >= TAR_MIN_DIST AND :dist2 <= TAR_MAX_DIST
     ");
-    $stmt->execute([':dist' => $distance]);
+    $stmt->execute([':dist1' => $distance, ':dist2' => $distance]);
     $tarif = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$tarif) {
-        // Distance hors tranches : on prend la tranche maximale
-        $stmtMax = $conn->query("SELECT TAR_PRIX FROM VIK_TARIF ORDER BY TAR_MAX_DIST DESC FETCH FIRST 1 ROWS ONLY");
-        $tarif = $stmtMax->fetch(PDO::FETCH_ASSOC);
+    if ($tarif !== false && $tarif !== null) {
+        return (int)$tarif['TAR_PRIX'];
     }
-    return $tarif ? (int)$tarif['TAR_PRIX'] : 0;
+
+    // Aucune tranche : on prend la tranche dont la distance max est la plus grande.
+    // TO_NUMBER force un tri numérique (sinon "80" passerait avant "500" en texte).
+    $stmtMax = $conn->query("
+        SELECT TAR_PRIX FROM VIK_TARIF
+        ORDER BY TO_NUMBER(TAR_MAX_DIST) DESC
+        FETCH FIRST 1 ROWS ONLY
+    ");
+    $max = $stmtMax->fetch(PDO::FETCH_ASSOC);
+    return ($max !== false && $max !== null) ? (int)$max['TAR_PRIX'] : 0;
 }
 ?>

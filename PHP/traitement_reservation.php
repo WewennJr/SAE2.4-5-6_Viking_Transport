@@ -32,11 +32,13 @@ if (isset($_SESSION['num_client'])) {
 
 // ── Tarif de base selon la distance ──
 $distanceTot = $trajet['distance'];
-$stmtTar = $conn->prepare("SELECT TAR_NUM_TRANCHE, TAR_PRIX FROM VIK_TARIF WHERE :dist >= TAR_MIN_DIST AND :dist <= TAR_MAX_DIST");
-$stmtTar->execute([':dist' => $distanceTot]);
+$stmtTar = $conn->prepare("SELECT TAR_NUM_TRANCHE, TAR_PRIX FROM VIK_TARIF WHERE :dist1 >= TAR_MIN_DIST AND :dist2 <= TAR_MAX_DIST");
+$stmtTar->execute([':dist1' => $distanceTot, ':dist2' => $distanceTot]);
 $tarif = $stmtTar->fetch(PDO::FETCH_ASSOC);
-if (!$tarif) {
-    $stmtMax = $conn->query("SELECT TAR_NUM_TRANCHE, TAR_PRIX FROM VIK_TARIF ORDER BY TAR_MAX_DIST DESC FETCH FIRST 1 ROWS ONLY");
+if ($tarif === false || $tarif === null) {
+    // Au-delà de toutes les tranches : on prend la tranche la plus haute.
+    // TO_NUMBER force un tri numérique (sinon "80" passerait avant "500" en texte).
+    $stmtMax = $conn->query("SELECT TAR_NUM_TRANCHE, TAR_PRIX FROM VIK_TARIF ORDER BY TO_NUMBER(TAR_MAX_DIST) DESC FETCH FIRST 1 ROWS ONLY");
     $tarif = $stmtMax->fetch(PDO::FETCH_ASSOC);
 }
 $numTranche = $tarif['TAR_NUM_TRANCHE'];
