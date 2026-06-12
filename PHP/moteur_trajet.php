@@ -333,6 +333,59 @@ function calculerHorairesTrajet($conn, $segments, $heureSouhaitee)
     ];
 }
 
+// ════════════════════════════════════════════════════════════
+// TRAJET MANUEL : l'utilisateur choisit une suite de communes.
+// Entre chaque paire consécutive, on calcule le meilleur sous-trajet
+// (qui peut emprunter plusieurs lignes), puis on concatène le tout.
+// $communes : liste ordonnée de codes INSEE [C0, C1, ..., Cn]
+// Renvoie le chemin complet + totaux, ou ['erreur' => msg] si impossible.
+// ════════════════════════════════════════════════════════════
+function composerTrajetManuel($graphe, $communes, $critere = 'duree')
+{
+    if (count($communes) < 2) {
+        return ['erreur' => "Il faut au moins un départ et une arrivée."];
+    }
+
+    $cheminComplet = [];
+    $sousTrajets   = [];
+
+    for ($i = 0; $i < count($communes) - 1; $i++) {
+        $de   = trim($communes[$i]);
+        $vers = trim($communes[$i + 1]);
+
+        if ($de === $vers) {
+            return ['erreur' => "Deux arrêts qui se suivent sont identiques."];
+        }
+
+        $t = trouverTrajet($graphe, $de, $vers, $critere);
+        if ($t === null) {
+            return ['erreur' => "Aucun trajet possible entre ces deux arrêts."];
+        }
+
+        $cheminComplet = array_merge($cheminComplet, $t['chemin']);
+        $sousTrajets[] = [
+            'de'       => $de,
+            'vers'     => $vers,
+            'chemin'   => $t['chemin'],
+            'duree'    => $t['dureeTotale'],
+            'distance' => $t['distanceTotale'],
+        ];
+    }
+
+    $dureeTot = 0; $distTot = 0;
+    foreach ($cheminComplet as $e) {
+        $dureeTot += $e['duree'];
+        $distTot  += $e['distance'];
+    }
+
+    return [
+        'chemin'         => $cheminComplet,
+        'sousTrajets'    => $sousTrajets,
+        'dureeTotale'    => $dureeTot,
+        'distanceTotale' => $distTot,
+    ];
+}
+
 function calculerPoints($distance)
 {
     return max(1, (int)floor($distance / 10));

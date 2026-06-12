@@ -10,7 +10,8 @@ if (!isset($_SESSION['trajets_proposes'])) {
 }
 
 // Quel trajet l'utilisateur a-t-il choisi parmi les propositions ?
-$indexChoisi = $_POST['trajet_choisi'] ?? null;
+// (POST depuis la recherche auto, ou GET depuis la réservation manuelle)
+$indexChoisi = $_POST['trajet_choisi'] ?? $_GET['trajet_choisi'] ?? null;
 if ($indexChoisi === null || !isset($_SESSION['trajets_proposes'][$indexChoisi])) {
     header("Location: recherche.php");
     exit;
