@@ -138,7 +138,7 @@ $conn = null;
                 <span id="btn-plan-texte">Voir le plan du réseau</span>
                 <span class="btn-plan-fleche" id="btn-plan-fleche">▾</span>
             </button>
-            <a href="lignes.php" class="btn-horaires">
+            <a href="lignes.php" class="btn-horaires" target="_blank">
                 <span class="btn-plan-icone">🕒</span>
                 <span>Consulter les lignes et horaires</span>
             </a>
