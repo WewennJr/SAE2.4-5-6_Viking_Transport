@@ -170,10 +170,11 @@ $conn = null;
 
 <script>
 (function () {
-    var html     = document.documentElement;
+    var html      = document.documentElement;
     var btnSombre = document.getElementById('btn-sombre');
     var btnDalton = document.getElementById('btn-dalton');
 
+    /* Applique (ou supprime) un thème et sauvegarde dans localStorage */
     function appliquerTheme(theme) {
         if (theme) {
             html.setAttribute('data-theme', theme);
@@ -185,30 +186,33 @@ $conn = null;
         mettreAJourBoutons(theme);
     }
 
+    /* Met les boutons dans le bon état visuel selon le thème actif */
     function mettreAJourBoutons(theme) {
-        // Sombre
         var sombreActif = (theme === 'sombre');
         btnSombre.classList.toggle('actif', sombreActif);
         btnSombre.querySelector('.theme-option-icone').textContent = sombreActif ? '☀' : '☾';
 
-        // Daltonien
         var daltonActif = (theme === 'daltonien');
         btnDalton.classList.toggle('actif', daltonActif);
         btnDalton.querySelector('.theme-option-icone').textContent = daltonActif ? '◉' : '◎';
     }
 
+    /* Clic mode sombre : bascule entre sombre et aucun thème */
     btnSombre.addEventListener('click', function () {
         var actuel = html.getAttribute('data-theme');
         appliquerTheme(actuel === 'sombre' ? null : 'sombre');
     });
 
+    /* Clic mode daltonien : bascule entre daltonien et aucun thème */
     btnDalton.addEventListener('click', function () {
         var actuel = html.getAttribute('data-theme');
         appliquerTheme(actuel === 'daltonien' ? null : 'daltonien');
     });
 
-    // Restaurer l'état des boutons au chargement
-    mettreAJourBoutons(html.getAttribute('data-theme'));
+    /* Au chargement de la page : lire localStorage et mettre les boutons à jour.
+       nav.php a déjà appliqué data-theme sur <html> avant le rendu,
+       donc on se base sur l'attribut réel du DOM. */
+    mettreAJourBoutons(html.getAttribute('data-theme') || localStorage.getItem('vk-theme') || null);
 })();
 </script>
 
