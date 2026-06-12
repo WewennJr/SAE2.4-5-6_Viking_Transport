@@ -101,15 +101,27 @@ try {
     ]);
 
     $segments = regrouperParLigne($trajet['chemin']);
+
+    // Horaires calculés (heure de départ réelle de chaque segment), s'ils existent
+    $horaires = $trajet['horaires']['etapes'] ?? [];
+
     $stmtInsEtape = $conn->prepare("
         INSERT INTO VIK_ETAPE (LIG_NUM, CLI_NUM, RES_NUM, COM_CODE_INSEE_DEPART, COM_CODE_INSEE_ARRIVEE, ETA_DISTANCE, ETA_HEURE)
-        VALUES (:lig, :cli, :res, :dep, :arr, :dist, TO_DATE(:dateres, 'YYYY-MM-DD'))
+        VALUES (:lig, :cli, :res, :dep, :arr, :dist, TO_DATE(:dateheure, 'YYYY-MM-DD HH24:MI'))
     ");
-    foreach ($segments as $s) {
+    foreach ($segments as $idx => $s) {
+        // Heure de départ du segment (HH:MM) si disponible, sinon 00:00
+        $heureSeg = '00:00';
+        if (isset($horaires[$idx]) && !empty($horaires[$idx]['realisable']) && isset($horaires[$idx]['depart'])) {
+            $heureSeg = minutesEnHhmm($horaires[$idx]['depart']);   // ex "08h32"
+            $heureSeg = str_replace('h', ':', $heureSeg);           // -> "08:32" pour TO_DATE
+        }
+        $dateHeure = $trajet['date'] . ' ' . $heureSeg;   // ex "2026-06-15 08:32"
+
         $stmtInsEtape->execute([
             ':lig' => $s['ligne'], ':cli' => $cliNum, ':res' => $resNum,
             ':dep' => $s['depart'], ':arr' => $s['arrivee'],
-            ':dist' => $s['distance'], ':dateres' => $trajet['date'],
+            ':dist' => $s['distance'], ':dateheure' => $dateHeure,
         ]);
     }
 

@@ -264,3 +264,18 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Heure de passage sur chaque étape du billet */
+.etape-heure {
+  font-family: var(--font-display, 'Oswald', sans-serif);
+  font-weight: 700;
+  color: var(--rouge, #C0392B);
+  margin-right: 0.6rem;
+  white-space: nowrap;
+}
+
+@media print {
+  .etape-heure {
+    color: #000;
+  }
+}
