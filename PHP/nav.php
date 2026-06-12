@@ -3,6 +3,17 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 $connecte = isset($_SESSION["num_client"]);
+
+// Détection de la page courante pour le soulignement actif
+$page_courante = basename($_SERVER['PHP_SELF']);
+
+// Pages appartenant à "Voyager"
+$pages_voyager = ['recherche.php', 'lignes.php', 'moteur_trajet.php', 'horaire_ligne.php', 'billet.php', 'paiement.php', 'confirmation_reservation.php'];
+// Pages appartenant à "À propos"
+$pages_apropos = ['VikingTransports.php', 'services.php', 'contact.php', 'cgu.php', 'mentionslegales.php'];
+
+$actif_voyager = in_array($page_courante, $pages_voyager);
+$actif_apropos = in_array($page_courante, $pages_apropos);
 ?>
 <head>
     <meta charset="UTF-8">
@@ -28,17 +39,17 @@ $connecte = isset($_SESSION["num_client"]);
             <a href="../PHP/index.php"><img id="logo" src="../images/logo-viking.png" alt="logo de Viking Transport" title="Accueil"></a>
         </li>
         <li class="dropdown">
-            <a href="#" class="dropdown-toggle">Voyager ▾</a>
+            <a href="#" class="dropdown-toggle<?= $actif_voyager ? ' nav-active' : '' ?>">Voyager ▾</a>
             <ul class="dropdown-menu">
-                <li><a href="../PHP/recherche.php">Réserver</a></li>
-                <li><a href="../PHP/lignes.php">Horaires</a></li>
+                <li><a href="../PHP/recherche.php"<?= $page_courante === 'recherche.php' ? ' class="nav-active"' : '' ?>>Réserver</a></li>
+                <li><a href="../PHP/lignes.php"<?= $page_courante === 'lignes.php' ? ' class="nav-active"' : '' ?>>Horaires</a></li>
             </ul>
         </li>
         <li class="dropdown">
-            <a href="#" class="dropdown-toggle">À propos ▾</a>
+            <a href="#" class="dropdown-toggle<?= $actif_apropos ? ' nav-active' : '' ?>">À propos ▾</a>
             <ul class="dropdown-menu">
-                <li><a href="../PHP/VikingTransports.php">Notre entreprise</a></li>
-                <li><a href="../PHP/services.php">Nos services</a></li>
+                <li><a href="../PHP/VikingTransports.php"<?= $page_courante === 'VikingTransports.php' ? ' class="nav-active"' : '' ?>>Notre entreprise</a></li>
+                <li><a href="../PHP/services.php"<?= $page_courante === 'services.php' ? ' class="nav-active"' : '' ?>>Nos services</a></li>
             </ul>
         </li>
         <?php if ($connecte) { ?>

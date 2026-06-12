@@ -282,7 +282,33 @@ nav ul li.dropdown .dropdown-menu li a:hover {
   }
 }
 
-/* ── Main ───────────────────────────────────────────────── */
+/* ── Indicateur de page active (soulignement sous le texte uniquement) ── */
+
+nav > ul > li.dropdown > a.nav-active {
+  text-decoration: underline;
+  text-decoration-color: var(--rouge);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+}
+
+nav > ul > li.dropdown > a.nav-active:hover {
+  text-decoration-color: var(--rouge-dark);
+}
+
+nav ul li.dropdown .dropdown-menu li a.nav-active {
+  text-decoration: underline;
+  text-decoration-color: var(--rouge);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+}
+
+nav ul li.dropdown .dropdown-menu li a.nav-active:hover {
+  text-decoration-color: var(--rouge-dark);
+}
+
+
+
+
 
 main {
   flex: 1;
