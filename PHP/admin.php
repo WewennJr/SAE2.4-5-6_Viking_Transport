@@ -1339,7 +1339,8 @@ $conn = null;
                         <div class="client-header">
                             <div class="client-info">
                                 <div class="client-nom">
-                                    <?php echo htmlspecialchars($client['CLI_PRENOM'] . ' ' . $client['CLI_NOM']); ?></div>
+                                    <?php echo htmlspecialchars($client['CLI_PRENOM'] . ' ' . $client['CLI_NOM']); ?>
+                                </div>
                                 <div class="client-details">
                                     <?php echo htmlspecialchars($client['CLI_COURRIEL']); ?> &nbsp;·&nbsp;
                                     <?php echo $client['CLI_NB_POINTS_EC']; ?> pts
@@ -1466,7 +1467,8 @@ $conn = null;
                 <?php if ($stat_resa_villes !== null) { ?>
                     <div class="stat-result"><?php echo count($stat_resa_villes); ?></div>
                     <div class="stat-result-label">réservation(s) de <?php echo htmlspecialchars($stat_v1); ?> vers
-                        <?php echo htmlspecialchars($stat_v2); ?></div>
+                        <?php echo htmlspecialchars($stat_v2); ?>
+                    </div>
                     <?php if (count($stat_resa_villes) > 0) { ?>
                         <table style="margin-top:1rem">
                             <thead>
@@ -1566,9 +1568,11 @@ $conn = null;
                 </form>
                 <?php if ($stat_dep_arr !== null) {
                     $nb_dep = count(array_filter($stat_dep_arr, function ($r) {
-                        return $r['SENS'] === 'Départ'; }));
+                        return $r['SENS'] === 'Départ';
+                    }));
                     $nb_arr = count(array_filter($stat_dep_arr, function ($r) {
-                        return $r['SENS'] === 'Arrivée'; }));
+                        return $r['SENS'] === 'Arrivée';
+                    }));
                     ?>
                     <div class="stat-result-grid">
                         <div class="stat-result-box">
@@ -1664,28 +1668,34 @@ $conn = null;
         <div class="lignes-horaires-wrap" id="section-lignes">
             <div class="stat-card">
                 <h3>Lignes &amp; Horaires (<?php echo count($all_lignes); ?> lignes)</h3>
-                <?php foreach ($all_lignes as $lig) {
-                    $lnum = trim($lig['LIG_NUM']);
-                    $noeuds = $noeuds_par_ligne[$lnum] ?? [];
-                    $isOpen = ($msg_ligne === $lnum);
-                    $nb_noeuds = count($noeuds);
-                    ?>
-                    <div class="ligne-edit-card" id="ligne-<?php echo htmlspecialchars($lnum); ?>">
-                        <div class="ligne-edit-header" onclick="toggleLigne('<?php echo addslashes($lnum); ?>')">
-                            <div>
-                                <div class="ligne-edit-titre">Ligne <?php echo htmlspecialchars($lnum); ?></div>
-                                <div class="ligne-edit-sous">
-                                    <?php echo htmlspecialchars($lig['NOM_DEBU']); ?> →
-                                    <?php echo htmlspecialchars($lig['NOM_TERM']); ?>
-                                    &nbsp;·&nbsp; <?php echo $nb_noeuds; ?> arrêt(s)
-                                </div>
-                            </div>
-                            <span class="ligne-chevron <?php echo $isOpen ? 'open' : ''; ?>"
-                                id="chevron-<?php echo htmlspecialchars($lnum); ?>">▼</span>
-                        </div>
 
-                        <div class="ligne-edit-body <?php echo $isOpen ? 'open' : ''; ?>"
-                            id="body-<?php echo htmlspecialchars($lnum); ?>">
+                <div class="stat-interactive" style="margin-bottom:1.5rem;">
+                    <div class="si-group">
+                        <label>Choisir une ligne</label>
+                        <select id="select-ligne" onchange="afficherLigne(this.value)">
+                            <option value="">-- Sélectionner une ligne --</option>
+                            <?php foreach ($all_lignes as $lig) {
+                                $lnum = trim($lig['LIG_NUM']);
+                                $selected = ($msg_ligne === $lnum) ? 'selected' : '';
+                                echo "<option value=\"" . htmlspecialchars($lnum) . "\" $selected>"
+                                    . "Ligne " . htmlspecialchars($lnum)
+                                    . " – " . htmlspecialchars($lig['NOM_DEBU'])
+                                    . " → " . htmlspecialchars($lig['NOM_TERM'])
+                                    . "</option>";
+                            } ?>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="ligne-detail-wrap">
+                    <?php foreach ($all_lignes as $lig) {
+                        $lnum = trim($lig['LIG_NUM']);
+                        $noeuds = $noeuds_par_ligne[$lnum] ?? [];
+                        $nb_noeuds = count($noeuds);
+                        $isVisible = ($msg_ligne === $lnum);
+                        ?>
+                        <div class="ligne-detail-panel" id="detail-<?php echo htmlspecialchars($lnum); ?>"
+                            style="<?php echo $isVisible ? '' : 'display:none'; ?>">
 
                             <!-- Modification des codes INSEE de la ligne -->
                             <form method="post" action="">
@@ -1708,7 +1718,7 @@ $conn = null;
                                 </div>
                             </form>
 
-                            <!-- Tableau des noeuds (arrêts avec horaires) -->
+                            <!-- Tableau des noeuds -->
                             <?php if (empty($noeuds)) { ?>
                                 <p class="no-resa">Aucun arrêt enregistré pour cette ligne.</p>
                             <?php } else { ?>
@@ -1730,12 +1740,9 @@ $conn = null;
                                             $is_dernier = ($idx === $nb_noeuds - 1);
                                             $arret = $noeud['COM_CODE_INSEE_ARRET'];
                                             $suivant = isset($noeud['COM_CODE_INSEE_SUIVANT']) ? trim($noeud['COM_CODE_INSEE_SUIVANT']) : '';
-                                            // Identifiant unique pour ce formulaire
                                             $form_id = 'fnoeud-' . htmlspecialchars($lnum) . '-' . $idx;
-                                            // Heure formatée pour input type="time" (HH:MM)
                                             $heure_raw = $noeud['NOE_HEURE_PASSAGE'] ?? '';
-                                            // Oracle peut renvoyer "HH:MI" ou "HH:MI:SS" selon le format de session
-                                            $heure_time = substr($heure_raw, 0, 5); // "HH:MM"
+                                            $heure_time = substr($heure_raw, 0, 5);
                                             ?>
                                             <tr class="<?php echo $is_dernier ? 'noeud-dernier' : ''; ?>">
                                                 <td style="font-weight:600;color:var(--rouge);font-size:0.8rem;">
@@ -1777,7 +1784,6 @@ $conn = null;
                                                         title="Enregistrer">✔</button>
                                                 </td>
                                             </tr>
-                                            <!-- Formulaire caché pour ce noeud -->
                                             <form id="<?php echo $form_id; ?>" method="post" action="">
                                                 <input type="hidden" name="action" value="modif_noeud">
                                                 <input type="hidden" name="lig_num" value="<?php echo htmlspecialchars($lnum); ?>">
@@ -1793,8 +1799,9 @@ $conn = null;
                                 </table>
                             <?php } ?>
                         </div>
-                    </div>
-                <?php } ?>
+                    <?php } ?>
+                </div>
+
             </div>
         </div>
 
@@ -1924,6 +1931,19 @@ $conn = null;
             btnTop.style.opacity = window.scrollY > 300 ? '1' : '0';
             btnTop.style.pointerEvents = window.scrollY > 300 ? 'auto' : 'none';
         });
+
+        function afficherLigne(lnum) {
+            document.querySelectorAll('.ligne-detail-panel').forEach(el => el.style.display = 'none');
+            if (lnum !== '') {
+                const panel = document.getElementById('detail-' + lnum);
+                if (panel) panel.style.display = 'block';
+            }
+        }
+        // Ouvrir automatiquement si un résultat POST vient de modifier une ligne
+        (function () {
+            const sel = document.getElementById('select-ligne');
+            if (sel && sel.value !== '') afficherLigne(sel.value);
+        })();
     </script>
 </body>
 
