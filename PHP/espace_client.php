@@ -150,7 +150,67 @@ $conn = null;
             </tbody>
         </table>
     </section>
+    <!-- Carte thème -->
+    <section class="carte carte-theme">
+        <h2>Apparence</h2>
+        <div class="theme-options">
+            <button id="btn-sombre" class="theme-option-btn" type="button">
+                <span class="theme-option-icone">☾</span>
+                <span class="theme-option-label">Mode sombre</span>
+            </button>
+            <button id="btn-dalton" class="theme-option-btn" type="button">
+                <span class="theme-option-icone">◎</span>
+                <span class="theme-option-label">Mode daltonien</span>
+            </button>
+        </div>
+        <p class="theme-note">Vos préférences sont sauvegardées sur cet appareil.</p>
+    </section>
+
 </main>
+
+<script>
+(function () {
+    var html     = document.documentElement;
+    var btnSombre = document.getElementById('btn-sombre');
+    var btnDalton = document.getElementById('btn-dalton');
+
+    function appliquerTheme(theme) {
+        if (theme) {
+            html.setAttribute('data-theme', theme);
+            localStorage.setItem('vk-theme', theme);
+        } else {
+            html.removeAttribute('data-theme');
+            localStorage.removeItem('vk-theme');
+        }
+        mettreAJourBoutons(theme);
+    }
+
+    function mettreAJourBoutons(theme) {
+        // Sombre
+        var sombreActif = (theme === 'sombre');
+        btnSombre.classList.toggle('actif', sombreActif);
+        btnSombre.querySelector('.theme-option-icone').textContent = sombreActif ? '☀' : '☾';
+
+        // Daltonien
+        var daltonActif = (theme === 'daltonien');
+        btnDalton.classList.toggle('actif', daltonActif);
+        btnDalton.querySelector('.theme-option-icone').textContent = daltonActif ? '◉' : '◎';
+    }
+
+    btnSombre.addEventListener('click', function () {
+        var actuel = html.getAttribute('data-theme');
+        appliquerTheme(actuel === 'sombre' ? null : 'sombre');
+    });
+
+    btnDalton.addEventListener('click', function () {
+        var actuel = html.getAttribute('data-theme');
+        appliquerTheme(actuel === 'daltonien' ? null : 'daltonien');
+    });
+
+    // Restaurer l'état des boutons au chargement
+    mettreAJourBoutons(html.getAttribute('data-theme'));
+})();
+</script>
 
 <?php include_once "footer.php"; ?>
 

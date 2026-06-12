@@ -262,3 +262,109 @@
     min-width: 540px;
   }
 }
+
+
+
+/* ── Mode sombre : cartes espace client ─────────────────────── */
+[data-theme="sombre"] .carte,
+[data-theme="sombre"] .carte-reservations {
+  background-color: #333333;
+}
+
+[data-theme="sombre"] .carte-points {
+  background-color: #1e1e1e;
+}
+
+[data-theme="sombre"] .carte h2,
+[data-theme="sombre"] .carte-reservations h2 {
+  color: #d4d4d4;
+  border-bottom-color: #3d3d3d;
+}
+
+[data-theme="sombre"] .info-liste li {
+  border-bottom-color: #3d3d3d;
+}
+
+[data-theme="sombre"] .info-liste .valeur {
+  color: #d4d4d4;
+}
+
+[data-theme="sombre"] .table-reservations tbody tr:nth-child(even) {
+  background-color: #2e2e2e;
+}
+
+[data-theme="sombre"] .table-reservations tbody tr:hover {
+  background-color: #3d3d3d;
+}
+
+[data-theme="sombre"] .table-reservations thead th {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+}
+
+[data-theme="sombre"] .table-reservations tbody td {
+  border-bottom-color: #3d3d3d;
+  color: #a0a0a0;
+}
+
+[data-theme="sombre"] .theme-option-btn {
+  background-color: #333333;
+  color: #d4d4d4;
+  border-color: #4a4a4a;
+}
+.carte-theme {
+  margin-top: 1.5rem;
+}
+
+.theme-options {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.theme-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #fff;
+  border: 2px solid var(--gris-clair);
+  border-radius: 6px;
+  padding: 0.9rem 1.4rem;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--noir);
+  transition: border-color 0.2s, background-color 0.2s, transform 0.1s;
+  min-width: 180px;
+}
+
+.theme-option-btn:hover {
+  border-color: var(--rouge);
+  transform: translateY(-2px);
+}
+
+.theme-option-btn.actif {
+  border-color: var(--rouge);
+  background-color: var(--rouge);
+  color: #fff;
+}
+
+.theme-option-icone {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.theme-note {
+  font-size: 0.82rem;
+  color: var(--gris);
+  font-style: italic;
+  margin: 0;
+}
+
+[data-theme="sombre"] .theme-option-btn {
+  background-color: #242424;
+}
