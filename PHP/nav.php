@@ -18,8 +18,14 @@ $actif_apropos = in_array($page_courante, $pages_apropos);
 <head>
     <meta charset="UTF-8">
     <title>Viking Transport</title>
-
     <link rel="icon" type="image/png" href="../images/favicon.png">
+    <script>
+        // Restaure le thème avant le rendu (évite le flash)
+        (function () {
+            var t = localStorage.getItem('vk-theme');
+            if (t) document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
 </head>
 <nav>
 
@@ -97,5 +103,11 @@ $actif_apropos = in_array($page_courante, $pages_apropos);
     });
 
     menu.addEventListener('click', function (e) { e.stopPropagation(); });
+
+    // ── Restauration thème sur toutes les pages ───────────────
+    (function () {
+        var t = localStorage.getItem('vk-theme');
+        if (t) document.documentElement.setAttribute('data-theme', t);
+    })();
 })();
 </script>
