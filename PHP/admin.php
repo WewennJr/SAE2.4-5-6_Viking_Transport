@@ -29,12 +29,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $mail = trim($_POST['cli_courriel']);
     $points = (int) trim($_POST['cli_nb_points_ec']);
     $grade = trim($_POST['cli_grade']);
+    $typ_num = (int) trim($_POST['typ_num']);
     $grades_ok = ['client', 'administrateur'];
     if (!in_array($grade, $grades_ok))
         $grade = 'client';
-    $sql_u = "UPDATE vik_client SET cli_prenom = :prenom, cli_nom = :nom, cli_courriel = :mail, cli_nb_points_ec = :points, cli_nb_points_tot = :points, cli_grade = :grade WHERE cli_num = :id";
+    $sql_u = "UPDATE vik_client SET cli_prenom = :prenom, cli_nom = :nom, cli_courriel = :mail, cli_nb_points_ec = :points, cli_nb_points_tot = :points, cli_grade = :grade, typ_num = :typ_num WHERE cli_num = :id";
     $cur = preparerRequetePDO($conn, $sql_u);
-    majDonneesPrepareesTabPDO($cur, [':prenom' => $prenom, ':nom' => $nom, ':mail' => $mail, ':points' => $points, ':grade' => $grade, ':id' => $id]);
+    majDonneesPrepareesTabPDO($cur, [':prenom' => $prenom, ':nom' => $nom, ':mail' => $mail, ':points' => $points, ':grade' => $grade, ':typ_num' => $typ_num, ':id' => $id]);
     $conn->exec("COMMIT");
     $msg_modif = "client_$id";
 }
@@ -57,13 +58,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $lig = trim($_POST['lig_num']);
     $arret = trim($_POST['com_code_insee_arret']);
     $suivant = trim($_POST['com_code_insee_suivant']);
-    $heure_old = trim($_POST['noe_heure_passage_old']);   // ancienne heure (clé PK)
-    $heure_new = trim($_POST['noe_heure_passage']);        // nouvelle heure saisie
+    $heure_old = trim($_POST['noe_heure_passage_old']);
+    $heure_new = trim($_POST['noe_heure_passage']);
     $dist_prochain = (float) str_replace(',', '.', $_POST['noe_distance_prochain']);
     $duree_prochain = (float) str_replace(',', '.', $_POST['noe_duree_prochain']);
 
-    // On met à jour heure_passage, distance et durée vers le noeud suivant
-    // Pour le dernier noeud (com_code_insee_suivant IS NULL), dist et durée ne s'appliquent pas
     $sql_un = "UPDATE vik_noeud
                SET noe_heure_passage     = :heure_new,
                    noe_distance_prochain = :dist,
@@ -197,8 +196,12 @@ $sql_inactifs = "SELECT cli_num, cli_prenom, cli_nom, cli_date_connec,
     ORDER BY cli_date_connec ASC";
 $inactifs = LireDonneesPDO3($conn, $sql_inactifs, $t);
 
+// ── Types de clients ──────────────────────────────────────────────────────────
+$sql_types = "SELECT typ_num, typ_nom FROM vik_type_client ORDER BY typ_num";
+$types_client = LireDonneesPDO3($conn, $sql_types, $t);
+
 // ── Liste clients ─────────────────────────────────────────────────────────────
-$sql_clients = "SELECT cli_num, cli_prenom, cli_nom, cli_courriel, cli_nb_points_ec, cli_grade
+$sql_clients = "SELECT cli_num, cli_prenom, cli_nom, cli_courriel, cli_nb_points_ec, cli_grade, typ_num
     FROM vik_client
     WHERE cli_grade != 'administrateur' AND cli_num != 0 AND cli_num != 1
     ORDER BY cli_nom ASC";
@@ -220,7 +223,6 @@ foreach ($clients as $client) {
 }
 
 // ── Lignes & noeuds (horaires) ────────────────────────────────────────────────
-// On récupère toutes les lignes
 $sql_all_lignes = "SELECT l.lig_num, l.com_code_insee_debu, l.com_code_insee_term,
     cd.com_nom AS NOM_DEBU, ct.com_nom AS NOM_TERM
     FROM vik_ligne l
@@ -229,16 +231,11 @@ $sql_all_lignes = "SELECT l.lig_num, l.com_code_insee_debu, l.com_code_insee_ter
     ORDER BY TO_NUMBER(REGEXP_SUBSTR(l.lig_num, '^[0-9]+')), REGEXP_SUBSTR(l.lig_num, '[A-Za-z]+$')";
 $all_lignes = LireDonneesPDO3($conn, $sql_all_lignes, $t);
 
-// Pour chaque ligne, on reconstruit la séquence ordonnée des noeuds.
-// La chaîne commence au noeud dont COM_CODE_INSEE_ARRET = COM_CODE_INSEE_DEBU de la ligne.
-// Chaque noeud pointe vers le suivant via COM_CODE_INSEE_SUIVANT.
-// Le dernier noeud a COM_CODE_INSEE_SUIVANT IS NULL (ou = COM_CODE_INSEE_TERM).
 $noeuds_par_ligne = [];
 foreach ($all_lignes as $lig) {
     $lnum = trim($lig['LIG_NUM']);
     $insee_deb = trim($lig['COM_CODE_INSEE_DEBU']);
 
-    // Récupère tous les noeuds de la ligne avec nom de l'arrêt et du suivant
     $sql_noeuds = "SELECT n.com_code_insee_arret,
                           n.com_code_insee_suivant,
                           n.noe_heure_passage,
@@ -257,13 +254,11 @@ foreach ($all_lignes as $lig) {
         continue;
     }
 
-    // Indexer par code INSEE d'arrêt pour reconstruire la chaîne
     $by_arret = [];
     foreach ($rows as $r) {
         $by_arret[trim($r['COM_CODE_INSEE_ARRET'])] = $r;
     }
 
-    // Reconstruire dans l'ordre : on part du premier arrêt de la ligne
     $ordered = [];
     $current = $insee_deb;
     $visited = [];
@@ -275,8 +270,6 @@ foreach ($all_lignes as $lig) {
         $current = ($suivant === '' || $suivant === null) ? null : $suivant;
     }
 
-    // Si le parcours n'a pas intégré tous les noeuds (chaîne cassée ou départ introuvable),
-    // on ajoute les noeuds manquants tels quels pour ne rien perdre
     if (count($ordered) < count($rows)) {
         foreach ($rows as $r) {
             if (!isset($visited[trim($r['COM_CODE_INSEE_ARRET'])])) {
@@ -896,60 +889,6 @@ $conn = null;
             margin-top: 2rem;
         }
 
-        .ligne-edit-card {
-            background: #fff;
-            border-left: 4px solid var(--noir);
-            border-radius: 0 6px 6px 0;
-            padding: 1rem 1.25rem;
-            margin-bottom: 0.75rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        }
-
-        .ligne-edit-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .ligne-edit-titre {
-            font-family: var(--font-display);
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--noir);
-            text-transform: uppercase;
-        }
-
-        .ligne-edit-sous {
-            font-size: 0.83rem;
-            color: var(--gris);
-            margin-top: 0.15rem;
-        }
-
-        .ligne-chevron {
-            font-size: 0.85rem;
-            color: var(--gris);
-            transition: transform 0.2s;
-            flex-shrink: 0;
-        }
-
-        .ligne-chevron.open {
-            transform: rotate(180deg);
-        }
-
-        .ligne-edit-body {
-            display: none;
-            margin-top: 1rem;
-            border-top: 1px solid var(--gris-clair);
-            padding-top: 0.9rem;
-        }
-
-        .ligne-edit-body.open {
-            display: block;
-        }
-
         .ligne-infos-form {
             display: grid;
             grid-template-columns: 1fr 1fr auto;
@@ -1068,6 +1007,19 @@ $conn = null;
             text-transform: uppercase;
         }
 
+        .badge-type {
+            font-size: 0.72rem;
+            background: #eaf3de;
+            color: #3b6d11;
+            border-radius: 3px;
+            padding: 1px 6px;
+            margin-left: 4px;
+            vertical-align: middle;
+            font-family: var(--font-display);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
         .btn-save-noeud {
             background: none;
             border: 2px solid var(--gris-clair);
@@ -1107,6 +1059,10 @@ $conn = null;
         .btn-save-ligne:hover {
             background-color: var(--rouge-dark);
             border-color: var(--rouge-dark);
+        }
+
+        .ligne-detail-panel {
+            margin-top: 1rem;
         }
 
         #back-to-top {
@@ -1270,10 +1226,6 @@ $conn = null;
             .stat-result {
                 font-size: 1.6rem;
             }
-
-            .ligne-edit-sous {
-                font-size: 0.72rem;
-            }
         }
     </style>
 </head>
@@ -1329,9 +1281,18 @@ $conn = null;
                         oninput="filtrerClients(this.value)">
                 </div>
 
-                <?php foreach ($clients as $i => $client) {
+                <?php
+                // Construire un index des types pour affichage rapide
+                $types_index = [];
+                foreach ($types_client as $tr) {
+                    $types_index[$tr['TYP_NUM']] = $tr['TYP_NOM'];
+                }
+
+                foreach ($clients as $i => $client) {
                     $cnum = $client['CLI_NUM'];
                     $grade_client = $client['CLI_GRADE'] ?? 'client';
+                    $typ_num_client = $client['TYP_NUM'] ?? null;
+                    $typ_nom_client = isset($typ_num_client) ? ($types_index[$typ_num_client] ?? '—') : '—';
                     $extra = $i >= 10 ? 'client-extra' : '';
                     ?>
                     <div class="client-card <?php echo $extra; ?>" id="client-<?php echo $cnum; ?>"
@@ -1340,6 +1301,7 @@ $conn = null;
                             <div class="client-info">
                                 <div class="client-nom">
                                     <?php echo htmlspecialchars($client['CLI_PRENOM'] . ' ' . $client['CLI_NOM']); ?>
+                                    <span class="badge-type"><?php echo htmlspecialchars($typ_nom_client); ?></span>
                                 </div>
                                 <div class="client-details">
                                     <?php echo htmlspecialchars($client['CLI_COURRIEL']); ?> &nbsp;·&nbsp;
@@ -1407,6 +1369,16 @@ $conn = null;
                                             <option value="administrateur" <?php echo ($grade_client === 'administrateur') ? 'selected' : ''; ?>>Administrateur</option>
                                         </select>
                                     </div>
+                                    <div>
+                                        <label>Type de client</label>
+                                        <select name="typ_num">
+                                            <?php foreach ($types_client as $tr) {
+                                                $sel = ($typ_num_client == $tr['TYP_NUM']) ? 'selected' : '';
+                                                echo "<option value=\"" . (int)$tr['TYP_NUM'] . "\" $sel>"
+                                                   . htmlspecialchars($tr['TYP_NOM']) . "</option>";
+                                            } ?>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div class="edit-actions">
                                     <?php if ($msg_modif === "client_$cnum") { ?>
@@ -1467,8 +1439,7 @@ $conn = null;
                 <?php if ($stat_resa_villes !== null) { ?>
                     <div class="stat-result"><?php echo count($stat_resa_villes); ?></div>
                     <div class="stat-result-label">réservation(s) de <?php echo htmlspecialchars($stat_v1); ?> vers
-                        <?php echo htmlspecialchars($stat_v2); ?>
-                    </div>
+                        <?php echo htmlspecialchars($stat_v2); ?></div>
                     <?php if (count($stat_resa_villes) > 0) { ?>
                         <table style="margin-top:1rem">
                             <thead>
@@ -1609,7 +1580,7 @@ $conn = null;
                     <div class="stat-result-label" style="margin-top:0.5rem">pour <?php echo htmlspecialchars($stat_dav); ?>
                     </div>
                 <?php } else if ($stat_dav !== '') { ?>
-                        <p class="no-resa" style="margin-top:0.5rem">Aucune donnée pour cette ville.</p>
+                    <p class="no-resa" style="margin-top:0.5rem">Aucune donnée pour cette ville.</p>
                 <?php } ?>
             </div>
 
@@ -1639,11 +1610,11 @@ $conn = null;
                                     <td><?php echo htmlspecialchars($c['CLI_NOM']); ?></td>
                                     <td><?php echo $c['CLI_DATE_CONNEC']; ?></td>
                                     <td><?php
-                                    $j = (int) $c['JOURS'];
-                                    if ($j > 730)
-                                        echo "<strong style='color:var(--rouge)'>$j j (à supprimer)</strong>";
-                                    else
-                                        echo "$j j";
+                                        $j = (int) $c['JOURS'];
+                                        if ($j > 730)
+                                            echo "<strong style='color:var(--rouge)'>$j j (à supprimer)</strong>";
+                                        else
+                                            echo "$j j";
                                     ?></td>
                                     <td>
                                         <button class="btn-goto"
@@ -1695,7 +1666,7 @@ $conn = null;
                         $isVisible = ($msg_ligne === $lnum);
                         ?>
                         <div class="ligne-detail-panel" id="detail-<?php echo htmlspecialchars($lnum); ?>"
-                            style="<?php echo $isVisible ? '' : 'display:none'; ?>">
+                             style="<?php echo $isVisible ? '' : 'display:none'; ?>">
 
                             <!-- Modification des codes INSEE de la ligne -->
                             <form method="post" action="">
@@ -1747,10 +1718,8 @@ $conn = null;
                                             <tr class="<?php echo $is_dernier ? 'noeud-dernier' : ''; ?>">
                                                 <td style="font-weight:600;color:var(--rouge);font-size:0.8rem;">
                                                     <?php echo $idx + 1; ?>
-                                                    <?php if ($is_premier)
-                                                        echo '<span class="badge-premier">départ</span>'; ?>
-                                                    <?php if ($is_dernier)
-                                                        echo '<span class="badge-dernier">terminus</span>'; ?>
+                                                    <?php if ($is_premier) echo '<span class="badge-premier">départ</span>'; ?>
+                                                    <?php if ($is_dernier) echo '<span class="badge-dernier">terminus</span>'; ?>
                                                 </td>
                                                 <td><?php echo htmlspecialchars($noeud['NOM_ARRET']); ?></td>
                                                 <td>
@@ -1764,8 +1733,7 @@ $conn = null;
                                                             step="0.1" min="0">
                                                     <?php } else { ?>
                                                         <span style="color:var(--gris);font-style:italic;font-size:0.8rem;">—</span>
-                                                        <input form="<?php echo $form_id; ?>" type="hidden" name="noe_distance_prochain"
-                                                            value="0">
+                                                        <input form="<?php echo $form_id; ?>" type="hidden" name="noe_distance_prochain" value="0">
                                                     <?php } ?>
                                                 </td>
                                                 <td>
@@ -1775,24 +1743,19 @@ $conn = null;
                                                             step="1" min="0">
                                                     <?php } else { ?>
                                                         <span style="color:var(--gris);font-style:italic;font-size:0.8rem;">—</span>
-                                                        <input form="<?php echo $form_id; ?>" type="hidden" name="noe_duree_prochain"
-                                                            value="0">
+                                                        <input form="<?php echo $form_id; ?>" type="hidden" name="noe_duree_prochain" value="0">
                                                     <?php } ?>
                                                 </td>
                                                 <td>
-                                                    <button form="<?php echo $form_id; ?>" type="submit" class="btn-save-noeud"
-                                                        title="Enregistrer">✔</button>
+                                                    <button form="<?php echo $form_id; ?>" type="submit" class="btn-save-noeud" title="Enregistrer">✔</button>
                                                 </td>
                                             </tr>
                                             <form id="<?php echo $form_id; ?>" method="post" action="">
                                                 <input type="hidden" name="action" value="modif_noeud">
                                                 <input type="hidden" name="lig_num" value="<?php echo htmlspecialchars($lnum); ?>">
-                                                <input type="hidden" name="com_code_insee_arret"
-                                                    value="<?php echo htmlspecialchars($arret); ?>">
-                                                <input type="hidden" name="com_code_insee_suivant"
-                                                    value="<?php echo htmlspecialchars($suivant); ?>">
-                                                <input type="hidden" name="noe_heure_passage_old"
-                                                    value="<?php echo htmlspecialchars($heure_raw); ?>">
+                                                <input type="hidden" name="com_code_insee_arret" value="<?php echo htmlspecialchars($arret); ?>">
+                                                <input type="hidden" name="com_code_insee_suivant" value="<?php echo htmlspecialchars($suivant); ?>">
+                                                <input type="hidden" name="noe_heure_passage_old" value="<?php echo htmlspecialchars($heure_raw); ?>">
                                             </form>
                                         <?php } ?>
                                     </tbody>
@@ -1921,17 +1884,6 @@ $conn = null;
             document.getElementById('modal').classList.remove('open');
         }
 
-        function toggleLigne(lnum) {
-            document.getElementById('body-' + lnum).classList.toggle('open');
-            document.getElementById('chevron-' + lnum).classList.toggle('open');
-        }
-
-        const btnTop = document.getElementById('back-to-top');
-        window.addEventListener('scroll', () => {
-            btnTop.style.opacity = window.scrollY > 300 ? '1' : '0';
-            btnTop.style.pointerEvents = window.scrollY > 300 ? 'auto' : 'none';
-        });
-
         function afficherLigne(lnum) {
             document.querySelectorAll('.ligne-detail-panel').forEach(el => el.style.display = 'none');
             if (lnum !== '') {
@@ -1939,11 +1891,17 @@ $conn = null;
                 if (panel) panel.style.display = 'block';
             }
         }
-        // Ouvrir automatiquement si un résultat POST vient de modifier une ligne
+
         (function () {
             const sel = document.getElementById('select-ligne');
             if (sel && sel.value !== '') afficherLigne(sel.value);
         })();
+
+        const btnTop = document.getElementById('back-to-top');
+        window.addEventListener('scroll', () => {
+            btnTop.style.opacity = window.scrollY > 300 ? '1' : '0';
+            btnTop.style.pointerEvents = window.scrollY > 300 ? 'auto' : 'none';
+        });
     </script>
 </body>
 
