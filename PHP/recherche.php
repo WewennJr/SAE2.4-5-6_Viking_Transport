@@ -130,13 +130,19 @@ $conn = null;
         <button type="button" class="btn-mode" data-mode="manuel" id="btn-mode-manuel">Composer mon trajet</button>
     </div>
 
-    <!-- Plan du réseau (dépliable) -->
+    <!-- Plan du réseau (dépliable) + lien horaires -->
     <div class="bloc-plan">
-        <button type="button" id="btn-plan" class="btn-plan" aria-expanded="false">
-            <span class="btn-plan-icone">🗺</span>
-            <span id="btn-plan-texte">Voir le plan du réseau</span>
-            <span class="btn-plan-fleche" id="btn-plan-fleche">▾</span>
-        </button>
+        <div class="bloc-plan-actions">
+            <button type="button" id="btn-plan" class="btn-plan" aria-expanded="false">
+                <span class="btn-plan-icone">🗺</span>
+                <span id="btn-plan-texte">Voir le plan du réseau</span>
+                <span class="btn-plan-fleche" id="btn-plan-fleche">▾</span>
+            </button>
+            <a href="lignes.php" class="btn-horaires">
+                <span class="btn-plan-icone">🕒</span>
+                <span>Consulter les lignes et horaires</span>
+            </a>
+        </div>
         <div id="conteneur-plan" class="conteneur-plan">
             <img src="../images/plan-reseau.png" alt="Plan du réseau Viking Transport" class="image-plan">
         </div>
