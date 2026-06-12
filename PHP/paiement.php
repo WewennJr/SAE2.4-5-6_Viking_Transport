@@ -103,7 +103,7 @@ $estConnecte = isset($_SESSION['num_client']);
                 if ($estConnecte && !empty($reductionsPossibles)) { ?>
                     <div class="bloc-form bloc-points">
                         <p class="bloc-titre">Utiliser mes points fidélité</p>
-                        <p class="points-solde">Vous avez <strong><?= $pointsClient ?></strong> point(s) utilisable(s).</p>
+                        <p class="points-solde">Vous avez <strong><?= $pointsClient ?></strong> point(s).</p>
 
                         <?php if (empty($reductionsDispo)) { ?>
                             <p class="points-insuffisant">Il vous faut au moins <?= (int)$reductionsPossibles[0]['RED_NB_POINTS'] ?> points pour bénéficier d'une réduction.</p>
