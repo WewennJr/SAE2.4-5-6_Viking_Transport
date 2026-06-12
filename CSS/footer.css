@@ -15,7 +15,7 @@
   color: #f5f5f5;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #C0392B;
+  border-bottom: 2px solid var(--rouge);
 }
 
 .footer-colonne ul {
@@ -49,7 +49,7 @@
 }
 
 .footer-colonne ul li a:hover {
-  color: #C0392B;
+  color: var(--rouge);
   opacity: 1;
   background-color: transparent;
   transform: none;

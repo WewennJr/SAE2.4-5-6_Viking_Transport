@@ -773,3 +773,155 @@ input[type="time"]#heure::-webkit-calendar-picker-indicator:hover,
   border-radius: 8px;
   background-color: #fff;
 }
+/* ══════════════════════════════════════════════════════════════
+   MODE SOMBRE — Page de recherche / formulaires
+   ══════════════════════════════════════════════════════════════ */
+
+/* Cartes formulaire et résultats */
+[data-theme="sombre"] .carte-recherche-form,
+[data-theme="sombre"] .carte-trajet,
+[data-theme="sombre"] .carte-option,
+[data-theme="sombre"] .recap-manuel {
+  background-color: #242526;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+}
+
+/* Entête trajet */
+[data-theme="sombre"] .trajet-entete {
+  border-bottom-color: #3a3b3c;
+}
+
+[data-theme="sombre"] .trajet-entete h2,
+[data-theme="sombre"] .resultats-entete h2,
+[data-theme="sombre"] .recap-entete h2 {
+  color: #e4e6ea;
+}
+
+[data-theme="sombre"] .resultats-entete p {
+  color: #b0b3b8;
+}
+
+/* Résumé trajet */
+[data-theme="sombre"] .resume-item {
+  color: #b0b3b8;
+}
+
+[data-theme="sombre"] .resume-item strong,
+[data-theme="sombre"] .option-duree,
+[data-theme="sombre"] .etape-trajet,
+[data-theme="sombre"] .mini-trajet,
+[data-theme="sombre"] .etape-villes,
+[data-theme="sombre"] .etape-horaire,
+[data-theme="sombre"] .recap-chiffres strong,
+[data-theme="sombre"] .sous-trajet-titre,
+[data-theme="sombre"] .ligne-label {
+  color: #e4e6ea;
+}
+
+[data-theme="sombre"] .option-detail,
+[data-theme="sombre"] .recap-chiffres,
+[data-theme="sombre"] .etape-info,
+[data-theme="sombre"] .st-info,
+[data-theme="sombre"] .etape-attente,
+[data-theme="sombre"] .trajet-critere {
+  color: #8a8d91;
+}
+
+/* Étapes compactes (chips) */
+[data-theme="sombre"] .option-etapes li,
+[data-theme="sombre"] .etape-ok {
+  background-color: #2d2e2f;
+  color: #b0b3b8;
+}
+
+/* Ligne commune (sélecteurs manuels) */
+[data-theme="sombre"] .ligne-commune {
+  background-color: #2d2e2f;
+  border-color: #3a3b3c;
+}
+
+/* Inputs spécifiques à recherche (select-commune, time, btn-plan) */
+[data-theme="sombre"] .select-commune,
+[data-theme="sombre"] input[type="time"]#heure,
+[data-theme="sombre"] input[type="time"]#heure-m {
+  background-color: #3a3b3c;
+  border-color: #4a4b4c;
+  color: #e4e6ea;
+}
+
+[data-theme="sombre"] .select-commune:focus,
+[data-theme="sombre"] input[type="time"]#heure:focus,
+[data-theme="sombre"] input[type="time"]#heure-m:focus {
+  border-color: #e05a4a;
+}
+
+/* Bouton plan / horaires */
+[data-theme="sombre"] .btn-plan,
+[data-theme="sombre"] .btn-horaires {
+  background-color: #2d2e2f;
+  border-color: #4a4b4c;
+  color: #e4e6ea;
+}
+
+[data-theme="sombre"] .btn-plan:hover,
+[data-theme="sombre"] .btn-horaires:hover {
+  border-color: #e05a4a;
+  background-color: #3a3b3c;
+}
+
+/* Image plan réseau */
+[data-theme="sombre"] .image-plan {
+  background-color: #2d2e2f;
+  border-color: #3a3b3c;
+}
+
+/* Bouton ajouter étape */
+[data-theme="sombre"] .btn-ajouter {
+  border-color: #4a4b4c;
+  color: #b0b3b8;
+}
+
+[data-theme="sombre"] .btn-ajouter:hover {
+  border-color: #e05a4a;
+  color: #e05a4a;
+}
+
+/* Bouton mode auto/manuel */
+[data-theme="sombre"] .bascule-mode {
+  border-color: #e05a4a;
+}
+
+[data-theme="sombre"] .btn-mode {
+  color: #e05a4a;
+}
+
+[data-theme="sombre"] .btn-mode.actif {
+  background-color: #e05a4a;
+  color: #fff;
+}
+
+/* Recap entête */
+[data-theme="sombre"] .recap-entete {
+  border-bottom-color: #3a3b3c;
+}
+
+/* Choix critère (rapide/court) */
+[data-theme="sombre"] .radio-critere {
+  border-color: #4a4b4c;
+  color: #b0b3b8;
+}
+
+[data-theme="sombre"] .radio-critere:has(input:checked) {
+  border-color: #e05a4a;
+  background-color: rgba(224, 90, 74, 0.1);
+}
+
+/* Badge écart */
+[data-theme="sombre"] .badge-ecart {
+  background-color: #3a3b3c;
+}
+
+/* Suppression bouton */
+[data-theme="sombre"] .btn-supprimer {
+  background-color: #3a3b3c;
+}

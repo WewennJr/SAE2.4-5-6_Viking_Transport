@@ -150,7 +150,71 @@ $conn = null;
             </tbody>
         </table>
     </section>
+    <!-- Carte thème -->
+    <section class="carte carte-theme">
+        <h2>Apparence</h2>
+        <div class="theme-options">
+            <button id="btn-sombre" class="theme-option-btn" type="button">
+                <span class="theme-option-icone">☾</span>
+                <span class="theme-option-label">Mode sombre</span>
+            </button>
+            <button id="btn-dalton" class="theme-option-btn" type="button">
+                <span class="theme-option-icone">◎</span>
+                <span class="theme-option-label">Mode daltonien</span>
+            </button>
+        </div>
+        <p class="theme-note">Vos préférences sont sauvegardées sur cet appareil.</p>
+    </section>
+
 </main>
+
+<script>
+(function () {
+    var html      = document.documentElement;
+    var btnSombre = document.getElementById('btn-sombre');
+    var btnDalton = document.getElementById('btn-dalton');
+
+    /* Applique (ou supprime) un thème et sauvegarde dans localStorage */
+    function appliquerTheme(theme) {
+        if (theme) {
+            html.setAttribute('data-theme', theme);
+            localStorage.setItem('vk-theme', theme);
+        } else {
+            html.removeAttribute('data-theme');
+            localStorage.removeItem('vk-theme');
+        }
+        mettreAJourBoutons(theme);
+    }
+
+    /* Met les boutons dans le bon état visuel selon le thème actif */
+    function mettreAJourBoutons(theme) {
+        var sombreActif = (theme === 'sombre');
+        btnSombre.classList.toggle('actif', sombreActif);
+        btnSombre.querySelector('.theme-option-icone').textContent = sombreActif ? '☀' : '☾';
+
+        var daltonActif = (theme === 'daltonien');
+        btnDalton.classList.toggle('actif', daltonActif);
+        btnDalton.querySelector('.theme-option-icone').textContent = daltonActif ? '◉' : '◎';
+    }
+
+    /* Clic mode sombre : bascule entre sombre et aucun thème */
+    btnSombre.addEventListener('click', function () {
+        var actuel = html.getAttribute('data-theme');
+        appliquerTheme(actuel === 'sombre' ? null : 'sombre');
+    });
+
+    /* Clic mode daltonien : bascule entre daltonien et aucun thème */
+    btnDalton.addEventListener('click', function () {
+        var actuel = html.getAttribute('data-theme');
+        appliquerTheme(actuel === 'daltonien' ? null : 'daltonien');
+    });
+
+    /* Au chargement de la page : lire localStorage et mettre les boutons à jour.
+       nav.php a déjà appliqué data-theme sur <html> avant le rendu,
+       donc on se base sur l'attribut réel du DOM. */
+    mettreAJourBoutons(html.getAttribute('data-theme') || localStorage.getItem('vk-theme') || null);
+})();
+</script>
 
 <?php include_once "footer.php"; ?>
 

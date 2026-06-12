@@ -831,3 +831,162 @@ nav li{
 .btn-reserver-icone {
   font-size: 1.1rem;
 }
+/* ══════════════════════════════════════════════════════════════
+   THÈMES — Mode sombre & Mode daltonien
+   Activés via data-theme="sombre" ou data-theme="daltonien"
+   sur <html>. Appliqués sur toutes les pages via ce fichier.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── MODE SOMBRE ─────────────────────────────────────────────── */
+/*
+   Palette :
+   - Fond page        #18191a  (gris très sombre, pas noir pur)
+   - Surface carte    #242526  (légèrement plus clair → profondeur visible)
+   - Surface input    #3a3b3c  (champs bien distincts du fond)
+   - Bordure input    #4a4b4c
+   - Texte principal  #e4e6ea  (blanc cassé doux, bon contraste sans éblouir)
+   - Texte secondaire #b0b3b8  (paragraphes, labels secondaires)
+   - Texte tertiaire  #8a8d91  (sous-titres, étapes, métadonnées)
+   - Accent rouge     #e05a4a  (rouge légèrement éclairci pour lisibilité sur fond sombre)
+*/
+
+[data-theme="sombre"] body {
+  background-color: #18191a;
+  color: #e4e6ea;
+}
+
+[data-theme="sombre"] main {
+  background-color: #18191a;
+}
+
+/* Titres */
+[data-theme="sombre"] h1 {
+  color: #e4e6ea;
+}
+
+[data-theme="sombre"] h2 {
+  color: #e4e6ea;
+}
+
+[data-theme="sombre"] h3 {
+  color: #b0b3b8;
+}
+
+/* Paragraphes et listes */
+[data-theme="sombre"] p,
+[data-theme="sombre"] ul {
+  color: #b0b3b8;
+}
+
+/* Articles (blocs de contenu) */
+[data-theme="sombre"] article {
+  background-color: #242526;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+/* Cartes lignes */
+[data-theme="sombre"] .ligne-carte {
+  background-color: #242526;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+[data-theme="sombre"] .ligne-ville {
+  color: #e4e6ea;
+}
+
+[data-theme="sombre"] .ligne-etapes span {
+  color: #8a8d91;
+}
+
+/* Labels de formulaire */
+[data-theme="sombre"] label {
+  color: #e4e6ea;
+}
+
+/* Champs de formulaire — fond légèrement distinct de la carte
+   mais sans contraste agressif */
+[data-theme="sombre"] input[type="text"],
+[data-theme="sombre"] input[type="email"],
+[data-theme="sombre"] input[type="password"],
+[data-theme="sombre"] input[type="tel"],
+[data-theme="sombre"] select,
+[data-theme="sombre"] textarea {
+  background-color: #2d2e2f;
+  border-color: #3a3b3c;
+  color: #e4e6ea;
+}
+
+[data-theme="sombre"] input:focus,
+[data-theme="sombre"] select:focus,
+[data-theme="sombre"] textarea:focus {
+  border-color: #e05a4a;
+  background-color: #2d2e2f;
+}
+
+/* Nav topbar mobile */
+[data-theme="sombre"] .nav-topbar {
+  background-color: var(--noir);
+}
+
+/* Menus déroulants nav */
+[data-theme="sombre"] nav ul li.dropdown .dropdown-menu {
+  background-color: #111213;
+}
+
+/* Redirect (page intermédiaire) */
+[data-theme="sombre"] #redirect {
+  background-color: #18191a;
+}
+
+/* Back to top */
+[data-theme="sombre"] #back-to-top {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+
+/* Liens rouge-clair : rouge un peu plus lumineux sur fond sombre */
+[data-theme="sombre"] .link-rouge {
+  color: #e05a4a;
+}
+
+[data-theme="sombre"] .link-rouge:hover {
+  color: #c0392b;
+}
+
+/* ── MODE DALTONIEN (deutéranopie/protanopie) ────────────────── */
+/* Remplace le rouge #C0392B par un bleu-teal #0072B2            */
+/* et le rouge-dark #922b21 par #005A8E                          */
+
+[data-theme="daltonien"] {
+  --rouge:      #0072B2;
+  --rouge-dark: #005A8E;
+}
+
+/* Les règles qui utilisent var(--rouge) et var(--rouge-dark)
+   se mettent à jour automatiquement. On surcharge seulement
+   les couleurs codées en dur dans le CSS. */
+
+[data-theme="daltonien"] nav ul li.dropdown .dropdown-menu li a {
+  border-bottom-color: #2e2e2e;
+}
+
+[data-theme="daltonien"] .table-reservations tbody tr:hover {
+  background-color: #e8f4fd;
+}
+
+[data-theme="daltonien"] .table-reservations tbody tr:nth-child(even) {
+  background-color: #f0f7fc;
+}
+
+[data-theme="daltonien"] .btn-reserver-lignes {
+  background-color: #0072B2;
+  border-color: #0072B2;
+}
+
+[data-theme="daltonien"] .btn-reserver-lignes:hover {
+  color: #0072B2;
+  background-color: #fff;
+}
+
+/* ── MODE DALTONIEN + SOMBRE combiné ─────────────────────────── */
+/* (si l'utilisateur avait les deux, mais ici on ne permet qu'un
+   seul à la fois — section présente pour robustesse) */
