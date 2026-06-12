@@ -7,15 +7,15 @@
 }
 
 .footer-colonne h3 {
-  font-family: 'Oswald', sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 1.1rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #f5f5f5;
+  color: var(--blanc);
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #C0392B;
+  border-bottom: 2px solid var(--rouge);
 }
 
 .footer-colonne ul {
@@ -29,14 +29,14 @@
 
 .footer-colonne ul li {
   font-size: 0.95rem;
-  color: #e8e8e8;
+  color: var(--gris-clair);
   opacity: 0.8;
   margin-bottom: 0;
 }
 
 .footer-colonne ul li a {
   display: inline;
-  color: #e8e8e8;
+  color: var(--gris-clair);
   opacity: 0.8;
   text-decoration: none;
   padding: 0;
@@ -49,7 +49,7 @@
 }
 
 .footer-colonne ul li a:hover {
-  color: #C0392B;
+  color: var(--rouge);
   opacity: 1;
   background-color: transparent;
   transform: none;

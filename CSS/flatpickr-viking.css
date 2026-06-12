@@ -1,0 +1,129 @@
+/* ════════════════════════════════════════════════════════════
+   flatpickr-viking.css — Thème calendrier Viking Transport
+   Surcharge flatpickr.min.css pour l'accorder à la charte
+   (rouge / noir / Oswald). À charger APRÈS flatpickr.min.css.
+   ════════════════════════════════════════════════════════════ */
+
+/* Conteneur du calendrier */
+.flatpickr-calendar {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  font-family: var(--font-body, system-ui, sans-serif);
+}
+
+/* Petite flèche qui pointe vers le champ */
+.flatpickr-calendar.arrowTop::before,
+.flatpickr-calendar.arrowTop::after {
+  border-bottom-color: var(--noir, #1a1a1a);
+}
+.flatpickr-calendar.arrowBottom::before,
+.flatpickr-calendar.arrowBottom::after {
+  border-top-color: var(--noir, #1a1a1a);
+}
+
+/* En-tête (mois + flèches) sur fond noir */
+.flatpickr-months {
+  background-color: var(--noir, #1a1a1a);
+  border-radius: 8px 8px 0 0;
+  padding: 0.3rem 0;
+}
+
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month,
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year {
+  color: #fff;
+  fill: #fff;
+}
+
+.flatpickr-current-month {
+  font-family: var(--font-display, 'Oswald', sans-serif);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+  background-color: var(--noir, #1a1a1a);
+}
+
+/* Flèches de navigation des mois */
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+  fill: #fff;
+  color: #fff;
+}
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg {
+  fill: #fff;
+}
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg {
+  fill: var(--rouge, #C0392B);
+}
+
+/* Noms des jours de la semaine */
+span.flatpickr-weekday {
+  color: var(--gris, #4a4a4a);
+  font-family: var(--font-display, 'Oswald', sans-serif);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+/* Jours */
+.flatpickr-day {
+  color: var(--noir, #1a1a1a);
+  border-radius: 6px;
+  transition: background-color 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.flatpickr-day:hover,
+.flatpickr-day:focus {
+  background-color: rgba(192, 57, 43, 0.10);
+  border-color: transparent;
+}
+
+/* Jour du jour */
+.flatpickr-day.today {
+  border-color: var(--rouge, #C0392B);
+}
+.flatpickr-day.today:hover,
+.flatpickr-day.today:focus {
+  background-color: rgba(192, 57, 43, 0.10);
+  color: var(--noir, #1a1a1a);
+}
+
+/* Jour sélectionné */
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover,
+.flatpickr-day.selected:focus,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background-color: var(--rouge, #C0392B);
+  border-color: var(--rouge, #C0392B);
+  color: #fff;
+}
+
+/* Jours désactivés / hors mois */
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: #bbb;
+}
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover {
+  background-color: transparent;
+  cursor: not-allowed;
+}
+
+/* Sélecteur d'heure (si activé) */
+.flatpickr-time input:hover,
+.flatpickr-time .flatpickr-am-pm:hover,
+.flatpickr-time input:focus,
+.flatpickr-time .flatpickr-am-pm:focus {
+  background-color: var(--gris-clair, #e8e8e8);
+}

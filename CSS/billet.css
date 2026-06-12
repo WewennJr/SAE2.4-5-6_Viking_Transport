@@ -43,7 +43,7 @@ body {
 }
 
 .btn-imprimer:hover {
-  background-color: var(--rouge-fonce, #922b21);
+  background-color: var(--rouge-dark, #922b21);
 }
 
 /* Le billet lui-même */
