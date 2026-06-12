@@ -54,7 +54,7 @@ $actif_apropos = in_array($page_courante, $pages_apropos);
         </li>
         <?php if ($connecte) { ?>
         <li id="profil">
-            <a href="../PHP/espace_client.php" class="profil-nom" title="Mon espace">Bonjour <?= htmlspecialchars($_SESSION["prenom"]) ?></a>
+            <a href="../PHP/espace_client.php" class="profil-nom<?= in_array($page_courante, ['espace_client.php','modifier_profil.php','supprimer_client.php','traitement_modifier_profil.php','traitement_modifier_mdp.php']) ? ' nav-active' : '' ?>" title="Mon espace">Bonjour <?= htmlspecialchars($_SESSION["prenom"]) ?></a>
             <a href="../PHP/deconnexion.php" class="btn-deconnexion" title="Se déconnecter" aria-label="Se déconnecter">⏻</a>
         </li>
         <?php } else { ?>
