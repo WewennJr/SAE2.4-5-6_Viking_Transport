@@ -22,7 +22,7 @@ $courriel = $client['CLI_COURRIEL'];
 $ville    = $client['CLI_VILLE'];
 $tel      = $client['CLI_TELEPHONE'];
 $dep      = $client['DEP_NUM'];
-$points   = $client['CLI_NB_POINTS_TOT'];
+$points   = $client['CLI_NB_POINTS_EC'];
 $grade    = $client['CLI_GRADE'];
 
 // --- Réservations du client (en-tête simple) ---
