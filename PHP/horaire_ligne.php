@@ -1,11 +1,58 @@
 <!doctype html>
 <html lang="fr">
-<html lang="fr">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horaires – Viking Transport</title>
     <link rel="stylesheet" href="../CSS/style.css">
     <style>
+        .ligne-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .ligne-nav h1 {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+            flex: 1;
+        }
+
+        .ligne-nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.4rem;
+            height: 2.4rem;
+            border-radius: 4px;
+            border: 2px solid var(--rouge);
+            color: var(--rouge);
+            font-size: 1.2rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .ligne-nav-btn:hover {
+            background-color: var(--rouge);
+            color: #fff;
+        }
+
+        .ligne-nav-btn.disabled {
+            border-color: var(--gris-clair);
+            color: var(--gris-clair);
+            pointer-events: none;
+        }
+
+        /* Séparateur sous le bloc titre+nav */
+        .ligne-nav + p.horaires-meta {
+            margin-top: 0.5rem;
+            padding-top: 0.6rem;
+            border-top: 4px solid var(--rouge);
+        }
+
         .horaires-meta {
             font-size: 0.85rem;
             text-transform: uppercase;
@@ -150,6 +197,83 @@
             color: var(--gris);
             font-style: italic;
         }
+
+        /* ── Responsive ─────────────────────────────────────── */
+        @media (min-width: 701px) {
+            table.mobile { display: none; }
+            table.desktop { display: table; width: 100%; }
+        }
+
+        @media (max-width: 700px) {
+            .horaires-table-wrap { overflow-x: visible; }
+
+            table.desktop { display: none; }
+
+            table.mobile {
+                display: table;
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.88rem;
+            }
+
+            table.mobile thead tr {
+                border-bottom: 3px solid var(--rouge);
+            }
+
+            table.mobile thead th {
+                font-family: var(--font-display);
+                font-weight: 700;
+                font-size: 0.72rem;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                padding: 0.6rem 0.7rem;
+                text-align: center;
+                white-space: nowrap;
+                color: var(--noir);
+            }
+
+            table.mobile thead th.th-depart {
+                color: var(--rouge);
+            }
+
+            table.mobile thead th.th-label {
+                text-align: left;
+            }
+
+            table.mobile tbody tr {
+                border-bottom: 1px solid var(--gris-clair);
+            }
+
+            table.mobile tbody tr:last-child {
+                border-bottom: 3px solid var(--rouge);
+            }
+
+            table.mobile tbody tr:hover {
+                background-color: #f0f0f0;
+            }
+
+            table.mobile td {
+                padding: 0.6rem 0.7rem;
+                vertical-align: middle;
+            }
+
+            table.mobile td.depart-label {
+                font-family: var(--font-display);
+                font-weight: 700;
+                font-size: 0.82rem;
+                color: var(--rouge);
+                white-space: nowrap;
+            }
+
+            table.mobile td.heure {
+                font-family: var(--font-display);
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: var(--noir);
+                text-align: center;
+                white-space: nowrap;
+            }
+        }
     </style>
 </head>
 <body>
@@ -173,16 +297,33 @@ if ($ligNum === null) {
     $ligA    = $numBase . 'A';
     $ligB    = $numBase . 'B';
 
-    echo "<h1>Horaires &ndash; Ligne " . htmlspecialchars($numBase) . "</h1>";
+    // Numéros de ligne précédente et suivante
+    $numInt  = (int)$numBase;
+    $prevNum = $numInt > 1  ? ($numInt - 1) . $sens : null;
+    $nextNum = $numInt < 19 ? ($numInt + 1) . $sens : null;
+
+    echo "<div class='ligne-nav'>";
+    if ($prevNum) {
+        echo "<a href='horaire_ligne.php?lig=" . htmlspecialchars($prevNum) . "' class='ligne-nav-btn' title='Ligne précédente'>&#8592;</a>";
+    } else {
+        echo "<span class='ligne-nav-btn disabled'>&#8592;</span>";
+    }
+    echo "<h1>Horaires &ndash; Ligne " . htmlspecialchars($numBase . $sens) . "</h1>";
+    if ($nextNum) {
+        echo "<a href='horaire_ligne.php?lig=" . htmlspecialchars($nextNum) . "' class='ligne-nav-btn' title='Ligne suivante'>&#8594;</a>";
+    } else {
+        echo "<span class='ligne-nav-btn disabled'>&#8594;</span>";
+    }
+    echo "</div>";
     echo "<p class='horaires-meta'>Réseau Viking Transport &mdash; Normandie</p>";
     echo "<div class='sens-toggle'>
         <a href='horaire_ligne.php?lig=" . htmlspecialchars($ligA) . "'
            class='sens-btn" . ($sens === 'A' ? ' actif' : '') . "'>
-            &#9654; Ligne A
+            &#9654; Aller
         </a>
         <a href='horaire_ligne.php?lig=" . htmlspecialchars($ligB) . "'
            class='sens-btn" . ($sens === 'B' ? ' actif' : '') . "'>
-            &#9664; Ligne B
+            &#9664; Retour
         </a>
     </div>";
 
@@ -278,7 +419,7 @@ if ($ligNum === null) {
         /*
          * ÉTAPE 4 — Affichage
          */
-        echo "<div class='horaires-table-wrap'><table><thead><tr>";
+        echo "<div class='horaires-table-wrap'><table class='desktop'><thead><tr>";
         echo "<th class='th-arret'>Arrêt</th>";
         for ($i = 1; $i <= $nbHoraires; $i++) {
             echo "<th class='th-horaire'>Départ&nbsp;" . $i . "</th>";
@@ -316,6 +457,45 @@ if ($ligNum === null) {
         }
 
         echo "</tbody></table></div>";
+
+        // ── Tableau mobile (transposé : 1 ligne = 1 départ) ──
+        // Précalculer les heures terminus
+        $heuresTerminus = [];
+        $dernierArret = $chaineArrets[count($chaineArrets) - 2];
+        $heuresDernier = $heuresParArret[$dernierArret['insee']] ?? [];
+        $duree = $dureeParArret[$dernierArret['insee']] ?? 0;
+        for ($i = 0; $i < $nbHoraires; $i++) {
+            if (isset($heuresDernier[$i])) {
+                list($hh, $mm) = explode(':', $heuresDernier[$i]);
+                $totalMin = (int)$hh * 60 + (int)$mm + $duree;
+                $heuresTerminus[$i] = sprintf('%02d:%02d', intdiv($totalMin, 60) % 24, $totalMin % 60);
+            } else {
+                $heuresTerminus[$i] = '—';
+            }
+        }
+
+        echo "<div class='horaires-table-wrap'><table class='mobile'><thead><tr>";
+        echo "<th class='th-label'>Départ</th>";
+        foreach ($chaineArrets as $arret) {
+            echo "<th class='th-depart'>" . htmlspecialchars($arret['nom']) . "</th>";
+        }
+        echo "</tr></thead><tbody>";
+
+        for ($i = 0; $i < $nbHoraires; $i++) {
+            echo "<tr><td class='depart-label'>Départ&nbsp;" . ($i + 1) . "</td>";
+            foreach ($chaineArrets as $arret) {
+                $isTerminus = isset($arret['terminus']) && $arret['terminus'];
+                if ($isTerminus) {
+                    echo "<td class='heure'>" . $heuresTerminus[$i] . "</td>";
+                } else {
+                    $heures = $heuresParArret[$arret['insee']] ?? [];
+                    $h = isset($heures[$i]) ? htmlspecialchars($heures[$i]) : '—';
+                    echo "<td class='heure'>" . $h . "</td>";
+                }
+            }
+            echo "</tr>";
+        }
+        echo "</tbody></table></div>";
     }
 }
 $conn=null;
@@ -324,8 +504,6 @@ $conn=null;
     <a href="lignes.php" class="retour-lien">Retour aux lignes</a>
 </main>
 
-<?php include_once("../PHP/footer.php"); ?>
-</body>
 <?php include_once("../PHP/footer.php"); ?>
 </body>
 </html>
