@@ -297,33 +297,25 @@ if ($ligNum === null) {
     $ligA    = $numBase . 'A';
     $ligB    = $numBase . 'B';
 
-    // Numéros de ligne précédente et suivante
+    // Numéros de ligne précédente et suivante (boucle 1-19)
     $numInt  = (int)$numBase;
-    $prevNum = $numInt > 1  ? ($numInt - 1) . $sens : null;
-    $nextNum = $numInt < 19 ? ($numInt + 1) . $sens : null;
+    $prevNum = ($numInt > 1  ? $numInt - 1 : 19) . $sens;
+    $nextNum = ($numInt < 19 ? $numInt + 1 : 1)  . $sens;
 
     echo "<div class='ligne-nav'>";
-    if ($prevNum) {
-        echo "<a href='horaire_ligne.php?lig=" . htmlspecialchars($prevNum) . "' class='ligne-nav-btn' title='Ligne précédente'>&#8592;</a>";
-    } else {
-        echo "<span class='ligne-nav-btn disabled'>&#8592;</span>";
-    }
+    echo "<a href='horaire_ligne.php?lig=" . htmlspecialchars($prevNum) . "' class='ligne-nav-btn' title='Ligne précédente'>&#8592;</a>";
     echo "<h1>Horaires &ndash; Ligne " . htmlspecialchars($numBase . $sens) . "</h1>";
-    if ($nextNum) {
-        echo "<a href='horaire_ligne.php?lig=" . htmlspecialchars($nextNum) . "' class='ligne-nav-btn' title='Ligne suivante'>&#8594;</a>";
-    } else {
-        echo "<span class='ligne-nav-btn disabled'>&#8594;</span>";
-    }
+    echo "<a href='horaire_ligne.php?lig=" . htmlspecialchars($nextNum) . "' class='ligne-nav-btn' title='Ligne suivante'>&#8594;</a>";
     echo "</div>";
     echo "<p class='horaires-meta'>Réseau Viking Transport &mdash; Normandie</p>";
     echo "<div class='sens-toggle'>
         <a href='horaire_ligne.php?lig=" . htmlspecialchars($ligA) . "'
            class='sens-btn" . ($sens === 'A' ? ' actif' : '') . "'>
-            &#9654; Aller
+            &#9654; Ligne A
         </a>
         <a href='horaire_ligne.php?lig=" . htmlspecialchars($ligB) . "'
            class='sens-btn" . ($sens === 'B' ? ' actif' : '') . "'>
-            &#9664; Retour
+            &#9664; Ligne B
         </a>
     </div>";
 
