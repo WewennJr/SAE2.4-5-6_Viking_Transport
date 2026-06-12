@@ -63,6 +63,7 @@
 
         .horaires-table-wrap {
             overflow-x: auto;
+            max-width: 100%;
         }
 
         table {
@@ -198,29 +199,57 @@
             font-style: italic;
         }
 
-        /* ── Responsive ─────────────────────────────────────── */
+        /* ── Sticky desktop : colonne arrêts figée à gauche ── */
+        table.desktop {
+            display: table;
+            width: 100%;
+        }
+
+        table.desktop thead th.th-arret,
+        table.desktop tbody td.arret-nom {
+            position: sticky;
+            left: 0;
+            background-color: var(--blanc);
+            z-index: 2;
+        }
+
+        table.desktop thead th.th-arret {
+            z-index: 3;
+            color: var(--noir);
+        }
+
+        table.desktop tbody tr:hover td.arret-nom {
+            background-color: #f0f0f0;
+        }
+
+        /* ── Sticky mobile : ligne villes figée en haut ────── */
         @media (min-width: 701px) {
             table.mobile { display: none; }
-            table.desktop { display: table; width: 100%; }
         }
 
         @media (max-width: 700px) {
-            .horaires-table-wrap { overflow-x: visible; }
-
             table.desktop { display: none; }
+
+            .horaires-table-wrap {
+                overflow-x: auto;
+                overflow-y: auto;
+                max-height: 80vh;
+                -webkit-overflow-scrolling: touch;
+            }
 
             table.mobile {
                 display: table;
-                width: 100%;
+                width: max-content;
+                min-width: 100%;
                 border-collapse: collapse;
                 font-size: 0.88rem;
             }
 
-            table.mobile thead tr {
-                border-bottom: 3px solid var(--rouge);
-            }
-
             table.mobile thead th {
+                position: sticky;
+                top: 0;
+                background-color: var(--blanc);
+                z-index: 2;
                 font-family: var(--font-display);
                 font-weight: 700;
                 font-size: 0.72rem;
@@ -230,14 +259,16 @@
                 text-align: center;
                 white-space: nowrap;
                 color: var(--noir);
-            }
-
-            table.mobile thead th.th-depart {
-                color: var(--rouge);
+                border-bottom: 3px solid var(--rouge);
             }
 
             table.mobile thead th.th-label {
                 text-align: left;
+                position: sticky;
+                top: 0;
+                left: 0;
+                z-index: 4;
+                background-color: var(--blanc);
             }
 
             table.mobile tbody tr {
@@ -248,21 +279,22 @@
                 border-bottom: 3px solid var(--rouge);
             }
 
-            table.mobile tbody tr:hover {
-                background-color: #f0f0f0;
-            }
-
             table.mobile td {
                 padding: 0.6rem 0.7rem;
                 vertical-align: middle;
             }
 
             table.mobile td.depart-label {
+                position: sticky;
+                left: 0;
+                background-color: var(--blanc);
+                z-index: 1;
                 font-family: var(--font-display);
                 font-weight: 700;
                 font-size: 0.82rem;
                 color: var(--rouge);
                 white-space: nowrap;
+                border-right: 1px solid var(--gris-clair);
             }
 
             table.mobile td.heure {
