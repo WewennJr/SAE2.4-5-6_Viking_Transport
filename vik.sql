@@ -82,8 +82,8 @@ CREATE TABLE VIK_CLIENT
     CLI_TELEPHONE VARCHAR2( 16)  NULL,
     CLI_COURRIEL VARCHAR2(64) NULL,
     CLI_MDP VARCHAR2(300) NOT NULL,
-    CLI_NB_POINTS_EC NUMBER(4)  NULL,
-    CLI_NB_POINTS_TOT NUMBER(6)  NULL,
+    CLI_NB_POINTS_EC NUMBER(5)  NULL,
+    CLI_NB_POINTS_TOT NUMBER(7)  NULL,
     CLI_DATE_CONNEC DATE  NULL,
     CONSTRAINT PK_VIK_CLIENT PRIMARY KEY (CLI_NUM)  
 );
@@ -6094,8 +6094,54 @@ order by cli_num;
 
 
 update vik_client
-set cli_grade = 'administrateur'
-where cli_num = 58;
+set cli_grade = 'client'
+where cli_num = 59;
 
 commit;
 
+/*Nombre de réservations entre 2 villes spécifiques*/
+SELECT COUNT(*) AS nb_reservations
+FROM VIK_ETAPE e
+JOIN VIK_COMMUNE c_dep ON c_dep.COM_CODE_INSEE = e.COM_CODE_INSEE_DEPART
+JOIN VIK_COMMUNE c_arr ON c_arr.COM_CODE_INSEE = e.COM_CODE_INSEE_ARRIVEE
+WHERE c_dep.COM_NOM = 'Caen'
+  AND c_arr.COM_NOM = 'Granville';
+  
+/*Nombre de lignes qui passent par une ville ( plutot partie client dans les réservations dcp )*/
+  SELECT COUNT(DISTINCT TRIM(n.LIG_NUM)) AS nb_lignes
+FROM VIK_NOEUD n
+JOIN VIK_COMMUNE c ON c.COM_CODE_INSEE = n.COM_CODE_INSEE_ARRET
+WHERE c.COM_NOM = 'Bayeux';
+
+
+/*Nombre de gens qui partent / arrivent dans une ville*/
+SELECT 
+    c.COM_NOM AS ville,
+    COUNT(DISTINCT CASE WHEN e.COM_CODE_INSEE_DEPART = c.COM_CODE_INSEE THEN e.CLI_NUM END) AS nb_departs,
+    COUNT(DISTINCT CASE WHEN e.COM_CODE_INSEE_ARRIVEE = c.COM_CODE_INSEE THEN e.CLI_NUM END) AS nb_arrivees
+FROM VIK_ETAPE e
+JOIN VIK_COMMUNE c ON c.COM_CODE_INSEE = e.COM_CODE_INSEE_DEPART 
+                   OR c.COM_CODE_INSEE = e.COM_CODE_INSEE_ARRIVEE
+WHERE c.COM_NOM = 'Caen'
+GROUP BY c.COM_NOM;
+
+select c.com_nom as dep, c1.com_nom as arr, to_char(n.noe_heure_passage, 'HH24:MI'), n.noe_distance_prochain from vik_noeud n
+join vik_commune c on c.com_code_insee = n.com_code_insee_arret
+join vik_commune c1 on c1.com_code_insee = n.com_code_insee_suivant
+where lig_num = '1B';
+
+
+select * from vik_client
+order by cli_num;
+
+select * from vik_reservation r
+join vik_client c using(cli_num)
+order by res_date;
+
+select * from vik_type_client;
+
+update vik_type_client
+set typ_nom = 'OR'
+where typ_num = 5;
+
+commit;
