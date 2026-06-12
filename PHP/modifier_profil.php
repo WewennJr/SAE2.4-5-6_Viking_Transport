@@ -29,33 +29,35 @@ if (isset($_SESSION['success'])) {
 }
 
 // Pré-remplissage avec les données de la BDD (ou données re-soumises en cas d'erreur)
-$nom      = $client['CLI_NOM'];
-$prenom   = $client['CLI_PRENOM'];
+$nom = $client['CLI_NOM'];
+$prenom = $client['CLI_PRENOM'];
 $courriel = $client['CLI_COURRIEL'];
-$ville    = $client['CLI_VILLE'];
-$tel      = $client['CLI_TELEPHONE'];
-$dep      = $client['DEP_NUM'];
+$ville = $client['CLI_VILLE'];
+$tel = $client['CLI_TELEPHONE'];
+$dep = $client['DEP_NUM'];
 
 // Si retour après erreur, on écrase avec ce que l'utilisateur avait saisi
 if (isset($_SESSION['form_data'])) {
-    $nom      = $_SESSION['form_data']['CLI_NOM'];
-    $prenom   = $_SESSION['form_data']['CLI_PRENOM'];
+    $nom = $_SESSION['form_data']['CLI_NOM'];
+    $prenom = $_SESSION['form_data']['CLI_PRENOM'];
     $courriel = $_SESSION['form_data']['CLI_COURRIEL'];
-    $ville    = $_SESSION['form_data']['CLI_VILLE'];
-    $tel      = $_SESSION['form_data']['CLI_TELEPHONE'];
-    $dep      = $_SESSION['form_data']['DEP_NUM'];
+    $ville = $_SESSION['form_data']['CLI_VILLE'];
+    $tel = $_SESSION['form_data']['CLI_TELEPHONE'];
+    $dep = $_SESSION['form_data']['DEP_NUM'];
     unset($_SESSION['form_data']);
 }
-$conn=null;
+$conn = null;
 ?>
 <!doctype html>
 <html lang="fr">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon profil – Viking Transport</title>
     <link rel="stylesheet" href="../CSS/style.css">
 </head>
+
 <body>
     <?php include_once "nav.php" ?>
     <main>
@@ -92,25 +94,31 @@ $conn=null;
                     </div>
                     <div class="form-group">
                         <label for="CLI_TELEPHONE">Téléphone</label>
-                        <input type="tel" id="CLI_TELEPHONE" name="CLI_TELEPHONE" value="<?php echo $tel; ?>" placeholder="00 00 00 00 00" required>
+                        <input type="tel" id="CLI_TELEPHONE" name="CLI_TELEPHONE" value="<?php echo $tel; ?>"
+                            placeholder="00 00 00 00 00" required>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="DEP_NUM">Département</label>
                     <select id="DEP_NUM" name="DEP_NUM" required>
                         <option value="">Sélectionnez votre département</option>
-                        <option value="14" <?php if ($dep == "14") echo "selected"; ?>>14 – Calvados</option>
-                        <option value="50" <?php if ($dep == "50") echo "selected"; ?>>50 – Manche</option>
-                        <option value="61" <?php if ($dep == "61") echo "selected"; ?>>61 – Orne</option>
-                        <option value="27" <?php if ($dep == "27") echo "selected"; ?>>27 – Eure</option>
-                        <option value="76" <?php if ($dep == "76") echo "selected"; ?>>76 – Seine-Maritime</option>
+                        <option value="14" <?php if ($dep == "14")
+                            echo "selected"; ?>>14 – Calvados</option>
+                        <option value="50" <?php if ($dep == "50")
+                            echo "selected"; ?>>50 – Manche</option>
+                        <option value="61" <?php if ($dep == "61")
+                            echo "selected"; ?>>61 – Orne</option>
+                        <option value="27" <?php if ($dep == "27")
+                            echo "selected"; ?>>27 – Eure</option>
+                        <option value="76" <?php if ($dep == "76")
+                            echo "selected"; ?>>76 – Seine-Maritime</option>
                     </select>
                 </div>
                 <button type="submit">Enregistrer les modifications</button>
             </form>
 
             <!-- Formulaire changement de mot de passe (séparé) -->
-            <h2>Changer mon mot de passe</h2>
+            <h2 style="margin-top: 3rem;">Changer mon mot de passe</h2>
             <form action="traitement_modifier_mdp.php" method="post">
                 <div class="form-group">
                     <label for="CLI_MDP_NOUVEAU">Nouveau mot de passe</label>
@@ -127,4 +135,5 @@ $conn=null;
     </main>
     <?php include_once "footer.php" ?>
 </body>
+
 </html>
