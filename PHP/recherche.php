@@ -130,6 +130,24 @@ $conn = null;
         <button type="button" class="btn-mode" data-mode="manuel" id="btn-mode-manuel">Composer mon trajet</button>
     </div>
 
+    <!-- Plan du réseau (dépliable) + lien horaires -->
+    <div class="bloc-plan">
+        <div class="bloc-plan-actions">
+            <button type="button" id="btn-plan" class="btn-plan" aria-expanded="false">
+                <span class="btn-plan-icone">🗺</span>
+                <span id="btn-plan-texte">Voir le plan du réseau</span>
+                <span class="btn-plan-fleche" id="btn-plan-fleche">▾</span>
+            </button>
+            <a href="lignes.php" class="btn-horaires" target="_blank">
+                <span class="btn-plan-icone">🕒</span>
+                <span>Consulter les lignes et horaires</span>
+            </a>
+        </div>
+        <div id="conteneur-plan" class="conteneur-plan">
+            <img src="../images/plan-reseau.png" alt="Plan du réseau Viking Transport" class="image-plan">
+        </div>
+    </div>
+
     <!-- ════════ MODE AUTOMATIQUE ════════ -->
     <div id="bloc-auto">
     <section class="carte-recherche-form">
@@ -380,6 +398,21 @@ btnModeAuto.addEventListener('click', () => activerMode('auto'));
 btnModeManuel.addEventListener('click', () => activerMode('manuel'));
 
 // ════════════════════════════════════════════════
+// Plan du réseau (dépliable)
+// ════════════════════════════════════════════════
+const btnPlan = document.getElementById('btn-plan');
+const conteneurPlan = document.getElementById('conteneur-plan');
+const btnPlanTexte = document.getElementById('btn-plan-texte');
+const btnPlanFleche = document.getElementById('btn-plan-fleche');
+
+btnPlan.addEventListener('click', function () {
+    const ouvert = conteneurPlan.classList.toggle('ouvert');
+    btnPlan.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
+    btnPlanTexte.textContent = ouvert ? 'Masquer le plan du réseau' : 'Voir le plan du réseau';
+    btnPlanFleche.textContent = ouvert ? '▴' : '▾';
+});
+
+// ════════════════════════════════════════════════
 // MODE MANUEL : composition du trajet
 // ════════════════════════════════════════════════
 const OPTIONS_COMMUNES = `<?php
@@ -585,7 +618,7 @@ async function recalculer() {
         recap.style.display = 'block';
     } catch (err) {
         recap.style.display = 'none';
-        msgErreur.textContent = '⚠ Erreur lors du calcul du trajet.';
+        msgErreur.textContent = '⚠ Erreur lors du calcul du trajet : ' + err.message;
         msgErreur.style.display = 'block';
     }
 }
