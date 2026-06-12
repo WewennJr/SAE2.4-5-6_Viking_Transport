@@ -37,23 +37,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reser
         if (!isset($resM['erreur'])) {
             $segsM = regrouperParLigne($resM['chemin']);
             $horairesM = calculerHorairesTrajet($conn, $segsM, hhmmEnMinutes($heureM));
-            $distM = $resM['distanceTotale'];
-            $_SESSION['trajets_proposes'] = [
-                0 => [
-                    'depart'   => $communesM[0],
-                    'arrivee'  => $communesM[count($communesM) - 1],
-                    'date'     => $dateM,
-                    'chemin'   => $resM['chemin'],
-                    'duree'    => $resM['dureeTotale'],
-                    'distance' => $distM,
-                    'points'   => calculerPoints($distM),
-                    'prix'     => calculerTarif($conn, $distM),
-                    'horaires' => $horairesM,
-                ]
-            ];
-            $conn = null;
-            header('Location: paiement.php?trajet_choisi=0');
-            exit;
+
+            // Sécurité : on refuse un trajet dont les correspondances ne s'enchaînent pas
+            if (empty($horairesM['realisable'])) {
+                $erreur = "Ce trajet n'est pas réalisable à l'heure choisie (une correspondance n'a plus de car). Essayez une heure de départ plus matinale.";
+            } else {
+                $distM = $resM['distanceTotale'];
+                $_SESSION['trajets_proposes'] = [
+                    0 => [
+                        'depart'   => $communesM[0],
+                        'arrivee'  => $communesM[count($communesM) - 1],
+                        'date'     => $dateM,
+                        'chemin'   => $resM['chemin'],
+                        'duree'    => $resM['dureeTotale'],
+                        'distance' => $distM,
+                        'points'   => calculerPoints($distM),
+                        'prix'     => calculerTarif($conn, $distM),
+                        'horaires' => $horairesM,
+                    ]
+                ];
+                $conn = null;
+                header('Location: paiement.php?trajet_choisi=0');
+                exit;
+            }
         } else {
             $erreur = $resM['erreur'];
         }
@@ -312,6 +318,8 @@ $conn = null;
             </div>
             <div id="recap-detail"></div>
 
+            <p id="avert-realisable" class="trajet-non-realisable" style="display:none;">⚠ Ce trajet n'est pas entièrement réalisable à l'heure choisie (une correspondance n'a plus de car). Essayez une heure de départ plus matinale.</p>
+
             <form id="form-reserver" action="recherche.php" method="post">
                 <input type="hidden" name="action" value="reserver_manuel">
                 <input type="hidden" name="communes" id="communes-input">
@@ -500,10 +508,11 @@ async function recalculer() {
     }
 
     try {
+        const heureChoisie = document.getElementById('heure-m').value || '08:00';
         const reponse = await fetch('calcul_trajet_manuel.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ communes: communes })
+            body: JSON.stringify({ communes: communes, heure: heureChoisie })
         });
         const data = await reponse.json();
 
@@ -521,6 +530,19 @@ async function recalculer() {
         document.getElementById('recap-points').textContent = data.points;
         document.getElementById('recap-prix').textContent = data.prix;
 
+        // Avertissement si le trajet n'est pas réalisable à l'heure choisie
+        const blocAvert = document.getElementById('avert-realisable');
+        const btnReserver = document.getElementById('btn-reserver');
+        if (data.realisable === false) {
+            blocAvert.style.display = 'block';
+            btnReserver.disabled = true;
+            btnReserver.value = 'Trajet non réalisable à cette heure';
+        } else {
+            blocAvert.style.display = 'none';
+            btnReserver.disabled = false;
+            btnReserver.value = 'Réserver ce trajet';
+        }
+
         let html = '';
         data.sousTrajets.forEach((st, idx) => {
             const hh = Math.floor(st.duree / 60);
@@ -529,10 +551,33 @@ async function recalculer() {
             html += '<div class="sous-trajet-titre"><span class="st-num">' + (idx + 1) + '</span> ' +
                     st.depart + ' → ' + st.arrivee +
                     ' <span class="st-info">' + hh + 'h' + String(mm).padStart(2, '0') + ' · ' + st.distance + ' km</span></div>';
-            html += '<ol class="st-lignes">';
+            // On réutilise EXACTEMENT les mêmes classes que le mode auto
+            html += '<ol class="option-etapes-horaires">';
             st.lignes.forEach(li => {
-                html += '<li><span class="mini-ligne">L' + li.ligne + '</span> ' +
-                        li.depart + ' → ' + li.arrivee + '</li>';
+                if (li.realisable === false) {
+                    html += '<li class="etape-ko">' +
+                            '<span class="mini-ligne">L' + li.ligne + '</span>' +
+                            '<span class="etape-villes">' + li.depart + ' → ' + li.arrivee + '</span>' +
+                            '<span class="etape-ko-txt">Plus de car</span>' +
+                            '</li>';
+                } else if (li.heureDep && li.heureArr) {
+                    // Segment avec horaire normal
+                    if (li.attente && li.attente > 0) {
+                        html += '<li class="etape-attente">⏱ ' + li.attente + ' min d\'attente</li>';
+                    }
+                    html += '<li class="etape-ok">' +
+                            '<span class="mini-ligne">L' + li.ligne + '</span>' +
+                            '<span class="etape-villes">' + li.depart + ' → ' + li.arrivee + '</span>' +
+                            '<span class="etape-horaire">' + li.heureDep + ' → ' + li.heureArr + '</span>' +
+                            '</li>';
+                } else {
+                    // Segment après un blocage : pas d'horaire disponible
+                    html += '<li class="etape-ko">' +
+                            '<span class="mini-ligne">L' + li.ligne + '</span>' +
+                            '<span class="etape-villes">' + li.depart + ' → ' + li.arrivee + '</span>' +
+                            '<span class="etape-ko-txt">Horaire indisponible</span>' +
+                            '</li>';
+                }
             });
             html += '</ol></div>';
         });
@@ -555,6 +600,9 @@ document.getElementById('btn-ajouter').addEventListener('click', function () {
     majLabels();
     recalculer();
 });
+
+// Recalcul quand on change l'heure de départ souhaitée
+document.getElementById('heure-m').addEventListener('change', recalculer);
 
 // Avant de réserver : on remplit les champs cachés
 document.getElementById('form-reserver').addEventListener('submit', function () {
