@@ -42,11 +42,13 @@ a {
 
 nav {
   background-color: var(--noir);
-  border-bottom: 3px solid var(--rouge);
   position: sticky;
   top: 0;
   z-index: 100;
   width: 100%;
+  border-bottom: 3px solid var(--rouge);
+  font-size: 0;
+  line-height: 1;
 }
 
 nav ul {
@@ -56,12 +58,16 @@ nav ul {
   margin: 0;
   padding: 0;
   align-items: stretch;
+  align-content: stretch;
+  font-size: 1rem;
+  line-height: normal;
 }
 
 nav li {
   list-style: none;
   display: flex;
   align-items: stretch;
+  margin-bottom: 0;
 }
 
 nav a {
@@ -210,6 +216,8 @@ nav ul li.dropdown .dropdown-menu li a:hover {
     justify-content: space-between;
     padding: 0 0.5rem;
     min-height: 56px;
+    font-size: 1rem;
+    line-height: normal;
   }
 
   .nav-burger {
@@ -282,7 +290,7 @@ nav ul li.dropdown .dropdown-menu li a:hover {
   }
 }
 
-/* ── Indicateur de page active (soulignement sous le texte uniquement) ── */
+/* ── Indicateur de page active ──────────────────────────── */
 
 nav li#profil a.profil-nom.nav-active {
   text-decoration: underline;
@@ -294,7 +302,6 @@ nav li#profil a.profil-nom.nav-active {
 nav li#profil a.profil-nom.nav-active:hover {
   text-decoration-color: #fff;
 }
-
 
 nav > ul > li.dropdown > a.nav-active {
   text-decoration: underline;
@@ -318,9 +325,7 @@ nav ul li.dropdown .dropdown-menu li a.nav-active:hover {
   text-decoration-color: var(--rouge-dark);
 }
 
-
-
-
+/* ── Contenu principal ──────────────────────────────────── */
 
 main {
   flex: 1;
@@ -764,10 +769,9 @@ main.main-lignes {
   }
 }
 
-
-#copyright_titre::after{
+#copyright_titre::after {
   content: '®';
-  font-size: 2rem ;
+  font-size: 2rem;
 }
 
 #back-to-top {
@@ -794,4 +798,8 @@ main.main-lignes {
 #back-to-top:hover {
   background-color: var(--rouge-dark);
   transform: translateY(-2px);
+}
+
+nav li{
+  margin-bottom: 0;
 }
